@@ -1,0 +1,8 @@
+@import './styles/design-system.css';
+
+/* Global resets for Vite default styles that might interfere */
+#root {
+  width: 100%;
+  margin: 0 auto;
+  text-align: left;
+}

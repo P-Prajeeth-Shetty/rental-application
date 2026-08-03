@@ -1,0 +1,663 @@
+/* Dashboard CSS - Liquid Glass */
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-lg);
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 140px;
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.kpi-icon {
+  color: var(--text-primary);
+}
+
+.kpi-menu-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1;
+}
+
+.kpi-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+  margin: 0;
+}
+
+/* Charts Area */
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  height: 400px;
+}
+
+.chart-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.chart-title-group h2 {
+  font-size: 1.25rem;
+  margin: 0 0 4px 0;
+}
+
+.chart-title-group p {
+  font-size: 0.85rem;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.arrow-link-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.chart-stats-row {
+  display: flex;
+  gap: 32px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.stat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stat-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-value-row h3 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.stat-decimals {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
+
+.stat-badge {
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+}
+
+.bg-danger { background: var(--danger); }
+.bg-success { background: var(--success); }
+
+/* Email List */
+.email-list-card {
+  margin-top: var(--spacing-lg);
+}
+
+.email-list-card h3 {
+  font-size: 1.1rem;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.email-row {
+  display: grid;
+  grid-template-columns: 40px 2fr 3fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.email-row:last-child {
+  border-bottom: none;
+}
+
+.email-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.email-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Side Widgets */
+.widget-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.widget-header h3 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.widget-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 4px 0 16px 0;
+}
+
+.progress-bar-container {
+  height: 24px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-md);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: 12px;
+}
+
+.widget-details h4 {
+  font-size: 1rem;
+  margin: 0 0 4px 0;
+}
+
+.widget-details p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 16px 0;
+}
+
+.btn-white {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  border-radius: 100px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-white:hover {
+  background: var(--bg-surface-hover);
+}
+
+.radial-chart-container {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.radial-center-text {
+  position: absolute;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.radial-center-text h2 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.radial-center-text span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.success-rate-desc {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: var(--spacing-md) 0;
+}
+
+.success-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  text-align: center;
+  border-top: 1px solid rgba(255,255,255,0.3);
+  padding-top: var(--spacing-md);
+}
+
+.success-stats-grid span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.success-stats-grid strong {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  display: block;
+  margin-top: 4px;
+}
+
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reminder & Notebook Layout */
+.list-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+
+@media (max-width: 768px) {
+  .list-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.premium-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.premium-card:active {
+  transform: scale(0.98);
+}
+
+.premium-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.premium-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.premium-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.premium-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 12px;
+}
+
+.premium-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.premium-card-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.premium-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.empty-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  height: 100%;
+  flex: 1;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+
+.empty-state-text {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin: 0 0 24px 0;
+}
+
+.search-filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.search-filter-bar .search-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.search-filter-bar input {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.2s;
+}
+
+.search-filter-bar input:focus {
+  outline: none;
+  background: white;
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px rgba(222, 163, 137, 0.2);
+}
+
+.search-filter-bar select {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.search-filter-bar select:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px rgba(222, 163, 137, 0.2);
+}
+
+.search-filter-bar select:hover {
+  background: white;
+}
+
+.search-filter-bar select option {
+  background: white;
+  color: var(--text-primary);
+}
+
+/* ── Overdue Alerts Widget ────────────────────────────── */
+
+.overdue-alerts-card {
+  padding: var(--spacing-lg) !important;
+}
+
+.overdue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.overdue-header h3 {
+  font-size: 1.05rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.overdue-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.overdue-pulse {
+  animation: overduePulse 2s ease-in-out infinite;
+}
+
+@keyframes overduePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.overdue-total-badge {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.overdue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.overdue-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.08);
+  transition: all 0.2s ease;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.overdue-row:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
+  transform: translateX(2px);
+}
+
+.overdue-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.overdue-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.overdue-tenant-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overdue-property {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.overdue-row-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.overdue-months-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.overdue-month-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.overdue-month-badge.overdue-more {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.overdue-amount {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}

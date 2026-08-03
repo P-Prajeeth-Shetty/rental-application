@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette - Liquid Glassmorphism */
+  --bg-main: url('/glass_background.png') center/cover no-repeat fixed;
+  
+  --bg-surface: rgba(255, 255, 255, 0.78);
+  --bg-surface-hover: rgba(255, 255, 255, 0.88);
+  --bg-glass-container: rgba(255, 255, 255, 0.55);
+  --bg-panel: rgba(255, 255, 255, 0.97);
+  --overlay-bg: rgba(255, 255, 255, 0.7);
+  
+  --primary-accent: #dea389; /* Soft Peach */
+  --primary-gradient: linear-gradient(135deg, #dea389 0%, #b7cbde 100%);
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
+  
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  
+  --border-color: rgba(255, 255, 255, 0.6);
+  --border-light: rgba(255, 255, 255, 0.8);
+  --input-border: rgba(0, 0, 0, 0.2);
+  
+  /* Layout & Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Utilities */
+  --border-radius-lg: 24px;
+  --border-radius: 16px;
+  --border-radius-sm: 8px;
+  --transition-fast: 0.15s ease-in-out;
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass-blur: blur(24px);
+}
+
+.dark-mode {
+  --bg-surface: rgba(0, 0, 0, 0.78);
+  --bg-surface-hover: rgba(0, 0, 0, 0.85);
+  --bg-glass-container: rgba(0, 0, 0, 0.55);
+  --bg-panel: rgba(20, 20, 20, 0.97);
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  
+  --border-color: rgba(255, 255, 255, 0.15);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --input-border: rgba(255, 255, 255, 0.25);
+}
+
+body.dark-mode::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --spacing-md: 24px;
+    --spacing-lg: 32px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg-main);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+
+@media (min-width: 768px) {
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+}
+
+/* App Layout - Floating Glass */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  padding: 2vh 2vw; /* Keep a small border to show the gradient background */
+  align-items: center;
+  justify-content: center;
+}
+
+.main-glass-container {
+  flex: 1;
+  background: var(--bg-glass-container);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1.5px solid var(--border-light);
+  border-radius: 32px;
+  display: flex;
+  flex-direction: column;
+  height: 96vh;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05), inset 0 0 0 1px rgba(255,255,255,0.4);
+}
+
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar - Global */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 1024px) {
+  .dashboard-layout {
+    flex-direction: row;
+  }
+  .main-column {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+  .side-column {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+}
+
+/* Glass Surface / Card Style */
+.surface-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.surface-card:hover {
+  background: var(--bg-surface-hover);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Flex Utilities */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-icon {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.btn-icon:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+.badge.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+.badge.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
