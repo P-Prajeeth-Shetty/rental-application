@@ -537,6 +537,7 @@ export const LeasesView: React.FC = () => {
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
+                        display: 'inline-block', minWidth: '75px', textAlign: 'center',
                         padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 500,
                         backgroundColor: fullyPaid ? 'rgba(16,185,129,0.15)' : overdue ? 'rgba(239,68,68,0.15)' : paidAmount > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
                         color: fullyPaid ? '#10b981' : overdue ? '#ef4444' : paidAmount > 0 ? '#f59e0b' : '#ef4444'
