@@ -12,6 +12,18 @@ interface ExpenseRow {
   Marketing: number;
 }
 
+interface TenantAssignmentRow {
+  id: string;
+  unit_number: string;
+  current_rent: number;
+  lease_start: string;
+  lease_end: string | null;
+  security_deposit: number;
+  status: string;
+  tenants: { full_name: string; phone: string | null } | null;
+  properties: { name: string } | null;
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const emptyExpenses = (): ExpenseRow[] =>
@@ -25,8 +37,13 @@ export const ReportsView: React.FC = () => {
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [loadingExp, setLoadingExp] = useState(true);
 
+  const [assignments, setAssignments] = useState<TenantAssignmentRow[]>([]);
+  const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { status: string; isOverdue: boolean }>>({});
+  const [loadingAssignments, setLoadingAssignments] = useState(true);
+
   useEffect(() => {
     fetchExpenses();
+    fetchAssignments();
   }, []);
 
   const fetchExpenses = async () => {
@@ -63,6 +80,36 @@ export const ReportsView: React.FC = () => {
     }
   };
 
+  const fetchAssignments = async () => {
+    setLoadingAssignments(true);
+    try {
+      const { data, error } = await supabase
+        .from('tenant_assignments')
+        .select(`
+          id, unit_number, current_rent, lease_start, lease_end, security_deposit, status,
+          tenants(full_name, phone), properties(name)
+        `)
+        .eq('status', 'active');
+      
+      if (error) throw error;
+      setAssignments(data as unknown as TenantAssignmentRow[]);
+
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+      
+      const { data: statusData, error: statusErr } = await supabase.functions.invoke('payment-stats', {
+        body: { action: 'payment-status', filterMonth: currentMonth, filterYear: currentYear },
+      });
+      if (!statusErr && statusData?.statusMap) {
+        setPaymentStatusMap(statusData.statusMap);
+      }
+    } catch (err) {
+      console.error('Assignments fetch error:', err);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
   const handleExportCSV = async () => {
     try {
       const { data: payments } = await supabase
@@ -82,6 +129,14 @@ export const ReportsView: React.FC = () => {
       });
       (expenses || []).forEach((e: any) => {
         csv += `Expense,${e.expense_date},${e.amount},"${e.category}${e.notes ? ' - ' + e.notes : ''}"\n`;
+      });
+      
+      csv += '\n--- TENANT LEASE REPORT ---\n';
+      csv += 'TENANT,PHONE,PROPERTY,UNIT,START DATE,END DATE,RENT,DEPOSIT,PAYMENT STATUS\n';
+      assignments.forEach(a => {
+        const statusInfo = paymentStatusMap[a.id];
+        const badgeText = statusInfo?.status === 'paid' ? 'Paid' : statusInfo?.isOverdue ? 'Overdue' : statusInfo?.status === 'partial' ? 'Partial' : 'Pending';
+        csv += `"${a.tenants?.full_name || ''}","${a.tenants?.phone || ''}","${a.properties?.name || ''}","${a.unit_number}",${a.lease_start},${a.lease_end || 'Ongoing'},${a.current_rent},${a.security_deposit || 0},${badgeText}\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -197,6 +252,80 @@ export const ReportsView: React.FC = () => {
               <Bar dataKey="Marketing" stackId="a" fill="#dea389" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Detailed Tenant & Lease Report */}
+      <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '1.1rem', margin: '0 0 4px 0', color: 'var(--text-primary)' }}>
+            Detailed Tenant &amp; Lease Report
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
+            Real-time monitoring of all active leases, deposits, and payment status for the current month
+          </p>
+        </div>
+        
+        <div style={{ overflowX: 'auto' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Tenant</th>
+                <th>Property &amp; Unit</th>
+                <th>Lease Timeline</th>
+                <th>Rent (₹)</th>
+                <th>Advance (₹)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingAssignments ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>Loading lease data...</td>
+                </tr>
+              ) : assignments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>No active tenants found.</td>
+                </tr>
+              ) : (
+                assignments.map(a => {
+                  const statusInfo = paymentStatusMap[a.id];
+                  const badgeClass = statusInfo?.status === 'paid' ? 'success' : statusInfo?.isOverdue ? 'danger' : statusInfo?.status === 'partial' ? 'warning' : 'default';
+                  const badgeText = statusInfo?.status === 'paid' ? 'Paid' : statusInfo?.isOverdue ? 'Overdue' : statusInfo?.status === 'partial' ? 'Partial' : 'Pending';
+                  
+                  return (
+                    <tr key={a.id}>
+                      <td>
+                        <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{a.tenants?.full_name || 'N/A'}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{a.tenants?.phone || 'No phone'}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{a.properties?.name || 'N/A'}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Unit: {a.unit_number}</div>
+                      </td>
+                      <td style={{ fontSize: '0.85rem' }}>
+                        <div style={{ color: 'var(--text-primary)' }}>{new Date(a.lease_start).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                        <div style={{ color: 'var(--text-muted)' }}>
+                          to {a.lease_end ? new Date(a.lease_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Ongoing'}
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
+                        {fmtRupee(a.current_rent)}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>
+                        {fmtRupee(a.security_deposit || 0)}
+                      </td>
+                      <td>
+                        <span className={`status-badge ${badgeClass}`}>
+                          {badgeText}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
