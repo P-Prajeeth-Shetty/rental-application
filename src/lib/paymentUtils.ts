@@ -127,17 +127,16 @@ export function expandAdvancePayment(
 export function timingBadge(timing: PaymentTiming, daysLate: number) {
   switch (timing) {
     case 'early':
-      return { label: 'Early', color: '#10b981', bg: 'rgba(16,185,129,0.12)', emoji: '🟢' };
+      return { label: 'Early', color: '#10b981', bg: 'rgba(16,185,129,0.12)' };
     case 'on_time':
-      return { label: 'On Time', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', emoji: '✅' };
+      return { label: 'On Time', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' };
     case 'late':
       return {
         label: `Late +${daysLate}d`,
         color: '#ef4444',
-        bg: 'rgba(239,68,68,0.12)',
-        emoji: '🔴',
+        bg: 'rgba(239,68,68,0.12)'
       };
     default:
-      return { label: '—', color: 'var(--text-secondary)', bg: 'transparent', emoji: '' };
+      return { label: '—', color: 'var(--text-secondary)', bg: 'transparent' };
   }
 }

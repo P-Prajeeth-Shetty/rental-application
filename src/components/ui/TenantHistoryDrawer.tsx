@@ -177,8 +177,8 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                       {/* Timing badge */}
                       {!isReversed && p.payment_timing !== 'unknown' && (
-                        <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 500, background: badge.bg, color: badge.color }}>
-                          {badge.emoji} {badge.label}
+                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 500, background: badge.bg, color: badge.color }}>
+                          {badge.label}
                         </span>
                       )}
                       {/* Method */}

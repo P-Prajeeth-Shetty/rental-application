@@ -518,12 +518,12 @@ export const LeasesView: React.FC = () => {
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       {overdue ? (
-                        <span style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '20px', fontWeight: 600, background: 'rgba(239,68,68,0.12)', color: '#ef4444', whiteSpace: 'nowrap', animation: 'overdueBlink 2s ease-in-out infinite' }}>
-                          🔴 Overdue
+                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.78rem', padding: '3px 9px', borderRadius: '20px', fontWeight: 600, background: 'rgba(239,68,68,0.12)', color: '#ef4444', whiteSpace: 'nowrap', animation: 'overdueBlink 2s ease-in-out infinite' }}>
+                          Overdue
                         </span>
                       ) : badge ? (
-                        <span style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '20px', fontWeight: 500, background: badge.bg, color: badge.color, whiteSpace: 'nowrap' }}>
-                          {badge.emoji} {badge.label}
+                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.78rem', padding: '3px 9px', borderRadius: '20px', fontWeight: 500, background: badge.bg, color: badge.color, whiteSpace: 'nowrap' }}>
+                          {badge.label}
                         </span>
                       ) : <span style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>—</span>}
                     </td>
