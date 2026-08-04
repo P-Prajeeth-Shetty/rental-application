@@ -475,6 +475,7 @@ export const LeasesView: React.FC = () => {
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
                 <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Tenant</th>
                 <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Property / Unit</th>
+                <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Total Overdue</th>
                 <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Expected</th>
                 <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Paid / Balance</th>
                 <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Timing</th>
@@ -498,6 +499,11 @@ export const LeasesView: React.FC = () => {
                     onMouseLeave={e => (e.currentTarget.style.background = overdue ? 'rgba(239,68,68,0.03)' : 'transparent')}>
                     <td style={{ padding: '12px 16px', fontWeight: 500 }}>{a.tenants?.full_name || '—'}</td>
                     <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '0.88rem' }}>{a.properties?.name} — {a.unit_number}</td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span style={{ color: st.overallOverdue > 0 ? '#ef4444' : 'var(--text-secondary)', fontWeight: st.overallOverdue > 0 ? 600 : 400 }}>
+                        {st.overallOverdue > 0 ? `₹${st.overallOverdue.toLocaleString('en-IN')}` : '—'}
+                      </span>
+                    </td>
                     <td style={{ padding: '12px 16px' }}>₹{expected.toLocaleString('en-IN')}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <div>
