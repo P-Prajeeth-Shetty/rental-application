@@ -9,6 +9,10 @@
   overflow-y: auto;
 }
 
+.view-container > * {
+  flex-shrink: 0;
+}
+
 .view-container::-webkit-scrollbar {
   width: 8px;
 }

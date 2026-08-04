@@ -141,6 +141,10 @@ h2 { font-size: 1.25rem; }
   overflow-y: auto;
 }
 
+.dashboard-layout > * {
+  flex-shrink: 0;
+}
+
 /* Custom Scrollbar - Global */
 *::-webkit-scrollbar {
   width: 6px;
