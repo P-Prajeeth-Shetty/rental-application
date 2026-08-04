@@ -261,3 +261,21 @@
 .btn-secondary:hover {
   background: var(--bg-surface-hover);
 }
+
+.glass-table tr:hover td {
+  background: var(--bg-surface-hover);
+}
+
+/* Glass Card override for absolute glass transparency */
+.glass-card {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1) !important;
+}
+
+body.dark-mode .glass-card {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
