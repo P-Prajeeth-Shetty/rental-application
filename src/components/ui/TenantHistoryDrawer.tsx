@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, TrendingUp, TrendingDown, Minus, Clock, Calendar, IndianRupee } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Clock, Calendar, IndianRupee } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { timingBadge } from '../../lib/paymentUtils';
 import type { PaymentTiming } from '../../lib/paymentUtils';
@@ -132,7 +132,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
               {payments.map(p => {
                 const badge = timingBadge(p.payment_timing, p.days_late);
                 const credit = Number(p.credit_amount || 0);
-                const expected = Number(p.expected_amount || currentRent);
+                // const expected = Number(p.expected_amount || currentRent);
                 const isReversed = p.is_reversed;
                 const isAdvance = p.payment_type === 'advance';
 

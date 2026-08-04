@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, IndianRupee, UserPlus, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 
@@ -44,7 +44,7 @@ interface RentRevision {
   created_at: string;
 }
 
-type Tab = 'tenants' | 'rent';
+
 
 export const TenantsView: React.FC = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -53,7 +53,7 @@ export const TenantsView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<Tab>('tenants');
+
 
   // Tenant modals
   const [tenantModal, setTenantModal] = useState<'create' | 'edit' | null>(null);

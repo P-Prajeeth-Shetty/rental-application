@@ -1,7 +1,7 @@
 import React from 'react';
 import './views.css';
 import { RevenueChart } from '../components/dashboard/RevenueChart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Download } from 'lucide-react';
 
 export const ReportsView: React.FC = () => {

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './views.css';
-import { Upload, Plus, X, FileSpreadsheet, Check, AlertTriangle, Download, Calendar, IndianRupee, Filter, Search, History } from 'lucide-react';
+import { Upload, Plus, X, FileSpreadsheet, Check, AlertTriangle, Download, Search, History } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
-import { computeDueDate, classifyTiming, computeCredit, expandAdvancePayment, timingBadge } from '../lib/paymentUtils';
+import { computeDueDate, classifyTiming, computeCredit, timingBadge } from '../lib/paymentUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
 
 interface AssignmentWithTenant {

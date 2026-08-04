@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Home, Users, Plus, X, Pencil, Trash2, ChevronLeft, Building2, MapPin, IndianRupee, Calendar, TrendingUp } from 'lucide-react';
+import { Home, Users, Plus, X, Pencil, Trash2, ChevronLeft, Building2, MapPin, TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 
