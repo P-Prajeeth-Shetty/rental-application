@@ -136,6 +136,8 @@ h2 { font-size: 1.25rem; }
   gap: var(--spacing-lg);
   padding: var(--spacing-lg);
   height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
