@@ -14,8 +14,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const emptyData = (): RevenueData[] =>
   MONTHS.map((m) => ({ name: m, Residential: 0, Commercial: 0 }));
 
-const fmtRupee = (v: number) =>
-  v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`;
+const fmtRupee = (v: number) => `₹${Number(v).toLocaleString('en-IN')}`;
 
 export const RevenueChart: React.FC = () => {
   const [chartData, setChartData] = useState<RevenueData[]>(emptyData());

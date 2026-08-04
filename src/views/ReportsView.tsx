@@ -29,8 +29,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const emptyExpenses = (): ExpenseRow[] =>
   MONTHS.map((m) => ({ name: m, Maintenance: 0, Utilities: 0, Marketing: 0 }));
 
-const fmtRupee = (v: number) =>
-  v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`;
+const fmtRupee = (v: number) => `₹${Number(v).toLocaleString('en-IN')}`;
 
 export const ReportsView: React.FC = () => {
   const [expensesData, setExpensesData] = useState<ExpenseRow[]>(emptyExpenses());
@@ -132,11 +131,12 @@ export const ReportsView: React.FC = () => {
       });
       
       csv += '\n--- TENANT LEASE REPORT ---\n';
-      csv += 'TENANT,PHONE,PROPERTY,UNIT,START DATE,END DATE,RENT,DEPOSIT,PAYMENT STATUS\n';
+      csv += 'TENANT,PHONE,PROPERTY,UNIT,START DATE,END DATE,RENT,DEPOSIT,OVERDUE AMOUNT,PAYMENT STATUS\n';
       assignments.forEach(a => {
         const statusInfo = paymentStatusMap[a.id];
         const badgeText = statusInfo?.status === 'paid' ? 'Paid' : statusInfo?.isOverdue ? 'Overdue' : statusInfo?.status === 'partial' ? 'Partial' : 'Pending';
-        csv += `"${a.tenants?.full_name || ''}","${a.tenants?.phone || ''}","${a.properties?.name || ''}","${a.unit_number}",${a.lease_start},${a.lease_end || 'Ongoing'},${a.current_rent},${a.security_deposit || 0},${badgeText}\n`;
+        const overdueAmount = statusInfo?.isOverdue ? statusInfo.balance : 0;
+        csv += `"${a.tenants?.full_name || ''}","${a.tenants?.phone || ''}","${a.properties?.name || ''}","${a.unit_number}",${a.lease_start},${a.lease_end || 'Ongoing'},${a.current_rent},${a.security_deposit || 0},${overdueAmount},${badgeText}\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -275,6 +275,7 @@ export const ReportsView: React.FC = () => {
                 <th>Lease Timeline</th>
                 <th>Rent (₹)</th>
                 <th>Advance (₹)</th>
+                <th>Overdue (₹)</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -314,6 +315,9 @@ export const ReportsView: React.FC = () => {
                       </td>
                       <td style={{ color: 'var(--text-secondary)' }}>
                         {fmtRupee(a.security_deposit || 0)}
+                      </td>
+                      <td style={{ color: statusInfo?.isOverdue ? 'var(--danger)' : 'var(--text-secondary)', fontWeight: statusInfo?.isOverdue ? 600 : 400 }}>
+                        {statusInfo?.isOverdue && statusInfo.balance > 0 ? fmtRupee(statusInfo.balance) : '—'}
                       </td>
                       <td>
                         <span className={`status-badge ${badgeClass}`}>
