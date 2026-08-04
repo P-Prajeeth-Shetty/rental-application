@@ -60,12 +60,16 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
   const totalPaid = activePays.reduce((s, p) => s + Number(p.amount), 0);
   const onTimeCount = activePays.filter(p => p.payment_timing === 'on_time' || p.payment_timing === 'early').length;
   const lateCount = activePays.filter(p => p.payment_timing === 'late').length;
-  const runningCredit = activePays.reduce((s, p) => s + Number(p.credit_amount || 0), 0);
 
-  const creditLabel = runningCredit > 0
-    ? { text: `+₹${Math.abs(runningCredit).toLocaleString('en-IN')} credit`, color: '#10b981' }
-    : runningCredit < 0
-    ? { text: `-₹${Math.abs(runningCredit).toLocaleString('en-IN')} outstanding`, color: '#ef4444' }
+  // Total balance = sum of (expected - paid) per period
+  // A negative value means the tenant has paid extra (credit); positive means they still owe
+  const totalExpectedAllTime = activePays.reduce((s, p) => s + Number(p.expected_amount || currentRent), 0);
+  const runningBalance = totalExpectedAllTime - totalPaid; // positive = owes money, negative = credit
+
+  const creditLabel = runningBalance < 0
+    ? { text: `+₹${Math.abs(runningBalance).toLocaleString('en-IN')} credit`, color: '#10b981' }
+    : runningBalance > 0
+    ? { text: `-₹${runningBalance.toLocaleString('en-IN')} outstanding`, color: '#ef4444' }
     : { text: '₹0 balance', color: 'var(--text-secondary)' };
 
   return (
