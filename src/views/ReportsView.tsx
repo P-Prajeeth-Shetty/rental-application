@@ -131,12 +131,12 @@ export const ReportsView: React.FC = () => {
       });
       
       csv += '\n--- TENANT LEASE REPORT ---\n';
-      csv += 'TENANT,PHONE,PROPERTY,UNIT,START DATE,END DATE,RENT,DEPOSIT,OVERDUE AMOUNT,PAYMENT STATUS\n';
+      csv += 'TENANT,PHONE,PROPERTY,UNIT,START DATE,END DATE,RENT,DEPOSIT,BALANCE AMOUNT,PAYMENT STATUS\n';
       assignments.forEach(a => {
         const statusInfo = paymentStatusMap[a.id];
         const badgeText = statusInfo?.status === 'paid' ? 'Paid' : statusInfo?.isOverdue ? 'Overdue' : statusInfo?.status === 'partial' ? 'Partial' : 'Pending';
-        const overdueAmount = statusInfo?.isOverdue ? statusInfo.balance : 0;
-        csv += `"${a.tenants?.full_name || ''}","${a.tenants?.phone || ''}","${a.properties?.name || ''}","${a.unit_number}",${a.lease_start},${a.lease_end || 'Ongoing'},${a.current_rent},${a.security_deposit || 0},${overdueAmount},${badgeText}\n`;
+        const balanceAmount = statusInfo?.balance > 0 ? statusInfo.balance : 0;
+        csv += `"${a.tenants?.full_name || ''}","${a.tenants?.phone || ''}","${a.properties?.name || ''}","${a.unit_number}",${a.lease_start},${a.lease_end || 'Ongoing'},${a.current_rent},${a.security_deposit || 0},${balanceAmount},${badgeText}\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -275,7 +275,7 @@ export const ReportsView: React.FC = () => {
                 <th>Lease Timeline</th>
                 <th>Rent (₹)</th>
                 <th>Advance (₹)</th>
-                <th>Overdue (₹)</th>
+                <th>Balance (₹)</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -316,8 +316,8 @@ export const ReportsView: React.FC = () => {
                       <td style={{ color: 'var(--text-secondary)' }}>
                         {fmtRupee(a.security_deposit || 0)}
                       </td>
-                      <td style={{ color: statusInfo?.isOverdue ? 'var(--danger)' : 'var(--text-secondary)', fontWeight: statusInfo?.isOverdue ? 600 : 400 }}>
-                        {statusInfo?.isOverdue && statusInfo.balance > 0 ? fmtRupee(statusInfo.balance) : '—'}
+                      <td style={{ color: statusInfo?.isOverdue ? 'var(--danger)' : 'var(--text-primary)', fontWeight: statusInfo?.isOverdue ? 600 : 500 }}>
+                        {statusInfo?.balance > 0 ? fmtRupee(statusInfo.balance) : '—'}
                       </td>
                       <td>
                         <span className={`status-badge ${badgeClass}`}>
