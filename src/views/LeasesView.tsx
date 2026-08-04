@@ -69,7 +69,7 @@ export const LeasesView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Server-computed payment status per assignment
-  const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { paidAmount: number; balance: number; isOverdue: boolean; fullyPaid: boolean; status: string }>>({});
+  const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { paidAmount: number; balance: number; isOverdue: boolean; fullyPaid: boolean; status: string; overallOverdue: number }>>({});
 
   // Filters
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
@@ -377,7 +377,7 @@ export const LeasesView: React.FC = () => {
   // Get status from edge function (server-computed overdue/balance)
   const getStatus = (assignId: string) => paymentStatusMap[assignId] || {
     paidAmount: 0, balance: Number(assignments.find(a => a.id === assignId)?.current_rent || 0),
-    isOverdue: false, fullyPaid: false, status: 'pending'
+    isOverdue: false, fullyPaid: false, status: 'pending', overallOverdue: 0
   };
 
   const filteredAssignments = assignments.filter(a => {
@@ -576,7 +576,7 @@ export const LeasesView: React.FC = () => {
                 );
               })}
               {filteredAssignments.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>No tenant assignments found.</td></tr>
+                <tr><td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>No tenant assignments found.</td></tr>
               )}
             </tbody>
           </table>
