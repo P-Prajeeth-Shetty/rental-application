@@ -411,10 +411,10 @@ export const LeasesView: React.FC = () => {
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           {/* Month/Year filter */}
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <select value={filterMonth} onChange={e => setFilterMonth(parseInt(e.target.value))} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.88rem' }}>
+            <select value={filterMonth} onChange={e => setFilterMonth(parseInt(e.target.value))} style={{ padding: '8px 12px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '0.88rem', outline: 'none' }}>
               {monthNames.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
             </select>
-            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '80px', fontSize: '0.88rem' }} />
+            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '8px 12px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '80px', fontSize: '0.88rem', outline: 'none' }} />
           </div>
           <button onClick={handleDownloadTemplate} className="btn-secondary" style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px', padding: '8px 16px', border: 'none', background: 'transparent', color: 'var(--text-secondary)' }}>
             <Download size={16} /> Template
