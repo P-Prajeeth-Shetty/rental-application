@@ -185,42 +185,43 @@ async function handleDashboard(supabase: any) {
 
 async function handlePaymentStatus(supabase: any, filterMonth: number, filterYear: number) {
   const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
 
-  const [{ data: assignments }, { data: allPayments }] = await Promise.all([
+  const [{ data: assignments }, { data: payments }] = await Promise.all([
     supabase.from('tenant_assignments')
-      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end')
+      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start')
       .eq('status', 'active'),
     supabase.from('payments')
-      .select('assignment_id, amount, is_reversed, period_month, period_year')
-      .eq('is_reversed', false),
+      .select('assignment_id, amount, is_reversed')
+      .eq('period_month', filterMonth)
+      .eq('period_year', filterYear),
   ]);
 
-  // Sum payments per assignment for this period and all time
-  const paidPerAssignmentFiltered: Record<string, number> = {};
-  const paidPerAssignmentAllTime: Record<string, number> = {};
-  const paymentCountPerAssignment: Record<string, number> = {};
+  // Sum payments per assignment for this period (exclude reversed)
+  const paidPerAssignment: Record<string, number> = {};
+  (payments || []).filter((p: any) => !p.is_reversed).forEach((p: any) => {
+    paidPerAssignment[p.assignment_id] = (paidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
+  });
 
-  (allPayments || []).forEach((p: any) => {
-    const amount = Number(p.amount);
-    paidPerAssignmentAllTime[p.assignment_id] = (paidPerAssignmentAllTime[p.assignment_id] || 0) + amount;
+  // Count total payments per assignment (for isFirstPayment check we need all-time data)
+  const { data: allPaymentCounts } = await supabase
+    .from('payments')
+    .select('assignment_id')
+    .eq('is_reversed', false);
+
+  const paymentCountPerAssignment: Record<string, number> = {};
+  (allPaymentCounts || []).forEach((p: any) => {
     paymentCountPerAssignment[p.assignment_id] = (paymentCountPerAssignment[p.assignment_id] || 0) + 1;
-    
-    if (p.period_month === filterMonth && p.period_year === filterYear) {
-      paidPerAssignmentFiltered[p.assignment_id] = (paidPerAssignmentFiltered[p.assignment_id] || 0) + amount;
-    }
   });
 
   const statusMap: Record<string, any> = {};
 
   (assignments || []).forEach((a: any) => {
-    // 1. Current period status
     const expected = Number(a.current_rent);
-    const paidAmount = paidPerAssignmentFiltered[a.id] || 0;
+    const paidAmount = paidPerAssignment[a.id] || 0;
     const balance = expected - paidAmount;
     const fullyPaid = paidAmount >= expected;
 
+    // Check overdue
     let isOverdue = false;
     if (!fullyPaid) {
       const isFirstPayment = (paymentCountPerAssignment[a.id] || 0) === 0;
@@ -243,32 +244,12 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
     else if (paidAmount > 0) status = 'partial';
     else status = 'pending';
 
-    // 2. Overall overdues computation
-    const expectedMonths = getExpectedMonths(a.lease_start, a.lease_end, currentMonth, currentYear);
-    let allTimeExpectedOverdue = 0;
-    
-    expectedMonths.forEach((em, idx) => {
-      const isFirstPayment = idx === 0;
-      const dueDate = computeDueDate(a.payment_mode || 'prepaid', a.due_day || 1, a.lease_start, em.month, em.year, isFirstPayment);
-      const graceEnd = new Date(dueDate);
-      graceEnd.setDate(graceEnd.getDate() + (a.grace_days || 5));
-      
-      // If grace period has passed for this expected month, it contributes to overdue
-      if (now > graceEnd) {
-        allTimeExpectedOverdue += Number(a.current_rent);
-      }
-    });
-
-    const totalPaidAllTime = paidPerAssignmentAllTime[a.id] || 0;
-    const overallOverdue = Math.max(0, allTimeExpectedOverdue - totalPaidAllTime);
-
     statusMap[a.id] = {
       paidAmount,
       balance,
       isOverdue,
       fullyPaid,
       status,
-      overallOverdue,
     };
   });
 
