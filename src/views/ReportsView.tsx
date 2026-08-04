@@ -1,24 +1,91 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './views.css';
 import { RevenueChart } from '../components/dashboard/RevenueChart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Download } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+
+interface ExpenseData {
+  name: string;
+  maintenance: number;
+  marketing: number;
+  utilities: number;
+}
 
 export const ReportsView: React.FC = () => {
-  const expensesData = [
-    { name: 'Jan', maintenance: 1200, marketing: 400, utilities: 800 },
-    { name: 'Feb', maintenance: 1500, marketing: 300, utilities: 750 },
-    { name: 'Mar', maintenance: 800, marketing: 500, utilities: 820 },
-    { name: 'Apr', maintenance: 2100, marketing: 400, utilities: 780 },
-    { name: 'May', maintenance: 900, marketing: 600, utilities: 850 },
-    { name: 'Jun', maintenance: 3200, marketing: 400, utilities: 900 } // Big maintenance month
-  ];
+  const [expensesData, setExpensesData] = useState<ExpenseData[]>([
+    { name: 'Jan', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Feb', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Mar', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Apr', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'May', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Jun', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Jul', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Aug', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Sep', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Oct', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Nov', maintenance: 0, marketing: 0, utilities: 0 },
+    { name: 'Dec', maintenance: 0, marketing: 0, utilities: 0 },
+  ]);
+
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('amount, category, expense_date');
+
+      if (error) {
+        console.error('Error fetching expenses:', error);
+        return;
+      }
+
+      if (data) {
+        const currentYear = new Date().getFullYear();
+        const monthlyData = [
+          { name: 'Jan', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Feb', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Mar', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Apr', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'May', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Jun', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Jul', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Aug', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Sep', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Oct', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Nov', maintenance: 0, marketing: 0, utilities: 0 },
+          { name: 'Dec', maintenance: 0, marketing: 0, utilities: 0 },
+        ];
+
+        data.forEach((expense: any) => {
+          const date = new Date(expense.expense_date);
+          if (date.getFullYear() === currentYear) {
+            const monthIndex = date.getMonth();
+            const category = expense.category;
+            const amount = Number(expense.amount);
+            
+            if (category === 'maintenance') monthlyData[monthIndex].maintenance += amount;
+            else if (category === 'marketing') monthlyData[monthIndex].marketing += amount;
+            else if (category === 'utilities') monthlyData[monthIndex].utilities += amount;
+            // 'insurance', 'taxes', 'other' are ignored in this specific chart for now
+          }
+        });
+
+        setExpensesData(monthlyData);
+      }
+    } catch (err) {
+      console.error('Failed to fetch expenses', err);
+    }
+  };
 
   return (
     <div className="view-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 className="view-title">Financial Reports</h1>
-        <button className="btn-white" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button className="btn-white" style={{ display: 'flex', gap: '8px', alignItems: 'center', width: 'auto' }}>
           <Download size={18} /> Export CSV
         </button>
       </div>
@@ -42,7 +109,7 @@ export const ReportsView: React.FC = () => {
               <BarChart data={expensesData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.2)" />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
                 <Tooltip 
                   cursor={{ fill: 'transparent' }}
                   contentStyle={{ backgroundColor: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', color: 'var(--text-primary)' }}
