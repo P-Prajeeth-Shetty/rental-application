@@ -106,7 +106,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
             { label: 'Payments Made', value: String(activePays.length), color: 'var(--text-primary)', icon: <Calendar size={14} /> },
             { label: 'On Time / Early', value: String(onTimeCount), color: '#3b82f6', icon: <Clock size={14} /> },
             { label: 'Late', value: String(lateCount), color: lateCount > 0 ? '#ef4444' : 'var(--text-secondary)', icon: <Clock size={14} /> },
-            { label: 'Balance', value: creditLabel.text, color: creditLabel.color, icon: runningCredit >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} /> },
+            { label: 'Balance', value: creditLabel.text, color: creditLabel.color, icon: runningBalance <= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} /> },
           ].map(s => (
             <div key={s.label} style={{ background: 'var(--bg-glass-container)', borderRadius: '10px', padding: '10px 14px', minWidth: '100px', flex: '1' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.75rem', marginBottom: '4px' }}>
