@@ -266,8 +266,8 @@ export const ReportsView: React.FC = () => {
           </p>
         </div>
         
-        <div style={{ overflowX: 'auto' }}>
-          <table className="data-table">
+        <div className="glass-table-wrapper" style={{ overflowX: 'auto' }}>
+          <table className="glass-table">
             <thead>
               <tr>
                 <th>Tenant</th>
