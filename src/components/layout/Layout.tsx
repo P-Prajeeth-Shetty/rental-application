@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Settings, LogOut, Calendar, Phone, ChevronDown, User, Users } from 'lucide-react';
+import { Bell, Settings, LogOut, ChevronDown, User, Users } from 'lucide-react';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { TimePill } from './TimePill';
 import { ProfileSettingsModals } from './ProfileSettingsModals';
