@@ -33,6 +33,7 @@ interface Assignment {
   status: string;
   property_id: string;
   properties: { id: string; name: string } | null;
+  payments?: { amount: number; is_reversed: boolean }[];
 }
 
 interface Property {
@@ -91,7 +92,7 @@ export const TenantsView: React.FC = () => {
     try {
       const [{ data: tData, error: tErr }, { data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
         supabase.from('tenants').select('*').order('created_at', { ascending: false }),
-        supabase.from('tenant_assignments').select('*, properties(id, name)').order('created_at', { ascending: false }),
+        supabase.from('tenant_assignments').select('*, properties(id, name), payments(amount, is_reversed)').order('created_at', { ascending: false }),
         supabase.from('properties').select('id, name, total_units'),
       ]);
       if (tErr) throw tErr;
@@ -377,7 +378,10 @@ export const TenantsView: React.FC = () => {
                           Deposit: ₹{Number(a.security_deposit).toLocaleString('en-IN')}
                         </td>
                         <td style={{ padding: '10px 16px', fontWeight: 500, fontSize: '0.85rem' }}>
-                          ₹{Number(a.current_rent).toLocaleString('en-IN')}
+                          <div>₹{Number(a.current_rent).toLocaleString('en-IN')}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '2px' }}>
+                            Paid: ₹{a.payments ? a.payments.filter(p => !p.is_reversed).reduce((s, p) => s + Number(p.amount), 0).toLocaleString('en-IN') : 0}
+                          </div>
                         </td>
                         <td style={{ padding: '10px 16px' }}>
                           <span style={{ padding: '3px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 500,
