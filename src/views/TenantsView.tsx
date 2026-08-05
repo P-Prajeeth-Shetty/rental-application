@@ -604,7 +604,6 @@ export const TenantsView: React.FC = () => {
                         options={[
                           { value: 'prepaid', label: 'Prepaid — Pay at start of month (before occupying)' },
                           { value: 'postpaid', label: 'Postpaid — Pay at end of month (after occupying)' },
-                          { value: 'advance_on_entry', label: 'Advance on Entry — First month on entry day, then prepaid' },
                         ]}
                       />
                     </div>
