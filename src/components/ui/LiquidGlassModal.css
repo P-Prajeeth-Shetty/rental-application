@@ -334,7 +334,7 @@ body.lg-modal-active #root {
 /* ── DRAWER WORKSPACE SYSTEM ── */
 body.lg-drawer-active #root {
   filter: brightness(0.65) saturate(0.65);
-  transform: scale(0.99); /* Very subtle push back */
+  /* Removed transform: scale(0.99) because it causes Windows font rasterization to blur */
 }
 
 .lg-drawer-backdrop {
