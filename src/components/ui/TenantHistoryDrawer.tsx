@@ -78,7 +78,13 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1100 }}
+        style={{ 
+          position: 'fixed', inset: 0, 
+          background: 'rgba(0, 0, 0, 0.15)',
+          backdropFilter: 'brightness(0.7) saturate(0.7)',
+          WebkitBackdropFilter: 'brightness(0.7) saturate(0.7)',
+          zIndex: 1100 
+        }}
       />
       {/* Drawer */}
       <div 
