@@ -91,8 +91,8 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(720px, 95vw)',
           background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(40px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
           borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
           boxShadow: '-30px 0 80px rgba(0, 0, 0, 0.3)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
