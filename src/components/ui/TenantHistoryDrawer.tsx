@@ -75,9 +75,20 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
 
   return (
     <LiquidGlassOverlay onClose={onClose}>
-      <LiquidGlassWindow style={{ width: '940px', maxWidth: '95vw', height: '85vh', maxHeight: '900px', display: 'flex', flexDirection: 'column' }}>
+      <div 
+        style={{
+          position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(720px, 95vw)',
+          background: 'rgba(255, 255, 255, 0.08)',
+          backdropFilter: 'blur(40px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '-30px 0 80px rgba(0, 0, 0, 0.3)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="lg-modal-header" style={{ padding: '24px 32px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
+        <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)' }}>{tenantName}</h2>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
@@ -89,9 +100,9 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
           </button>
         </div>
 
-        <LiquidGlassContent style={{ display: 'flex', flexDirection: 'column', padding: 0, flex: 1, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', padding: 0, flex: 1, overflow: 'hidden' }}>
           {/* Summary Stats */}
-          <div style={{ display: 'flex', gap: '12px', padding: '20px 32px', borderBottom: '1px solid var(--border-color)', flexShrink: 0, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', padding: '20px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', flexShrink: 0, flexWrap: 'wrap' }}>
           {[
             { label: 'Total Paid', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: '#10b981', icon: <IndianRupee size={14} /> },
             { label: 'Payments Made', value: String(activePays.length), color: 'var(--text-primary)', icon: <Calendar size={14} /> },
@@ -204,8 +215,8 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
             </div>
           )}
         </div>
-        </LiquidGlassContent>
-      </LiquidGlassWindow>
+        </div>
+      </div>
     </LiquidGlassOverlay>
   );
 };
