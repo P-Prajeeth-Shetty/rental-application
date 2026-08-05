@@ -330,3 +330,42 @@ body.lg-modal-active #root {
 .lg-btn-primary:active {
   transform: translateY(1px) scale(0.98);
 }
+
+/* ── DRAWER WORKSPACE SYSTEM ── */
+body.lg-drawer-active #root {
+  filter: brightness(0.65) saturate(0.65);
+  transform: scale(0.99); /* Very subtle push back */
+}
+
+.lg-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 1100;
+  /* NO backdrop-filter here to avoid browser bugs with overlapping filters */
+  animation: lgOverlayEnter 0.3s ease-out forwards;
+}
+
+.lg-drawer-surface {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(720px, 95vw);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(64px) saturate(220%);
+  -webkit-backdrop-filter: blur(64px) saturate(220%);
+  border-left: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: -30px 0 80px rgba(0, 0, 0, 0.3), -2px 0 20px rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1200;
+  transform: translateX(100%);
+  animation: lgDrawerSlideIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes lgDrawerSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

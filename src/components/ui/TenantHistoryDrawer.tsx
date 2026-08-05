@@ -42,6 +42,13 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    document.body.classList.add('lg-drawer-active');
+    return () => {
+      document.body.classList.remove('lg-drawer-active');
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchHistory = async () => {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -77,28 +84,11 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
     <>
       {/* Backdrop */}
       <div
+        className="lg-drawer-backdrop"
         onClick={onClose}
-        style={{ 
-          position: 'fixed', inset: 0, 
-          background: 'rgba(0, 0, 0, 0.15)',
-          backdropFilter: 'brightness(0.7) saturate(0.7)',
-          WebkitBackdropFilter: 'brightness(0.7) saturate(0.7)',
-          zIndex: 1100 
-        }}
       />
       {/* Drawer */}
-      <div 
-        style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(720px, 95vw)',
-          background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '-30px 0 80px rgba(0, 0, 0, 0.3)',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          zIndex: 1200
-        }}
-      >
+      <div className="lg-drawer-surface" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
           <div>
