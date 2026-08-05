@@ -3,7 +3,13 @@ import './views.css';
 import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
-
+import { 
+  LiquidGlassOverlay, 
+  LiquidGlassWindow, 
+  LiquidGlassContent, 
+  LiquidGlassInput, 
+  LiquidGlassTextarea 
+} from '../components/ui/LiquidGlassModal';
 interface Tenant {
   id: string;
   full_name: string;
@@ -279,7 +285,7 @@ export const TenantsView: React.FC = () => {
       {error && <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: '#ff4d4d', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}
 
       {/* ── Table ── */}
-      <div className="surface-card glass-card" style={{ padding: 0, overflow: 'auto' }}>
+      <div className="surface-card glass-card static-card" style={{ padding: 0, overflow: 'auto' }}>
         {isLoading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading tenants...</div>
         ) : (
@@ -324,16 +330,33 @@ export const TenantsView: React.FC = () => {
                           <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>New</span>
                         )}
                       </td>
-                      <td style={{ padding: '14px 16px', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                          <button onClick={() => openAssignModal(t)} title="Assign to Property" style={{ background: 'rgba(16,185,129,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#10b981', display: 'flex', alignItems: 'center' }}>
-                            <Home size={14} />
+                      <td 
+                        style={{ padding: '14px 16px', textAlign: 'right' }} 
+                        onClick={e => e.stopPropagation()}
+                        onPointerDown={e => e.stopPropagation()}
+                        onMouseDown={e => e.stopPropagation()}
+                        onTouchStart={e => e.stopPropagation()}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        <div 
+                          style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}
+                          onClick={e => e.stopPropagation()}
+                          onPointerDown={e => e.stopPropagation()}
+                          onMouseDown={e => e.stopPropagation()}
+                          onTouchStart={e => e.stopPropagation()}
+                        >
+                          <button onClick={(e) => { e.stopPropagation(); openAssignModal(t); }} title="Assign to Property" style={{ background: 'rgba(16,185,129,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#10b981', display: 'flex', alignItems: 'center' }}>
+                            <Home size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={() => openEditTenant(t)} title="Edit" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
-                            <Pencil size={14} />
+                          <button onClick={(e) => { e.stopPropagation(); openEditTenant(t); }} title="Edit" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                            <Pencil size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={() => setDeleteTarget(t)} title="Delete" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
-                            <Trash2 size={14} />
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} title="Delete" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                            <Trash2 size={14} style={{ pointerEvents: 'none' }} />
                           </button>
                         </div>
                       </td>
@@ -361,12 +384,29 @@ export const TenantsView: React.FC = () => {
                             {a.status}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 16px', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                            <button onClick={() => openRentModal(a)} title="Increase Rent" style={{ background: 'rgba(245,158,11,0.15)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
-                              <TrendingUp size={13} /> Increase
+                        <td 
+                          style={{ padding: '10px 16px', textAlign: 'right' }}
+                          onClick={e => e.stopPropagation()}
+                          onPointerDown={e => e.stopPropagation()}
+                          onMouseDown={e => e.stopPropagation()}
+                          onTouchStart={e => e.stopPropagation()}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                            }
+                          }}
+                        >
+                          <div 
+                            style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}
+                            onClick={e => e.stopPropagation()}
+                            onPointerDown={e => e.stopPropagation()}
+                            onMouseDown={e => e.stopPropagation()}
+                            onTouchStart={e => e.stopPropagation()}
+                          >
+                            <button onClick={(e) => { e.stopPropagation(); openRentModal(a); }} title="Increase Rent" style={{ background: 'rgba(245,158,11,0.15)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
+                              <TrendingUp size={13} style={{ pointerEvents: 'none' }} /> Increase
                             </button>
-                            <button onClick={() => openRevisionHistory(a)} title="Rent History" style={{ background: 'rgba(59,130,246,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#3b82f6', fontSize: '0.78rem' }}>
+                            <button onClick={(e) => { e.stopPropagation(); openRevisionHistory(a); }} title="Rent History" style={{ background: 'rgba(59,130,246,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#3b82f6', fontSize: '0.78rem' }}>
                               History
                             </button>
                           </div>
@@ -388,250 +428,340 @@ export const TenantsView: React.FC = () => {
 
       {/* Tenant Create/Edit Modal */}
       {tenantModal && (
-        <div className="modal-overlay" onClick={() => !isSubmitting && setTenantModal(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => !isSubmitting && setTenantModal(null)}>
+          <LiquidGlassWindow className="tenant-modal" style={{ maxHeight: '90vh' }}>
+            <div className="lg-modal-header">
               <h2 className="modal-title">{tenantModal === 'create' ? 'Add New Tenant' : 'Edit Tenant'}</h2>
-              <button className="close-btn" onClick={() => setTenantModal(null)} disabled={isSubmitting}><X size={20} /></button>
+              <button className="lg-close-btn" onClick={() => setTenantModal(null)} disabled={isSubmitting}><X size={20} /></button>
             </div>
-            <form onSubmit={handleTenantSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div className="form-group">
-                <label className="form-label">Full Name *</label>
-                <input type="text" className="form-input" value={tenantForm.full_name} onChange={e => setTenantForm({ ...tenantForm, full_name: e.target.value })} required placeholder="e.g. Alice Freeman" />
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Email</label>
-                  <input type="email" className="form-input" value={tenantForm.email} onChange={e => setTenantForm({ ...tenantForm, email: e.target.value })} placeholder="alice@example.com" />
+            <LiquidGlassContent>
+              <form onSubmit={handleTenantSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <LiquidGlassInput 
+                  label="Full Name *" 
+                  value={tenantForm.full_name} 
+                  onChange={e => setTenantForm({ ...tenantForm, full_name: e.target.value })} 
+                  required 
+                  placeholder="e.g. Alice Freeman" 
+                />
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      type="email" 
+                      label="Email" 
+                      value={tenantForm.email} 
+                      onChange={e => setTenantForm({ ...tenantForm, email: e.target.value })} 
+                      placeholder="alice@example.com" 
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      type="tel" 
+                      label="Phone" 
+                      value={tenantForm.phone} 
+                      onChange={e => setTenantForm({ ...tenantForm, phone: e.target.value })} 
+                      placeholder="+91 98765 43210" 
+                    />
+                  </div>
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Phone</label>
-                  <input type="tel" className="form-input" value={tenantForm.phone} onChange={e => setTenantForm({ ...tenantForm, phone: e.target.value })} placeholder="+91 98765 43210" />
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div className="lg-input-group">
+                      <label className="lg-input-label">ID Proof Type</label>
+                      <div className="lg-input-wrapper">
+                        <CustomSelect
+                          value={tenantForm.id_proof_type}
+                          onChange={(val) => setTenantForm({ ...tenantForm, id_proof_type: val })}
+                          placeholder="Select..."
+                          options={[
+                            { value: 'Aadhaar', label: 'Aadhaar' },
+                            { value: 'PAN', label: 'PAN' },
+                            { value: 'Passport', label: 'Passport' },
+                            { value: 'Driving License', label: 'Driving License' },
+                            { value: 'Voter ID', label: 'Voter ID' }
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      label="ID Proof Number" 
+                      value={tenantForm.id_proof_number} 
+                      onChange={e => setTenantForm({ ...tenantForm, id_proof_number: e.target.value })} 
+                      placeholder="XXXX-XXXX-XXXX" 
+                    />
+                  </div>
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">ID Proof Type</label>
-                  <CustomSelect
-                    value={tenantForm.id_proof_type}
-                    onChange={(val) => setTenantForm({ ...tenantForm, id_proof_type: val })}
-                    placeholder="Select..."
-                    options={[
-                      { value: 'Aadhaar', label: 'Aadhaar' },
-                      { value: 'PAN', label: 'PAN' },
-                      { value: 'Passport', label: 'Passport' },
-                      { value: 'Driving License', label: 'Driving License' },
-                      { value: 'Voter ID', label: 'Voter ID' }
-                    ]}
-                  />
+                <LiquidGlassInput 
+                  label="Emergency Contact" 
+                  value={tenantForm.emergency_contact} 
+                  onChange={e => setTenantForm({ ...tenantForm, emergency_contact: e.target.value })} 
+                  placeholder="Name — Phone" 
+                />
+                <LiquidGlassTextarea 
+                  label="Notes" 
+                  rows={2} 
+                  value={tenantForm.notes} 
+                  onChange={e => setTenantForm({ ...tenantForm, notes: e.target.value })} 
+                  placeholder="Any additional notes..." 
+                />
+                <div className="lg-actions">
+                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setTenantModal(null)}>Cancel</button>
+                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : tenantModal === 'create' ? 'Add Tenant' : 'Save Changes'}</button>
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">ID Proof Number</label>
-                  <input type="text" className="form-input" value={tenantForm.id_proof_number} onChange={e => setTenantForm({ ...tenantForm, id_proof_number: e.target.value })} placeholder="XXXX-XXXX-XXXX" />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Emergency Contact</label>
-                <input type="text" className="form-input" value={tenantForm.emergency_contact} onChange={e => setTenantForm({ ...tenantForm, emergency_contact: e.target.value })} placeholder="Name — Phone" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Notes</label>
-                <textarea rows={2} className="form-input" value={tenantForm.notes} onChange={e => setTenantForm({ ...tenantForm, notes: e.target.value })} placeholder="Any additional notes..." />
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setTenantModal(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : tenantModal === 'create' ? 'Add Tenant' : 'Save Changes'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+              </form>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
 
       {/* Assign to Property Modal */}
       {assignModal && (
-        <div className="modal-overlay" onClick={() => !isSubmitting && setAssignModal(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => !isSubmitting && setAssignModal(null)}>
+          <LiquidGlassWindow>
+            <div className="lg-modal-header">
               <h2 className="modal-title">Assign {assignModal.full_name} to Property</h2>
-              <button className="close-btn" onClick={() => setAssignModal(null)}><X size={20} /></button>
+              <button className="lg-close-btn" onClick={() => setAssignModal(null)}><X size={20} /></button>
             </div>
-            <form onSubmit={handleAssign} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div className="form-group">
-                <label className="form-label">Property *</label>
-                <CustomSelect
-                  value={assignForm.property_id}
-                  onChange={(val) => setAssignForm({ ...assignForm, property_id: val })}
-                  placeholder="Select property..."
-                  searchable={true}
-                  options={properties.map(p => ({
-                    value: p.id,
-                    label: `${p.name} (${p.total_units} units)`
-                  }))}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Unit Number *</label>
-                  <input type="text" className="form-input" value={assignForm.unit_number} onChange={e => setAssignForm({ ...assignForm, unit_number: e.target.value })} placeholder="e.g. 4B" required />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Monthly Rent (₹) *</label>
-                  <input type="number" className="form-input" value={assignForm.current_rent} onChange={e => setAssignForm({ ...assignForm, current_rent: e.target.value })} placeholder="e.g. 15000" required min="0" />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Lease Start *</label>
-                  <input type="date" className="form-input" value={assignForm.lease_start} onChange={e => setAssignForm({ ...assignForm, lease_start: e.target.value })} required />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Lease End</label>
-                  <input type="date" className="form-input" value={assignForm.lease_end} onChange={e => setAssignForm({ ...assignForm, lease_end: e.target.value })} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Security Deposit (₹)</label>
-                <input type="number" className="form-input" value={assignForm.security_deposit} onChange={e => setAssignForm({ ...assignForm, security_deposit: e.target.value })} placeholder="e.g. 30000" min="0" />
-              </div>
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '4px' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '10px', fontWeight: 500 }}>💳 Payment Terms</p>
-                <div className="form-group">
-                  <label className="form-label">Payment Mode *
-                    <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: '6px' }}>
-                      (determines when rent is due)
-                    </span>
-                  </label>
-                  <CustomSelect
-                    value={assignForm.payment_mode}
-                    onChange={(val) => setAssignForm({ ...assignForm, payment_mode: val })}
-                    options={[
-                      { value: 'prepaid', label: 'Prepaid — Pay at start of month (before occupying)' },
-                      { value: 'postpaid', label: 'Postpaid — Pay at end of month (after occupying)' },
-                      { value: 'advance_on_entry', label: 'Advance on Entry — First month on entry day, then prepaid' },
-                    ]}
-                  />
+            <LiquidGlassContent>
+              <form onSubmit={handleAssign} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className="lg-input-group">
+                  <label className="lg-input-label">Property *</label>
+                  <div className="lg-input-wrapper">
+                    <CustomSelect
+                      value={assignForm.property_id}
+                      onChange={(val) => setAssignForm({ ...assignForm, property_id: val })}
+                      placeholder="Select property..."
+                      searchable={true}
+                      options={properties.map(p => ({
+                        value: p.id,
+                        label: `${p.name} (${p.total_units} units)`
+                      }))}
+                    />
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label">Due Day of Month</label>
-                    <input type="number" className="form-input" value={assignForm.due_day} min="1" max="28"
-                      onChange={e => setAssignForm({ ...assignForm, due_day: e.target.value })} placeholder="1" />
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      label="Unit Number *" 
+                      value={assignForm.unit_number} 
+                      onChange={e => setAssignForm({ ...assignForm, unit_number: e.target.value })} 
+                      placeholder="e.g. 4B" 
+                      required 
+                    />
                   </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label">Grace Period (days)</label>
-                    <input type="number" className="form-input" value={assignForm.grace_days} min="0" max="30"
-                      onChange={e => setAssignForm({ ...assignForm, grace_days: e.target.value })} placeholder="5" />
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      type="number" 
+                      label="Monthly Rent (₹) *" 
+                      value={assignForm.current_rent} 
+                      onChange={e => setAssignForm({ ...assignForm, current_rent: e.target.value })} 
+                      placeholder="e.g. 15000" 
+                      required 
+                      min="0" 
+                    />
                   </div>
                 </div>
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setAssignModal(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Assigning...' : 'Assign Tenant'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      type="date" 
+                      label="Lease Start *" 
+                      value={assignForm.lease_start} 
+                      onChange={e => setAssignForm({ ...assignForm, lease_start: e.target.value })} 
+                      required 
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      type="date" 
+                      label="Lease End" 
+                      value={assignForm.lease_end} 
+                      onChange={e => setAssignForm({ ...assignForm, lease_end: e.target.value })} 
+                    />
+                  </div>
+                </div>
+                <LiquidGlassInput 
+                  type="number" 
+                  label="Security Deposit (₹)" 
+                  value={assignForm.security_deposit} 
+                  onChange={e => setAssignForm({ ...assignForm, security_deposit: e.target.value })} 
+                  placeholder="e.g. 30000" 
+                  min="0" 
+                />
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', marginTop: '8px' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '10px', fontWeight: 500 }}>💳 Payment Terms</p>
+                  <div className="lg-input-group">
+                    <label className="lg-input-label">Payment Mode *
+                      <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: '6px' }}>
+                        (determines when rent is due)
+                      </span>
+                    </label>
+                    <div className="lg-input-wrapper">
+                      <CustomSelect
+                        value={assignForm.payment_mode}
+                        onChange={(val) => setAssignForm({ ...assignForm, payment_mode: val })}
+                        options={[
+                          { value: 'prepaid', label: 'Prepaid — Pay at start of month (before occupying)' },
+                          { value: 'postpaid', label: 'Postpaid — Pay at end of month (after occupying)' },
+                          { value: 'advance_on_entry', label: 'Advance on Entry — First month on entry day, then prepaid' },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+                    <div style={{ flex: 1 }}>
+                      <LiquidGlassInput 
+                        type="number" 
+                        label="Due Day of Month" 
+                        value={assignForm.due_day} 
+                        min="1" 
+                        max="28"
+                        onChange={e => setAssignForm({ ...assignForm, due_day: e.target.value })} 
+                        placeholder="1" 
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <LiquidGlassInput 
+                        type="number" 
+                        label="Grace Period (days)" 
+                        value={assignForm.grace_days} 
+                        min="0" 
+                        max="30"
+                        onChange={e => setAssignForm({ ...assignForm, grace_days: e.target.value })} 
+                        placeholder="5" 
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="lg-actions" style={{ marginTop: '16px' }}>
+                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setAssignModal(null)}>Cancel</button>
+                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Assigning...' : 'Assign Tenant'}</button>
+                </div>
+              </form>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
 
       {/* Rent Increase Modal */}
       {rentModal && (
-        <div className="modal-overlay" onClick={() => !isSubmitting && setRentModal(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => !isSubmitting && setRentModal(null)}>
+          <LiquidGlassWindow style={{ maxWidth: '440px' }}>
+            <div className="lg-modal-header">
               <h2 className="modal-title">Increase Rent</h2>
-              <button className="close-btn" onClick={() => setRentModal(null)}><X size={20} /></button>
+              <button className="lg-close-btn" onClick={() => setRentModal(null)}><X size={20} /></button>
             </div>
-            <form onSubmit={handleRentIncrease} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ padding: '14px', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Current Rent</span>
-                  <span style={{ fontWeight: 600 }}>₹{Number(rentModal.current_rent).toLocaleString('en-IN')}</span>
+            <LiquidGlassContent>
+              <form onSubmit={handleRentIncrease} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ padding: '14px', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Current Rent</span>
+                    <span style={{ fontWeight: 600 }}>₹{Number(rentModal.current_rent).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>New Rent</span>
+                    <span style={{ fontWeight: 600, color: '#10b981' }}>₹{computedNewRent.toLocaleString('en-IN')}</span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>New Rent</span>
-                  <span style={{ fontWeight: 600, color: '#10b981' }}>₹{computedNewRent.toLocaleString('en-IN')}</span>
+                <LiquidGlassInput 
+                  type="number" 
+                  step="0.01" 
+                  label="Increase Percentage (%) *" 
+                  value={rentForm.increase_pct} 
+                  onChange={e => setRentForm({ ...rentForm, increase_pct: e.target.value })} 
+                  placeholder="e.g. 10" 
+                  required 
+                  min="0" 
+                />
+                <LiquidGlassInput 
+                  type="date" 
+                  label="Effective From *" 
+                  value={rentForm.effective_from} 
+                  onChange={e => setRentForm({ ...rentForm, effective_from: e.target.value })} 
+                  required 
+                />
+                <LiquidGlassInput 
+                  label="Reason" 
+                  value={rentForm.reason} 
+                  onChange={e => setRentForm({ ...rentForm, reason: e.target.value })} 
+                  placeholder="e.g. Annual revision" 
+                />
+                <div className="lg-actions" style={{ marginTop: '16px' }}>
+                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setRentModal(null)}>Cancel</button>
+                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Apply Increase'}</button>
                 </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Increase Percentage (%) *</label>
-                <input type="number" step="0.01" className="form-input" value={rentForm.increase_pct} onChange={e => setRentForm({ ...rentForm, increase_pct: e.target.value })} placeholder="e.g. 10" required min="0" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Effective From *</label>
-                <input type="date" className="form-input" value={rentForm.effective_from} onChange={e => setRentForm({ ...rentForm, effective_from: e.target.value })} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Reason</label>
-                <input type="text" className="form-input" value={rentForm.reason} onChange={e => setRentForm({ ...rentForm, reason: e.target.value })} placeholder="e.g. Annual revision" />
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setRentModal(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Apply Increase'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+              </form>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
 
       {/* Rent Revision History Modal */}
       {revisionTarget && (
-        <div className="modal-overlay" onClick={() => setRevisionTarget(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '540px' }}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => setRevisionTarget(null)}>
+          <LiquidGlassWindow style={{ maxWidth: '540px' }}>
+            <div className="lg-modal-header">
               <h2 className="modal-title">Rent History — Unit {revisionTarget.unit_number}</h2>
-              <button className="close-btn" onClick={() => setRevisionTarget(null)}><X size={20} /></button>
+              <button className="lg-close-btn" onClick={() => setRevisionTarget(null)}><X size={20} /></button>
             </div>
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              {revisions.length === 0 ? (
-                <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '24px' }}>No revision history yet.</p>
-              ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                      <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Effective</th>
-                      <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Previous</th>
-                      <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>New</th>
-                      <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>%</th>
-                      <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {revisions.map(r => (
-                      <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '10px 12px', fontSize: '0.88rem' }}>{new Date(r.effective_from).toLocaleDateString()}</td>
-                        <td style={{ padding: '10px 12px', fontSize: '0.88rem' }}>₹{Number(r.previous_rent).toLocaleString('en-IN')}</td>
-                        <td style={{ padding: '10px 12px', fontSize: '0.88rem', fontWeight: 500, color: '#10b981' }}>₹{Number(r.new_rent).toLocaleString('en-IN')}</td>
-                        <td style={{ padding: '10px 12px', fontSize: '0.88rem' }}>+{Number(r.increase_pct)}%</td>
-                        <td style={{ padding: '10px 12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{r.reason || '—'}</td>
+            <LiquidGlassContent>
+              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {revisions.length === 0 ? (
+                  <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '24px' }}>No revision history yet.</p>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
+                        <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Effective</th>
+                        <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Previous</th>
+                        <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>New</th>
+                        <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>%</th>
+                        <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Reason</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </div>
+                    </thead>
+                    <tbody>
+                      {revisions.map(r => (
+                        <tr key={r.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '0.88rem' }}>{new Date(r.effective_from).toLocaleDateString()}</td>
+                          <td style={{ padding: '10px 12px', fontSize: '0.88rem' }}>₹{Number(r.previous_rent).toLocaleString('en-IN')}</td>
+                          <td style={{ padding: '10px 12px', fontSize: '0.88rem', fontWeight: 500, color: '#10b981' }}>₹{Number(r.new_rent).toLocaleString('en-IN')}</td>
+                          <td style={{ padding: '10px 12px', fontSize: '0.88rem' }}>+{Number(r.increase_pct)}%</td>
+                          <td style={{ padding: '10px 12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{r.reason || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
 
       {/* Delete Tenant Confirmation */}
       {deleteTarget && (
-        <div className="modal-overlay" onClick={() => !isSubmitting && setDeleteTarget(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => !isSubmitting && setDeleteTarget(null)}>
+          <LiquidGlassWindow style={{ maxWidth: '440px' }}>
+            <div className="lg-modal-header">
               <h2 className="modal-title" style={{ color: '#ef4444' }}>Delete Tenant</h2>
-              <button className="close-btn" onClick={() => setDeleteTarget(null)}><X size={20} /></button>
+              <button className="lg-close-btn" onClick={() => setDeleteTarget(null)}><X size={20} /></button>
             </div>
-            <p style={{ color: 'var(--text-secondary)', padding: '8px 4px 16px' }}>
-              Are you sure you want to delete <strong style={{ color: 'white' }}>{deleteTarget.full_name}</strong>? All their property assignments and payment history will be permanently removed.
-            </p>
-            <div className="form-actions">
-              <button className="btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleDeleteTenant} disabled={isSubmitting} style={{ background: '#ef4444', borderColor: '#ef4444' }}>
-                {isSubmitting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
+            <LiquidGlassContent>
+              <div style={{ padding: '8px 4px 10px' }}>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+                  Are you sure you want to delete <strong style={{ color: 'white' }}>{deleteTarget.full_name}</strong>? All their property assignments and payment history will be permanently removed.
+                </p>
+                <div className="lg-actions" style={{ marginTop: '24px' }}>
+                  <button className="lg-btn lg-btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
+                  <button className="lg-btn lg-btn-primary" onClick={handleDeleteTenant} disabled={isSubmitting} style={{ background: '#ef4444', color: 'white' }}>
+                    {isSubmitting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
     </div>
   );

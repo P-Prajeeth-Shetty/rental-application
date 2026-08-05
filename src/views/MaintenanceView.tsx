@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import './views.css';
 import { Wrench, Plus, AlertTriangle, MessageSquare, X } from 'lucide-react';
+import { 
+  LiquidGlassOverlay, 
+  LiquidGlassWindow, 
+  LiquidGlassContent, 
+  LiquidGlassInput 
+} from '../components/ui/LiquidGlassModal';
+import { CustomSelect } from '../components/ui/CustomSelect';
 
 export const MaintenanceView: React.FC = () => {
   const [tickets, setTickets] = useState({
@@ -115,64 +122,60 @@ export const MaintenanceView: React.FC = () => {
       </div>
 
       {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => setIsModalOpen(false)}>
+          <LiquidGlassWindow>
+            <div className="lg-modal-header">
               <h2 className="modal-title">New Maintenance Request</h2>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}>
+              <button className="lg-close-btn" onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
               </button>
             </div>
             
-            <form onSubmit={handleAddRequest} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className="form-group">
-                <label className="form-label">Issue Title</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
+            <LiquidGlassContent>
+              <form onSubmit={handleAddRequest} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <LiquidGlassInput 
+                  label="Issue Title" 
                   value={newRequest.title}
                   onChange={e => setNewRequest({...newRequest, title: e.target.value})}
                   placeholder="e.g. Leaking Faucet"
                   required
                 />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label">Property & Unit</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
+                
+                <LiquidGlassInput 
+                  label="Property & Unit" 
                   value={newRequest.property}
                   onChange={e => setNewRequest({...newRequest, property: e.target.value})}
                   placeholder="e.g. Sunset Apartments 4B"
                   required
                 />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label">Priority</label>
-                <select 
-                  className="form-input" 
-                  value={newRequest.priority}
-                  onChange={e => setNewRequest({...newRequest, priority: e.target.value})}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
-              </div>
+                
+                <div className="lg-input-group">
+                  <label className="lg-input-label">Priority</label>
+                  <div className="lg-input-wrapper">
+                    <CustomSelect 
+                      value={newRequest.priority}
+                      onChange={val => setNewRequest({...newRequest, priority: val})}
+                      options={[
+                        { value: 'Low', label: 'Low' },
+                        { value: 'Medium', label: 'Medium' },
+                        { value: 'High', label: 'High' }
+                      ]}
+                    />
+                  </div>
+                </div>
 
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Submit Request
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+                <div className="lg-actions" style={{ marginTop: '16px' }}>
+                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setIsModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="lg-btn lg-btn-primary">
+                    Submit Request
+                  </button>
+                </div>
+              </form>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
     </div>
   );

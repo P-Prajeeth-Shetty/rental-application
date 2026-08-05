@@ -8,7 +8,11 @@ import { CalendarWidget } from '../components/dashboard/CalendarWidget';
 import { supabase } from '../lib/supabase';
 import '../components/dashboard/dashboard.css';
 
-export const DashboardView: React.FC = () => {
+interface DashboardProps {
+  onNavigate?: (view: string) => void;
+}
+
+export const DashboardView: React.FC<DashboardProps> = ({ onNavigate }) => {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
@@ -26,24 +30,23 @@ export const DashboardView: React.FC = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="dashboard-layout">
-      <div className="main-column">
-        <h1 style={{ fontSize: '1.5rem', marginBottom: '-8px' }}>{greeting}, {userName}!</h1>
-        <KPIGrid />
-        <OverdueAlerts />
-        <div style={{ display: 'flex', gap: 'var(--spacing-lg)' }}>
-          <div style={{ flex: 2, minWidth: 0 }}>
-            <RevenueChart />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <CalendarWidget />
-          </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+      <div className="dashboard-layout" style={{ height: 'auto', overflowY: 'visible', flex: 'none', paddingBottom: 'var(--spacing-lg)' }}>
+        <div className="main-column">
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '-8px' }}>{greeting}, {userName}!</h1>
+          <KPIGrid />
+          <OverdueAlerts />
+          <RecentActivities />
         </div>
-        <RecentActivities />
+        
+        <div className="side-column">
+          <SideWidgets onNavigate={onNavigate} />
+          <CalendarWidget />
+        </div>
       </div>
       
-      <div className="side-column">
-        <SideWidgets />
+      <div style={{ padding: '0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg)', flexShrink: 0 }}>
+        <RevenueChart />
       </div>
     </div>
   );

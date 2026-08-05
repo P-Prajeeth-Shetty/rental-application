@@ -4,7 +4,11 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../lib/supabase';
 import './dashboard.css';
 
-export const SideWidgets: React.FC = () => {
+interface SideWidgetsProps {
+  onNavigate?: (view: string) => void;
+}
+
+export const SideWidgets: React.FC<SideWidgetsProps> = ({ onNavigate }) => {
   const [occupancyPct, setOccupancyPct] = useState(0);
   const [collectionRate, setCollectionRate] = useState(0);
   const [collected, setCollected] = useState(0);
@@ -44,7 +48,7 @@ export const SideWidgets: React.FC = () => {
       <div className="surface-card widget-card glass-card">
         <div className="widget-header">
           <h3>Occupancy Status</h3>
-          <button className="arrow-link-btn">
+          <button className="arrow-link-btn" onClick={() => onNavigate?.('properties')}>
             <ArrowUpRight size={18} />
           </button>
         </div>
@@ -64,7 +68,7 @@ export const SideWidgets: React.FC = () => {
       <div className="surface-card widget-card glass-card">
         <div className="widget-header">
           <h3>Collection Rate</h3>
-          <button className="arrow-link-btn">
+          <button className="arrow-link-btn" onClick={() => onNavigate?.('leases')}>
             <ArrowUpRight size={18} />
           </button>
         </div>

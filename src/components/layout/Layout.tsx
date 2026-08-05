@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Bell, Settings, LogOut, Calendar, Phone, ChevronDown, User, Users } from 'lucide-react';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { TimePill } from './TimePill';
 import { ProfileSettingsModals } from './ProfileSettingsModals';
 import { supabase } from '../../lib/supabase';
@@ -22,10 +23,13 @@ export interface UserProfile {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveView, onLogout, userRole }) => {
+  const { activeNotifications, reminders, updateReminder } = useNotifications();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<'profile' | 'settings' | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [email, setEmail] = useState('');
+
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const fetchProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -55,6 +59,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
 
   const displayName = profile?.full_name || 'User';
 
+  const dueReminders = reminders.filter(r => r.status === 'pending' && new Date(r.date) <= new Date());
+
   return (
     <div className="app-container">
       <div className="main-glass-container">
@@ -81,15 +87,44 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
           </nav>
           
           <div className="header-actions">
-            <button className="action-btn"><Phone size={20} /></button>
-            <button className="action-btn"><Calendar size={20} /></button>
-            <button className="action-btn"><Search size={20} /></button>
-            <button className="action-btn">
-              <Bell size={20} />
-              <span className="notification-dot"></span>
-            </button>
+            
+            <div style={{ position: 'relative' }}>
+              <button className="action-btn" onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); setIsProfileOpen(false); }}>
+                <Bell size={20} />
+                {activeNotifications > 0 && <span className="notification-dot" style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', background: 'red', borderRadius: '50%' }}></span>}
+              </button>
+              
+              {isNotificationsOpen && (
+                <div className="profile-dropdown" style={{ right: '-60px', width: '320px', padding: '16px', zIndex: 100 }}>
+                  <div className="dropdown-header" style={{ padding: '0 0 12px 0' }}>
+                    <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Notifications</h4>
+                    {activeNotifications > 0 && <span style={{ fontSize: '0.8rem', color: 'red', fontWeight: 600 }}>{activeNotifications} Due</span>}
+                  </div>
+                  <div className="dropdown-divider" style={{ margin: '0 0 12px 0' }}></div>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {dueReminders.length === 0 ? (
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', margin: 0 }}>No due reminders.</p>
+                    ) : (
+                      dueReminders.map(r => (
+                        <div key={r.id} style={{ background: 'rgba(0,0,0,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                          <h5 style={{ margin: '0 0 4px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{r.title}</h5>
+                          <p style={{ margin: '0 0 8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(r.date).toLocaleString()}</p>
+                          <button 
+                            onClick={() => updateReminder(r.id, { status: 'completed' })}
+                            style={{ background: '#dea389', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                          >
+                            Mark Completed
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="user-profile-container" style={{ position: 'relative' }}>
-              <div className="user-profile" onClick={() => setIsProfileOpen(!isProfileOpen)}>
+              <div className="user-profile" onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotificationsOpen(false); }}>
                 <img src={avatarUrl} alt="Profile" className="avatar" style={{ objectFit: 'cover' }} />
                 <ChevronDown size={16} className="text-secondary" />
               </div>

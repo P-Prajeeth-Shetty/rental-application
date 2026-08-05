@@ -1,4 +1,14 @@
 /* Dashboard CSS - Liquid Glass */
+:root {
+  --z-base: 0;
+  --z-card: 10;
+  --z-sticky: 20;
+  --z-dropdown: 100;
+  --z-popover: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}
 
 /* KPI Grid */
 .kpi-grid {
@@ -512,6 +522,7 @@
 
 .overdue-alerts-card {
   padding: var(--spacing-lg) !important;
+  flex-shrink: 0;
 }
 
 .overdue-header {

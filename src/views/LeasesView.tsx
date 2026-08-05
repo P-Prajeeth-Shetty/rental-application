@@ -4,6 +4,12 @@ import { Upload, Plus, X, FileSpreadsheet, Check, AlertTriangle, Download, Searc
 import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { 
+  LiquidGlassOverlay, 
+  LiquidGlassWindow, 
+  LiquidGlassContent, 
+  LiquidGlassInput 
+} from '../components/ui/LiquidGlassModal';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { computeDueDate, classifyTiming, computeCredit, timingBadge } from '../lib/paymentUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
@@ -453,7 +459,7 @@ export const LeasesView: React.FC = () => {
       </div>
 
       {/* Payments Table */}
-      <div className="surface-card glass-card" style={{ padding: 0, overflow: 'auto' }}>
+      <div className="surface-card glass-card static-card" style={{ padding: 0, overflow: 'auto' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <h3 style={{ margin: 0, fontSize: '1rem' }}>{monthNames[filterMonth - 1]} {filterYear} — Payment Status</h3>
           <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-surface)', borderRadius: '8px', padding: '6px 12px', border: '1px solid var(--border-color)' }}>
@@ -592,162 +598,190 @@ export const LeasesView: React.FC = () => {
 
       {/* ══ Record Payment Modal ══════════════════════════════════════════ */}
       {payModal && (
-        <div className="modal-overlay" onClick={() => !isSubmitting && setPayModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => !isSubmitting && setPayModal(false)}>
+          <LiquidGlassWindow>
+            <div className="lg-modal-header">
               <h2 className="modal-title">Record Payment</h2>
-              <button className="close-btn" onClick={() => setPayModal(false)}><X size={20} /></button>
+              <button className="lg-close-btn" onClick={() => setPayModal(false)}><X size={20} /></button>
             </div>
-            <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div className="form-group">
-                <label className="form-label">Tenant *</label>
-                <CustomSelect
-                  value={payForm.assignment_id}
-                  onChange={(val) => setPayForm({ ...payForm, assignment_id: val })}
-                  placeholder="Select tenant..."
-                  searchable={true}
-                  options={assignments.map(a => ({
-                    value: a.id,
-                    label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(a.current_rent).toLocaleString('en-IN')})`
-                  }))}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Amount (₹) *</label>
-                  <input type="number" className="form-input" value={payForm.amount} onChange={e => setPayForm({ ...payForm, amount: e.target.value })} required min="0" />
+            <LiquidGlassContent>
+              <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className="lg-input-group">
+                  <label className="lg-input-label">Tenant *</label>
+                  <div className="lg-input-wrapper">
+                    <CustomSelect
+                      value={payForm.assignment_id}
+                      onChange={(val) => setPayForm({ ...payForm, assignment_id: val })}
+                      placeholder="Select tenant..."
+                      searchable={true}
+                      options={assignments.map(a => ({
+                        value: a.id,
+                        label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(a.current_rent).toLocaleString('en-IN')})`
+                      }))}
+                    />
+                  </div>
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Payment Date *</label>
-                  <input type="date" className="form-input" value={payForm.payment_date} onChange={e => setPayForm({ ...payForm, payment_date: e.target.value })} required />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Method</label>
-                  <CustomSelect
-                    value={payForm.payment_method}
-                    onChange={(val) => setPayForm({ ...payForm, payment_method: val })}
-                    options={[
-                      { value: 'UPI', label: 'UPI' },
-                      { value: 'Cash', label: 'Cash' },
-                      { value: 'Bank Transfer', label: 'Bank Transfer' },
-                      { value: 'Cheque', label: 'Cheque' }
-                    ]}
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <LiquidGlassInput 
+                    type="number" 
+                    label="Amount (₹) *" 
+                    value={payForm.amount} 
+                    onChange={e => setPayForm({ ...payForm, amount: e.target.value })} 
+                    required 
+                    min="0" 
+                  />
+                  <LiquidGlassInput 
+                    type="date" 
+                    label="Payment Date *" 
+                    value={payForm.payment_date} 
+                    onChange={e => setPayForm({ ...payForm, payment_date: e.target.value })} 
+                    required 
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Reference No</label>
-                  <input type="text" className="form-input" value={payForm.reference_number} onChange={e => setPayForm({ ...payForm, reference_number: e.target.value })} placeholder="TXN12345" />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Period Month</label>
-                  <CustomSelect
-                    value={payForm.period_month}
-                    onChange={(val) => setPayForm({ ...payForm, period_month: val })}
-                    options={monthNames.map((m, i) => ({ value: String(i + 1), label: m }))}
-                    menuPlacement="top"
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="lg-input-group">
+                    <label className="lg-input-label">Method</label>
+                    <div className="lg-input-wrapper">
+                      <CustomSelect
+                        value={payForm.payment_method}
+                        onChange={(val) => setPayForm({ ...payForm, payment_method: val })}
+                        options={[
+                          { value: 'UPI', label: 'UPI' },
+                          { value: 'Cash', label: 'Cash' },
+                          { value: 'Bank Transfer', label: 'Bank Transfer' },
+                          { value: 'Cheque', label: 'Cheque' }
+                        ]}
+                      />
+                    </div>
+                  </div>
+                  <LiquidGlassInput 
+                    label="Reference No" 
+                    value={payForm.reference_number} 
+                    onChange={e => setPayForm({ ...payForm, reference_number: e.target.value })} 
+                    placeholder="TXN12345" 
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Period Year</label>
-                  <input type="number" className="form-input" value={payForm.period_year} onChange={e => setPayForm({ ...payForm, period_year: e.target.value })} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Payment Type</label>
-                  <CustomSelect
-                    value={payForm.payment_type}
-                    onChange={(val) => setPayForm({ ...payForm, payment_type: val })}
-                    options={[
-                      { value: 'rent', label: 'Rent' },
-                      { value: 'security_deposit', label: 'Security Deposit' },
-                      { value: 'advance', label: 'Advance' },
-                      { value: 'penalty', label: 'Penalty' },
-                      { value: 'adjustment', label: 'Adjustment' }
-                    ]}
-                    menuPlacement="top"
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="lg-input-group">
+                    <label className="lg-input-label">Period Month</label>
+                    <div className="lg-input-wrapper">
+                      <CustomSelect
+                        value={payForm.period_month}
+                        onChange={(val) => setPayForm({ ...payForm, period_month: val })}
+                        options={monthNames.map((m, i) => ({ value: String(i + 1), label: m }))}
+                        menuPlacement="top"
+                      />
+                    </div>
+                  </div>
+                  <LiquidGlassInput 
+                    type="number" 
+                    label="Period Year" 
+                    value={payForm.period_year} 
+                    onChange={e => setPayForm({ ...payForm, period_year: e.target.value })} 
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Months Covered</label>
-                  <input type="number" className="form-input" value={payForm.months_covered} onChange={e => setPayForm({ ...payForm, months_covered: e.target.value })} min="1" />
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="lg-input-group">
+                    <label className="lg-input-label">Payment Type</label>
+                    <div className="lg-input-wrapper">
+                      <CustomSelect
+                        value={payForm.payment_type}
+                        onChange={(val) => setPayForm({ ...payForm, payment_type: val })}
+                        options={[
+                          { value: 'rent', label: 'Rent' },
+                          { value: 'security_deposit', label: 'Security Deposit' },
+                          { value: 'advance', label: 'Advance' },
+                          { value: 'penalty', label: 'Penalty' },
+                          { value: 'adjustment', label: 'Adjustment' }
+                        ]}
+                        menuPlacement="top"
+                      />
+                    </div>
+                  </div>
+                  <LiquidGlassInput 
+                    type="number" 
+                    label="Months Covered" 
+                    value={payForm.months_covered} 
+                    onChange={e => setPayForm({ ...payForm, months_covered: e.target.value })} 
+                    min="1" 
+                  />
                 </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Status</label>
-                <CustomSelect
-                  value={payForm.status}
-                  onChange={(val) => setPayForm({ ...payForm, status: val })}
-                  options={[
-                    { value: 'paid', label: 'Paid' },
-                    { value: 'partial', label: 'Partial' },
-                    { value: 'pending', label: 'Pending' }
-                  ]}
-                  menuPlacement="top"
-                />
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setPayModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Recording...' : 'Record Payment'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+                <div className="lg-input-group">
+                  <label className="lg-input-label">Status</label>
+                  <div className="lg-input-wrapper">
+                    <CustomSelect
+                      value={payForm.status}
+                      onChange={(val) => setPayForm({ ...payForm, status: val })}
+                      options={[
+                        { value: 'paid', label: 'Paid' },
+                        { value: 'partial', label: 'Partial' },
+                        { value: 'pending', label: 'Pending' }
+                      ]}
+                      menuPlacement="top"
+                    />
+                  </div>
+                </div>
+                <div className="lg-actions" style={{ marginTop: '16px' }}>
+                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setPayModal(false)}>Cancel</button>
+                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Recording...' : 'Record Payment'}</button>
+                </div>
+              </form>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
 
       {/* ══ Excel Preview Modal ═══════════════════════════════════════════ */}
       {excelModal && (
-        <div className="modal-overlay" onClick={() => !uploading && setExcelModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div className="modal-header">
+        <LiquidGlassOverlay onClose={() => !uploading && setExcelModal(false)}>
+          <LiquidGlassWindow style={{ maxWidth: '720px' }}>
+            <div className="lg-modal-header">
               <h2 className="modal-title"><FileSpreadsheet size={20} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} />Excel Upload Preview</h2>
-              <button className="close-btn" onClick={() => setExcelModal(false)} disabled={uploading}><X size={20} /></button>
+              <button className="lg-close-btn" onClick={() => setExcelModal(false)} disabled={uploading}><X size={20} /></button>
             </div>
-            <div style={{ marginBottom: '12px', display: 'flex', gap: '16px', fontSize: '0.88rem' }}>
-              <span>Total: <strong>{excelRows.length}</strong></span>
-              <span style={{ color: '#10b981' }}>Valid: <strong>{excelRows.filter(r => !r.error).length}</strong></span>
-              <span style={{ color: '#ef4444' }}>Errors: <strong>{excelRows.filter(r => r.error).length}</strong></span>
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                  <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Tenant</th>
-                  <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Amount</th>
-                  <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Date</th>
-                  <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Month/Year</th>
-                  <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {excelRows.map((r, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', backgroundColor: r.error ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.03)' }}>
-                    <td style={{ padding: '8px 10px' }}>{r.tenant_name}</td>
-                    <td style={{ padding: '8px 10px' }}>₹{r.amount?.toLocaleString('en-IN')}</td>
-                    <td style={{ padding: '8px 10px' }}>{r.payment_date}</td>
-                    <td style={{ padding: '8px 10px' }}>{monthNames[(r.month || 1) - 1]} {r.year}</td>
-                    <td style={{ padding: '8px 10px' }}>
-                      {r.error ? (
-                        <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={12} /> {r.error}</span>
-                      ) : (
-                        <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={12} /> Matched</span>
-                      )}
-                    </td>
+            <LiquidGlassContent>
+              <div style={{ marginBottom: '12px', display: 'flex', gap: '16px', fontSize: '0.88rem' }}>
+                <span>Total: <strong>{excelRows.length}</strong></span>
+                <span style={{ color: '#10b981' }}>Valid: <strong>{excelRows.filter(r => !r.error).length}</strong></span>
+                <span style={{ color: '#ef4444' }}>Errors: <strong>{excelRows.filter(r => r.error).length}</strong></span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
+                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Tenant</th>
+                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Amount</th>
+                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Date</th>
+                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Month/Year</th>
+                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="form-actions" style={{ marginTop: '16px' }}>
-              <button className="btn-secondary" onClick={() => setExcelModal(false)} disabled={uploading}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleBulkUpload} disabled={uploading || excelRows.filter(r => !r.error).length === 0}>
-                {uploading ? 'Uploading...' : `Upload ${excelRows.filter(r => !r.error).length} Payments`}
-              </button>
-            </div>
-          </div>
-        </div>
+                </thead>
+                <tbody>
+                  {excelRows.map((r, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', backgroundColor: r.error ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.03)' }}>
+                      <td style={{ padding: '8px 10px' }}>{r.tenant_name}</td>
+                      <td style={{ padding: '8px 10px' }}>₹{r.amount?.toLocaleString('en-IN')}</td>
+                      <td style={{ padding: '8px 10px' }}>{r.payment_date}</td>
+                      <td style={{ padding: '8px 10px' }}>{monthNames[(r.month || 1) - 1]} {r.year}</td>
+                      <td style={{ padding: '8px 10px' }}>
+                        {r.error ? (
+                          <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={12} /> {r.error}</span>
+                        ) : (
+                          <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={12} /> Matched</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="lg-actions" style={{ marginTop: '16px' }}>
+                <button className="lg-btn lg-btn-secondary" onClick={() => setExcelModal(false)} disabled={uploading}>Cancel</button>
+                <button className="lg-btn lg-btn-primary" onClick={handleBulkUpload} disabled={uploading || excelRows.filter(r => !r.error).length === 0}>
+                  {uploading ? 'Uploading...' : `Upload ${excelRows.filter(r => !r.error).length} Payments`}
+                </button>
+              </div>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
       )}
     </div>
   );

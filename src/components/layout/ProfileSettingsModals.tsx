@@ -3,6 +3,13 @@ import { X, Camera, Bell, Moon, Lock, Loader2, User, Phone, Mail, FileText } fro
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { supabase } from '../../lib/supabase';
 import type { UserProfile } from './Layout';
+import { 
+  LiquidGlassOverlay, 
+  LiquidGlassWindow, 
+  LiquidGlassContent, 
+  LiquidGlassInput, 
+  LiquidGlassTextarea 
+} from '../ui/LiquidGlassModal';
 import './layout.css';
 
 interface ProfileSettingsModalsProps {
@@ -66,41 +73,42 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
     }
   };
 
-  // Admin: upload avatar
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !profile) return;
     const file = e.target.files[0];
     const fileExt = file.name.split('.').pop();
     const filePath = `${profile.id}/${profile.id}-${Date.now()}.${fileExt}`;
     setUploadingImage(true);
+    
     try {
       const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { error: updateError } = await supabase.from('profiles').update({ avatar_url: filePath }).eq('id', profile.id);
       if (updateError) throw updateError;
       onProfileUpdate();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      alert('Failed to upload image.');
+      alert(`Failed to upload image: ${error.message || 'Unknown error'}`);
     } finally {
       setUploadingImage(false);
+      // Reset input so the same file can be selected again
+      e.target.value = '';
     }
   };
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const defaultAvatar = "https://i.pravatar.cc/150?img=68";
   const avatarUrl = profile?.avatar_url
-    ? `${supabaseUrl}/storage/v1/object/public/avatars/${profile.avatar_url}`
+    ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl
     : defaultAvatar;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
+    <LiquidGlassOverlay onClose={onClose}>
+      <LiquidGlassWindow>
+        <div className="lg-modal-header">
           <h3 className="modal-title">
             {activeModal === 'profile' ? 'My Profile' : 'Account Settings'}
           </h3>
-          <button className="modal-close-btn" onClick={onClose} disabled={isSaving || uploadingImage}>
+          <button className="lg-close-btn" onClick={onClose} disabled={isSaving || uploadingImage}>
             <X size={20} />
           </button>
         </div>
@@ -115,7 +123,7 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
                 <img src={avatarUrl} alt="Profile" className="large-avatar" style={{ objectFit: 'cover' }} />
                 {isAdmin && (
                   <>
-                    <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} accept="image/*" style={{ display: 'none' }} />
+                    <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} accept="image/*" style={{ opacity: 0, position: 'absolute', width: 0, height: 0, zIndex: -1 }} />
                     <button type="button" className="change-photo-btn" onClick={() => fileInputRef.current?.click()} disabled={uploadingImage}>
                       {uploadingImage ? <Loader2 size={16} className="spin" /> : <Camera size={16} />}
                     </button>
@@ -130,24 +138,38 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
 
             {/* ── ADMIN: Editable form ── */}
             {isAdmin && (
-              <form id="profile-form" className="modal-form" onSubmit={handleProfileSave}>
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="form-input" placeholder="e.g. Your Name" />
-                </div>
-                <div className="form-group">
-                  <label>Email Address</label>
-                  <input type="email" value={email} disabled className="form-input" style={{ opacity: 0.6 }} />
-                </div>
-                <div className="form-group">
-                  <label>Phone Number</label>
-                  <input type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} className="form-input" placeholder="(555) 123-4567" />
-                </div>
-                <div className="form-group">
-                  <label>Bio / Notes</label>
-                  <textarea rows={3} value={bio} onChange={e => setBio(e.target.value)} className="form-input" placeholder="A short bio..." />
-                </div>
-              </form>
+              <LiquidGlassContent>
+                <form id="profile-form" className="modal-form" onSubmit={handleProfileSave} style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '16px' }}>
+                  <LiquidGlassInput 
+                    label="Full Name"
+                    type="text" 
+                    value={fullName} 
+                    onChange={e => setFullName(e.target.value)} 
+                    placeholder="e.g. Your Name" 
+                  />
+                  <LiquidGlassInput 
+                    label="Email Address"
+                    type="email" 
+                    value={email} 
+                    disabled 
+                    style={{ opacity: 0.6 }} 
+                  />
+                  <LiquidGlassInput 
+                    label="Phone Number"
+                    type="tel" 
+                    value={phoneNumber} 
+                    onChange={e => setPhoneNumber(e.target.value)} 
+                    placeholder="(555) 123-4567" 
+                  />
+                  <LiquidGlassTextarea 
+                    label="Bio / Notes"
+                    rows={3} 
+                    value={bio} 
+                    onChange={e => setBio(e.target.value)} 
+                    placeholder="A short bio..." 
+                  />
+                </form>
+              </LiquidGlassContent>
             )}
 
             {/* ── REGULAR USER: Read-only card ── */}
@@ -238,25 +260,25 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
         )}
 
         {/* ── Footer ── */}
-        <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose} disabled={isSaving || uploadingImage}>
+        <div className="lg-actions">
+          <button className="lg-btn lg-btn-secondary" onClick={onClose} disabled={isSaving || uploadingImage}>
             {!isAdmin && activeModal === 'profile' ? 'Close' : 'Cancel'}
           </button>
           {(isAdmin || activeModal === 'settings') && activeModal === 'profile' && (
             <button
               type="submit"
               form="profile-form"
-              className="btn-primary"
+              className="lg-btn lg-btn-primary"
               disabled={isSaving || uploadingImage}
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
           )}
           {activeModal === 'settings' && (
-            <button className="btn-primary" onClick={onClose}>Done</button>
+            <button className="lg-btn lg-btn-primary" onClick={onClose}>Done</button>
           )}
         </div>
-      </div>
-    </div>
+      </LiquidGlassWindow>
+    </LiquidGlassOverlay>
   );
 };

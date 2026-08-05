@@ -1,34 +1,22 @@
-import React, { useState, useMemo } from 'react';
-import { X, Plus, Search, Trash2, Edit2, CheckCircle, Circle, ChevronLeft, Calendar as CalendarIcon, FileText, MoreVertical } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { X, Plus, Trash2, Edit2, CheckCircle, Circle, ChevronLeft, Calendar as CalendarIcon, FileText, MoreVertical } from 'lucide-react';
 import './dashboard.css';
 import '../../views/views.css';
 import { LiquidGlassButton } from '../ui/LiquidGlassButton';
 import { CustomSelect } from '../ui/CustomSelect';
 import { CustomDatePicker } from '../ui/CustomDatePicker';
-
-// Types
-interface Reminder {
-  id: number;
-  title: string;
-  description: string;
-  date: string; // YYYY-MM-DD
-  status: 'pending' | 'completed';
-  createdAt: number;
-}
-
-interface Notebook {
-  id: number;
-  title: string;
-  notes: string;
-  createdAt: number;
-}
+import { WidgetPortalOverlay } from '../ui/WidgetPortalOverlay';
+import { useNotifications } from '../../contexts/NotificationContext';
+import type { Reminder, Notebook } from '../../contexts/NotificationContext';
 
 export const CalendarWidget: React.FC = () => {
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
   
-  // Data
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  // Data from Context
+  const { 
+    reminders, addReminder, updateReminder, deleteReminder: ctxDeleteReminder,
+    notebooks, addNotebook, updateNotebook, deleteNotebook: ctxDeleteNotebook
+  } = useNotifications();
 
   // Modals state
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
@@ -45,6 +33,9 @@ export const CalendarWidget: React.FC = () => {
   const [editingNotebook, setEditingNotebook] = useState<Notebook | null>(null);
   const [notebookSearch, setNotebookSearch] = useState('');
   const [notebookSort, setNotebookSort] = useState<'newest' | 'oldest'>('newest');
+
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const isAnyModalOpen = isReminderModalOpen || isNotebookModalOpen;
 
   // --- Date Logic for Calendar ---
   const today = new Date();
@@ -71,23 +62,13 @@ export const CalendarWidget: React.FC = () => {
   }
 
   // --- Styles ---
-  const overlayStyle: React.CSSProperties = {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'var(--bg-panel)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-    display: 'flex', flexDirection: 'column',
-    zIndex: 10, borderRadius: 'inherit', padding: '20px',
-  };
-
-  const innerContentStyle: React.CSSProperties = {
-    width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: '16px', overflow: 'hidden'
-  };
 
   // --- Reminder Actions ---
   const handleSaveReminder = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const newReminder: Reminder = {
-      id: editingReminder?.id || Date.now(),
+      id: editingReminder?.id || Date.now().toString(),
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       date: formData.get('date') as string,
@@ -96,30 +77,33 @@ export const CalendarWidget: React.FC = () => {
     };
 
     if (editingReminder) {
-      setReminders(reminders.map(r => r.id === newReminder.id ? newReminder : r));
+      updateReminder(newReminder.id, newReminder);
     } else {
-      setReminders([newReminder, ...reminders]);
+      addReminder(newReminder);
     }
     setReminderView('list');
     setEditingReminder(null);
   };
 
-  const deleteReminder = (id: number) => {
-    setReminders(reminders.filter(r => r.id !== id));
+  const handleDeleteReminder = (id: string) => {
+    ctxDeleteReminder(id);
     if (reminderView === 'details' && editingReminder?.id === id) {
       setReminderView('list');
     }
   };
 
-  const toggleReminderStatus = (id: number, e?: React.MouseEvent) => {
+  const toggleReminderStatus = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setReminders(reminders.map(r => r.id === id ? { ...r, status: r.status === 'pending' ? 'completed' : 'pending' } : r));
+    const r = reminders.find(r => r.id === id);
+    if (r) {
+      updateReminder(id, { status: r.status === 'pending' ? 'completed' : 'pending' });
+    }
   };
 
   const sortedAndFilteredReminders = useMemo(() => {
     let result = reminders.filter(r => 
       r.title.toLowerCase().includes(reminderSearch.toLowerCase()) || 
-      r.description.toLowerCase().includes(reminderSearch.toLowerCase())
+      (r.description || '').toLowerCase().includes(reminderSearch.toLowerCase())
     );
     result.sort((a, b) => {
       if (reminderSort === 'newest') return b.createdAt - a.createdAt;
@@ -135,23 +119,23 @@ export const CalendarWidget: React.FC = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const newNotebook: Notebook = {
-      id: editingNotebook?.id || Date.now(),
+      id: editingNotebook?.id || Date.now().toString(),
       title: formData.get('title') as string,
       notes: formData.get('notes') as string,
-      createdAt: editingNotebook?.createdAt || Date.now(),
+      createdAt: editingNotebook?.createdAt || new Date().toISOString(),
     };
 
     if (editingNotebook) {
-      setNotebooks(notebooks.map(n => n.id === newNotebook.id ? newNotebook : n));
+      updateNotebook(newNotebook.id, newNotebook);
     } else {
-      setNotebooks([newNotebook, ...notebooks]);
+      addNotebook(newNotebook);
     }
     setNotebookView('list');
     setEditingNotebook(null);
   };
 
-  const deleteNotebook = (id: number) => {
-    setNotebooks(notebooks.filter(n => n.id !== id));
+  const handleDeleteNotebook = (id: string) => {
+    ctxDeleteNotebook(id);
     if (notebookView === 'details' && editingNotebook?.id === id) {
       setNotebookView('list');
     }
@@ -163,17 +147,21 @@ export const CalendarWidget: React.FC = () => {
       n.notes.toLowerCase().includes(notebookSearch.toLowerCase())
     );
     result.sort((a, b) => {
-      if (notebookSort === 'newest') return b.createdAt - a.createdAt;
-      if (notebookSort === 'oldest') return a.createdAt - b.createdAt;
+      if (notebookSort === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (notebookSort === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       return 0;
     });
     return result;
   }, [notebooks, notebookSearch, notebookSort]);
 
   return (
-    <div className="surface-card glass-card" style={{ 
+    <div ref={widgetRef} className="surface-card glass-card" style={{ 
       display: 'flex', flexDirection: 'column', minHeight: '400px',
       padding: 'var(--spacing-lg)', position: 'relative', overflow: 'hidden',
+      opacity: isAnyModalOpen ? 0.65 : 1,
+      filter: isAnyModalOpen ? 'saturate(0.85) brightness(0.9)' : 'none',
+      pointerEvents: isAnyModalOpen ? 'none' : 'auto',
+      transition: 'all 0.3s ease'
     }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -251,9 +239,11 @@ export const CalendarWidget: React.FC = () => {
       </div>
 
       {/* --- Reminder Modal --- */}
-      {isReminderModalOpen && (
-        <div style={overlayStyle}>
-          <div style={innerContentStyle}>
+      <WidgetPortalOverlay 
+        isOpen={isReminderModalOpen} 
+        onClose={() => setIsReminderModalOpen(false)}
+        targetRef={widgetRef as any}
+      >
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -284,13 +274,13 @@ export const CalendarWidget: React.FC = () => {
               <>
                 <div className="search-filter-bar">
                   <div className="search-input-wrapper">
-                    <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
                       type="text" placeholder="Search..." value={reminderSearch} onChange={e => setReminderSearch(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: '8px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
+                      style={{ display: 'block', width: '100%', padding: '8px 12px', borderRadius: '8px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
                     />
                   </div>
                   <CustomSelect 
+                    width="160px"
                     value={reminderSort} 
                     onChange={val => setReminderSort(val as any)}
                     options={[
@@ -337,7 +327,7 @@ export const CalendarWidget: React.FC = () => {
                         
                         <div className="premium-card-footer">
                           <div className="premium-card-meta">
-                            <span className="premium-card-date">{new Date(r.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                            <span className="premium-card-date">{new Date(r.date).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
                             <span className={`badge ${r.status === 'completed' ? 'success' : 'warning'}`}>{r.status === 'completed' ? 'Completed' : 'Pending'}</span>
                           </div>
                           <div className="premium-card-actions">
@@ -388,7 +378,7 @@ export const CalendarWidget: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => setReminderView('form')} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Edit"><Edit2 size={16} /></button>
-                    <button onClick={() => deleteReminder(editingReminder.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
+                    <button className="icon-btn danger" onClick={() => handleDeleteReminder(editingReminder.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
                   </div>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.02)', padding: '16px', borderRadius: '12px', minHeight: '120px', fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>
@@ -404,14 +394,15 @@ export const CalendarWidget: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
+
+      </WidgetPortalOverlay>
 
       {/* --- Notebook Modal --- */}
-      {isNotebookModalOpen && (
-        <div style={overlayStyle}>
-          <div style={innerContentStyle}>
+      <WidgetPortalOverlay 
+        isOpen={isNotebookModalOpen} 
+        onClose={() => setIsNotebookModalOpen(false)}
+        targetRef={widgetRef as any}
+      >
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -442,13 +433,13 @@ export const CalendarWidget: React.FC = () => {
               <>
                 <div className="search-filter-bar">
                   <div className="search-input-wrapper">
-                    <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
                       type="text" placeholder="Search notes..." value={notebookSearch} onChange={e => setNotebookSearch(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: '8px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
+                      style={{ display: 'block', width: '100%', padding: '8px 12px', borderRadius: '8px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
                     />
                   </div>
                   <CustomSelect 
+                    width="140px"
                     value={notebookSort} 
                     onChange={val => setNotebookSort(val as any)}
                     options={[
@@ -531,7 +522,7 @@ export const CalendarWidget: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => setNotebookView('form')} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Edit"><Edit2 size={16} /></button>
-                    <button onClick={() => deleteNotebook(editingNotebook.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
+                    <button className="icon-btn danger" onClick={() => handleDeleteNotebook(editingNotebook.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
                   </div>
                 </div>
                 <div style={{ background: 'var(--bg-surface)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', overflowY: 'auto', lineHeight: '1.6' }}>
@@ -539,9 +530,7 @@ export const CalendarWidget: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
+      </WidgetPortalOverlay>
     </div>
   );
 };

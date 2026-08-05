@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { Layout } from './components/layout/Layout';
 import { LoginView } from './views/LoginView';
 import { DashboardView } from './views/DashboardView';
@@ -114,14 +115,16 @@ function App() {
   }
 
   return (
-    <Layout 
-      activeView={activeView} 
-      setActiveView={setActiveView}
-      onLogout={handleLogout}
-      userRole={userRole}
-    >
-      {renderView()}
-    </Layout>
+    <NotificationProvider>
+      <Layout 
+        activeView={activeView} 
+        setActiveView={setActiveView}
+        onLogout={handleLogout}
+        userRole={userRole}
+      >
+        {renderView()}
+      </Layout>
+    </NotificationProvider>
   );
 }
 

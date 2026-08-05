@@ -37,7 +37,7 @@ export const ReportsView: React.FC = () => {
   const [loadingExp, setLoadingExp] = useState(true);
 
   const [assignments, setAssignments] = useState<TenantAssignmentRow[]>([]);
-  const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { status: string; isOverdue: boolean }>>({});
+  const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { status: string; isOverdue: boolean; balance: number }>>({});
   const [loadingAssignments, setLoadingAssignments] = useState(true);
 
   useEffect(() => {
@@ -256,7 +256,7 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* Detailed Tenant & Lease Report */}
-      <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+      <div className="surface-card glass-card static-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ marginBottom: '16px' }}>
           <h2 style={{ fontSize: '1.1rem', margin: '0 0 4px 0', color: 'var(--text-primary)' }}>
             Detailed Tenant &amp; Lease Report

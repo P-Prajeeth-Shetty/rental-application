@@ -1,0 +1,332 @@
+/* LiquidGlassModal.css */
+
+/* Global container transition */
+#root {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              filter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: center center;
+}
+
+body.lg-modal-active #root {
+  transform: scale(0.985);
+  filter: brightness(0.8) saturate(0.65);
+  /* NOTE: pointer-events intentionally NOT disabled here.
+   * The overlay (z-index: 10000) sits on top and captures backdrop clicks.
+   * Disabling pointer-events on #root would permanently break all buttons. */
+}
+
+/* LAYER 2 & 3: ATMOSPHERIC OVERLAY */
+.lg-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+.lg-atmospheric-glass {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* subtle white diffusion and radial lighting */
+  background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.15) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none; /* backdrop layer must NEVER intercept clicks */
+  animation: lgOverlayEnter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes lgOverlayEnter {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+
+/* Modal Container (handles scroll if modal is taller than screen) */
+.lg-modal-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+  pointer-events: auto; /* Re-enable pointer events for the modal */
+}
+
+/* LAYER 4: FLOATING WINDOW SHELL */
+.lg-window-shell {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+  border-radius: 36px;
+  
+  /* SHADOW SYSTEM */
+  box-shadow: 
+    0 50px 120px -20px rgba(0, 0, 0, 0.4),   /* Ambient Shadow */
+    0 24px 48px -12px rgba(0, 0, 0, 0.25),   /* Elevation Shadow */
+    0 12px 24px -6px rgba(0, 0, 0, 0.15),    /* Contact Shadow */
+    0 0 0 1px rgba(255, 255, 255, 0.2),      /* Edge Glow */
+    inset 0 2px 3px rgba(255, 255, 255, 0.7),/* Inner Top Highlight */
+    inset 0 -1px 2px rgba(255, 255, 255, 0.1);/* Inner Bottom Highlight */
+
+  opacity: 0;
+  transform: scale(0.92) translateY(30px);
+  animation: lgModalEnter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.05s; /* Slight delay for staggered effect */
+}
+
+@keyframes lgModalEnter {
+  from { 
+    opacity: 0; 
+    transform: scale(0.92) translateY(30px);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* GLASS SURFACE */
+.lg-glass-surface {
+  position: relative;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(64px) saturate(220%);
+  -webkit-backdrop-filter: blur(64px) saturate(220%);
+  border-radius: 36px;
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+  border-left: 1px solid rgba(255, 255, 255, 0.4);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  padding: 32px;
+}
+
+/* REFLECTION LAYER */
+.lg-reflection-layer {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  border-radius: 36px;
+  /* Top-left soft illumination and subtle edge gradients */
+  background: 
+    radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.4) 0%, transparent 60%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.05) 100%);
+  z-index: 0;
+  opacity: 0;
+  animation: lgReflections 0.5s ease-out forwards 0.2s;
+}
+
+@keyframes lgReflections {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* CONTENT SURFACE */
+.lg-content-surface {
+  position: relative;
+  z-index: 1;
+  /* Slightly higher opacity for readability, separating content from background */
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: lgContentEnter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.1s;
+}
+
+@keyframes lgContentEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal typography (assuming titles inside lg-content-surface) */
+.lg-content-surface h2,
+.lg-content-surface h3 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 24px;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.4);
+}
+
+.lg-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.lg-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.lg-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+/* INTERACTIVE SURFACE (INPUTS) */
+.lg-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.lg-input-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.85;
+  margin-left: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lg-input-wrapper {
+  position: relative;
+}
+
+.lg-input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  
+  /* Thick glass input */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+    
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  
+  /* Staggered animation for inputs */
+  opacity: 0;
+  transform: translateY(5px);
+  animation: lgInputEnter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.2s;
+}
+
+@keyframes lgInputEnter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lg-input::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.lg-input:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.04),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.lg-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.02),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
+/* Select specifics */
+.lg-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  padding-right: 48px;
+}
+
+/* Buttons inside the modal */
+.lg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+  opacity: 0;
+  animation: lgInputEnter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.25s;
+}
+
+.lg-btn {
+  padding: 14px 28px;
+  border-radius: 100px; /* pill shape like apple */
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+}
+
+.lg-btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.lg-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.lg-btn-secondary:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.lg-btn-primary {
+  background: var(--text-primary);
+  color: #fff;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.lg-btn-primary:hover {
+  background: #000;
+  transform: translateY(-1px);
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+.lg-btn-primary:active {
+  transform: translateY(1px) scale(0.98);
+}
