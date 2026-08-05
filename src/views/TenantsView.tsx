@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { 
   LiquidGlassOverlay, 
   LiquidGlassWindow, 
@@ -56,6 +57,7 @@ export const TenantsView: React.FC = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [assignmentsMap, setAssignmentsMap] = useState<Record<string, Assignment[]>>({});
   const [properties, setProperties] = useState<Property[]>([]);
+  const [paymentLedgerTarget, setPaymentLedgerTarget] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -405,6 +407,18 @@ export const TenantsView: React.FC = () => {
                           >
                             <button onClick={(e) => { e.stopPropagation(); openRentModal(a); }} title="Increase Rent" style={{ background: 'rgba(245,158,11,0.15)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
                               <TrendingUp size={13} style={{ pointerEvents: 'none' }} /> Increase
+                            </button>
+                            <button onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setPaymentLedgerTarget({
+                                assignmentId: a.id,
+                                tenantName: t.full_name,
+                                propertyName: a.properties?.name || 'Unknown Property',
+                                unitNumber: a.unit_number,
+                                currentRent: a.current_rent
+                              });
+                            }} title="Payment Ledger" style={{ background: 'rgba(16,185,129,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
+                              <List size={13} style={{ pointerEvents: 'none' }} /> Ledger
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); openRevisionHistory(a); }} title="Rent History" style={{ background: 'rgba(59,130,246,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#3b82f6', fontSize: '0.78rem' }}>
                               Rent Changes
@@ -761,6 +775,18 @@ export const TenantsView: React.FC = () => {
             </LiquidGlassContent>
           </LiquidGlassWindow>
         </LiquidGlassOverlay>
+      )}
+
+      {/* Payment Ledger Drawer */}
+      {paymentLedgerTarget && (
+        <TenantHistoryDrawer
+          assignmentId={paymentLedgerTarget.assignmentId}
+          tenantName={paymentLedgerTarget.tenantName}
+          propertyName={paymentLedgerTarget.propertyName}
+          unitNumber={paymentLedgerTarget.unitNumber}
+          currentRent={paymentLedgerTarget.currentRent}
+          onClose={() => setPaymentLedgerTarget(null)}
+        />
       )}
     </div>
   );
