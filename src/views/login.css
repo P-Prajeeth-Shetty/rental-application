@@ -13,9 +13,12 @@
   width: 100%;
   max-width: 1300px;
   height: 800px;
-  background: #ffffff;
+  background: var(--bg-glass-container);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
   border-radius: 32px;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.1);
   display: flex;
   position: relative;
   padding: 16px; /* Add inset padding for the image */
@@ -169,7 +172,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 24px;
-  color: #111827;
+  color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -178,12 +181,12 @@
 .login-form-content h2 {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
 }
 
 .login-form-content > p {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 1.05rem;
   margin: 0 0 40px 0;
 }
@@ -199,9 +202,11 @@
   width: 100%;
   padding: 16px 20px;
   border-radius: 12px;
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #111827;
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: inherit;
   transition: all 0.2s ease;
@@ -210,12 +215,13 @@
 
 .dribbble-input:focus {
   outline: none;
+  background: var(--bg-surface-hover);
   border-color: var(--primary-accent);
   box-shadow: 0 0 0 3px rgba(222, 163, 137, 0.2);
 }
 
 .dribbble-input::placeholder {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .forgot-password {
@@ -238,12 +244,12 @@
 .divider-container::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .divider-container span {
   padding: 0 16px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -276,8 +282,9 @@
   border: none;
   background: var(--primary-gradient);
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.1rem;
+  letter-spacing: 0.5px;
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -315,14 +322,15 @@
 .social-icon {
   cursor: pointer;
   transition: all 0.2s;
-  background: #f3f4f6;
+  background: transparent;
   padding: 8px;
   border-radius: 8px;
+  color: var(--text-muted);
 }
 
 .social-icon:hover {
   color: var(--primary-accent);
-  background: #fdf2ed;
+  transform: translateY(-2px);
 }
 
 /* Responsive */

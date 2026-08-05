@@ -11,7 +11,7 @@
   --overlay-bg: rgba(255, 255, 255, 0.2);
   
   --primary-accent: #dea389; /* Soft Peach */
-  --primary-gradient: linear-gradient(135deg, rgba(222,163,137,0.3) 0%, rgba(183,203,222,0.3) 100%);
+  --primary-gradient: linear-gradient(135deg, #dea389 0%, #b7cbde 100%);
   
   --success: #10b981;
   --success-light: #d1fae5;
