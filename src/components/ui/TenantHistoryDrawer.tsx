@@ -227,6 +227,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
             </div>
           )}
         </div>
+        </div>
       </div>
     </>
   );
