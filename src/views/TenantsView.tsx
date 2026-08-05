@@ -4,6 +4,7 @@ import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, Trending
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
+import { LiquidGlassDatePicker } from '../components/ui/LiquidGlassDatePicker';
 import { 
   LiquidGlassOverlay, 
   LiquidGlassWindow, 
@@ -184,6 +185,12 @@ export const TenantsView: React.FC = () => {
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignModal) return;
+    
+    if (!assignForm.lease_start) {
+      setError("Please select a Lease Start date.");
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('tenant_assignments').insert([{
@@ -582,20 +589,18 @@ export const TenantsView: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
-                    <LiquidGlassInput 
-                      type="date" 
+                    <LiquidGlassDatePicker 
                       label="Lease Start *" 
                       value={assignForm.lease_start} 
-                      onChange={e => setAssignForm({ ...assignForm, lease_start: e.target.value })} 
+                      onChange={val => setAssignForm({ ...assignForm, lease_start: val })} 
                       required 
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <LiquidGlassInput 
-                      type="date" 
+                    <LiquidGlassDatePicker 
                       label="Lease End" 
                       value={assignForm.lease_end} 
-                      onChange={e => setAssignForm({ ...assignForm, lease_end: e.target.value })} 
+                      onChange={val => setAssignForm({ ...assignForm, lease_end: val })} 
                     />
                   </div>
                 </div>

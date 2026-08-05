@@ -186,42 +186,64 @@ async function handleDashboard(supabase: any) {
 async function handlePaymentStatus(supabase: any, filterMonth: number, filterYear: number) {
   const now = new Date();
 
-  const [{ data: assignments }, { data: payments }] = await Promise.all([
+  const [{ data: assignments }, { data: payments }, { data: allPayments }] = await Promise.all([
     supabase.from('tenant_assignments')
-      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start')
+      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end')
       .eq('status', 'active'),
     supabase.from('payments')
       .select('assignment_id, amount, is_reversed')
       .eq('period_month', filterMonth)
       .eq('period_year', filterYear),
+    supabase.from('payments')
+      .select('assignment_id, amount, is_reversed')
   ]);
 
-  // Sum payments per assignment for this period (exclude reversed)
+  // Sum payments per assignment for THIS period
   const paidPerAssignment: Record<string, number> = {};
   (payments || []).filter((p: any) => !p.is_reversed).forEach((p: any) => {
     paidPerAssignment[p.assignment_id] = (paidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
   });
 
-  // Count total payments per assignment (for isFirstPayment check we need all-time data)
-  const { data: allPaymentCounts } = await supabase
-    .from('payments')
-    .select('assignment_id')
-    .eq('is_reversed', false);
-
+  // Sum ALL payments per assignment for CUMULATIVE balance
+  const totalPaidPerAssignment: Record<string, number> = {};
   const paymentCountPerAssignment: Record<string, number> = {};
-  (allPaymentCounts || []).forEach((p: any) => {
+  (allPayments || []).filter((p: any) => !p.is_reversed).forEach((p: any) => {
+    totalPaidPerAssignment[p.assignment_id] = (totalPaidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
     paymentCountPerAssignment[p.assignment_id] = (paymentCountPerAssignment[p.assignment_id] || 0) + 1;
   });
 
   const statusMap: Record<string, any> = {};
 
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+
   (assignments || []).forEach((a: any) => {
     const expected = Number(a.current_rent);
     const paidAmount = paidPerAssignment[a.id] || 0;
-    const balance = expected - paidAmount;
     const fullyPaid = paidAmount >= expected;
 
-    // Check overdue
+    // CUMULATIVE BALANCE CALCULATION (Anniversary Billing)
+    const start = new Date(a.lease_start);
+    let monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+    
+    // If we haven't reached the anniversary day of the current month, subtract 1
+    if (now.getDate() < start.getDate()) {
+      monthsElapsed -= 1;
+    }
+    
+    // Prepaid leases owe the first month immediately on move-in
+    if (a.payment_mode === 'prepaid' || a.payment_mode === 'advance_on_entry') {
+      monthsElapsed += 1;
+    }
+    
+    // Ensure we don't charge negative months if lease is in the future
+    monthsElapsed = Math.max(0, monthsElapsed);
+    
+    const totalExpectedAllTime = monthsElapsed * Number(a.current_rent);
+    const totalPaidAllTime = totalPaidPerAssignment[a.id] || 0;
+    const cumulativeBalance = totalExpectedAllTime - totalPaidAllTime;
+
+    // Check overdue for the specific filter period
     let isOverdue = false;
     if (!fullyPaid) {
       const isFirstPayment = (paymentCountPerAssignment[a.id] || 0) === 0;
@@ -245,8 +267,9 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
     else status = 'pending';
 
     statusMap[a.id] = {
-      paidAmount,
-      balance,
+      paidAmount, // Amount paid this specific month
+      balance: cumulativeBalance, // UI expects total outstanding balance here
+      monthBalance: expected - paidAmount, // Real balance for this specific month
       isOverdue,
       fullyPaid,
       status,

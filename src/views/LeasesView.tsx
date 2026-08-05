@@ -11,7 +11,7 @@ import {
   LiquidGlassInput 
 } from '../components/ui/LiquidGlassModal';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
-import { computeDueDate, classifyTiming, computeCredit, timingBadge } from '../lib/paymentUtils';
+import { timingBadge } from '../lib/paymentUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
 
 interface AssignmentWithTenant {
@@ -84,7 +84,7 @@ export const LeasesView: React.FC = () => {
   // Record Payment modal
   const [payModal, setPayModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [payForm, setPayForm] = useState({ assignment_id: '', amount: '', payment_date: '', payment_method: 'UPI', reference_number: '', period_month: String(new Date().getMonth() + 1), period_year: String(new Date().getFullYear()), notes: '', status: 'paid', payment_type: 'rent', months_covered: '1' });
+  const [payForm, setPayForm] = useState({ assignment_id: '', amount: '', payment_date: '', payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' });
 
   // Excel upload
   const [excelModal, setExcelModal] = useState(false);
@@ -141,53 +141,21 @@ export const LeasesView: React.FC = () => {
       const amount = parseFloat(payForm.amount);
       const periodMonth = parseInt(payForm.period_month);
       const periodYear = parseInt(payForm.period_year);
-      const expectedAmount = assignment?.current_rent ?? amount;
-      const monthsCovered = Math.max(1, parseInt(payForm.months_covered) || 1);
-      const perMonthAmount = Math.round((amount / monthsCovered) * 100) / 100;
+      const payload = [{
+        assignment_id: payForm.assignment_id,
+        amount: payForm.amount,
+        payment_date: payForm.payment_date,
+        payment_method: payForm.payment_method || null,
+        payment_type: payForm.payment_type || 'rent'
+      }];
 
-      const allPayloads: any[] = [];
-      for (let i = 0; i < monthsCovered; i++) {
-        let m = periodMonth + i;
-        let y = periodYear;
-        while (m > 12) { m -= 12; y += 1; }
+      const { data, error } = await supabase.functions.invoke('process-payments', {
+        body: { payments: payload }
+      });
 
-        let timing = 'unknown' as any;
-        let daysLate = 0;
-        if (assignment) {
-          const existingPays = payments.filter(p => p.assignment_id === assignment.id);
-          const isFirstPayment = existingPays.length === 0 && i === 0;
-          const dueDate = computeDueDate(
-            { payment_mode: assignment.payment_mode || 'prepaid', due_day: assignment.due_day || 1, grace_days: assignment.grace_days || 5, lease_start: assignment.lease_start },
-            m, y, isFirstPayment
-          );
-          const result = classifyTiming(payForm.payment_date, dueDate, assignment.grace_days || 5);
-          timing = result.timing;
-          daysLate = result.daysLate;
-        }
-
-        const creditAmount = computeCredit(perMonthAmount, expectedAmount);
-        const loopStatus = perMonthAmount >= expectedAmount ? 'paid' : 'partial';
-
-        allPayloads.push({
-          assignment_id: payForm.assignment_id,
-          amount: perMonthAmount,
-          payment_date: payForm.payment_date,
-          payment_method: payForm.payment_method || null,
-          period_month: m,
-          period_year: y,
-          reference_number: payForm.reference_number || null,
-          notes: payForm.notes || null,
-          status: loopStatus,
-          payment_type: i === 0 ? (payForm.payment_type || 'rent') : 'advance',
-          payment_timing: timing,
-          days_late: daysLate,
-          credit_amount: creditAmount,
-          expected_amount: expectedAmount,
-        });
-      }
-
-      const { error } = await supabase.from('payments').insert(allPayloads);
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       setPayModal(false);
       showToast('success', 'Payment recorded!');
 
@@ -291,48 +259,22 @@ export const LeasesView: React.FC = () => {
       }]).select().single();
       if (batchErr) throw batchErr;
 
-      // Bulk insert payments with timing computation + advance expansion
-      const allPayloads: any[] = [];
-      for (const r of valid) {
-        const assignment = r.matched_assignment!;
-        const perMonthAmount = Math.round((r.amount / r.months_covered) * 100) / 100;
-        const expectedAmount = assignment.current_rent;
+      // Bulk insert payments using the backend edge function
+      const payload = valid.map(r => ({
+        assignment_id: r.matched_assignment_id!,
+        amount: r.amount,
+        payment_date: r.payment_date,
+        payment_method: r.method || null,
+        reference_number: r.reference || null,
+        payment_type: r.payment_type || 'rent'
+      }));
 
-        for (let i = 0; i < r.months_covered; i++) {
-          let m = r.month + i;
-          let y = r.year;
-          while (m > 12) { m -= 12; y += 1; }
+      const { data, error: insertErr } = await supabase.functions.invoke('process-payments', {
+        body: { payments: payload, upload_batch_id: batch.id }
+      });
 
-          const existingPays = payments.filter(p => p.assignment_id === assignment.id);
-          const isFirstPayment = existingPays.length === 0 && i === 0;
-          const dueDate = computeDueDate(
-            { payment_mode: assignment.payment_mode || 'prepaid', due_day: assignment.due_day || 1, grace_days: assignment.grace_days || 5, lease_start: assignment.lease_start },
-            m, y, isFirstPayment
-          );
-          const { timing, daysLate } = classifyTiming(r.payment_date, dueDate, assignment.grace_days || 5);
-          const creditAmount = computeCredit(perMonthAmount, expectedAmount);
-
-          allPayloads.push({
-            assignment_id: r.matched_assignment_id!,
-            amount: perMonthAmount,
-            payment_date: r.payment_date,
-            payment_method: r.method || null,
-            period_month: m,
-            period_year: y,
-            reference_number: r.reference || null,
-            status: perMonthAmount >= expectedAmount ? 'paid' : 'partial',
-            payment_type: i === 0 ? (r.payment_type || 'rent') : 'advance',
-            payment_timing: timing,
-            days_late: daysLate,
-            credit_amount: creditAmount,
-            expected_amount: expectedAmount,
-            upload_batch_id: batch.id,
-          });
-        }
-      }
-
-      const { error: insertErr } = await supabase.from('payments').insert(allPayloads);
       if (insertErr) throw insertErr;
+      if (data?.error) throw new Error(data.error);
 
       setExcelModal(false);
       setExcelRows([]);
@@ -358,12 +300,9 @@ export const LeasesView: React.FC = () => {
           'Payment Date': new Date().toISOString().split('T')[0],
           'Method': 'UPI',
           'Reference': '',
-          'Month': filterMonth,
-          'Year': filterYear,
-          'Payment Type': 'rent',
-          'Months Covered': 1
+          'Payment Type': 'rent'
         }))
-      : [{ 'Tenant Name': 'Example Tenant', 'Email': 'example@email.com', 'Phone': '9876543210', 'Property': 'Example Property', 'Unit': '101', 'Amount': 25000, 'Payment Date': new Date().toISOString().split('T')[0], 'Method': 'UPI', 'Reference': 'TXN12345', 'Month': filterMonth, 'Year': filterYear, 'Payment Type': 'rent', 'Months Covered': 1 }];
+      : [{ 'Tenant Name': 'Example Tenant', 'Email': 'example@email.com', 'Phone': '9876543210', 'Property': 'Example Property', 'Unit': '101', 'Amount': 25000, 'Payment Date': new Date().toISOString().split('T')[0], 'Method': 'UPI', 'Reference': 'TXN12345', 'Payment Type': 'rent' }];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
@@ -432,7 +371,7 @@ export const LeasesView: React.FC = () => {
           <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px', padding: '8px 16px' }}>
             <Upload size={16} /> Upload Excel
           </button>
-          <button onClick={() => { setPayForm({ ...payForm, period_month: String(filterMonth), period_year: String(filterYear), assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', status: 'paid', payment_type: 'rent', months_covered: '1' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
+          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
             <Plus size={16} /> Record Payment
           </button>
         </div>
@@ -560,17 +499,15 @@ export const LeasesView: React.FC = () => {
                         >
                           <History size={14} />
                         </button>
-                        {!fullyPaid && (
                           <button
                             onClick={() => {
-                              setPayForm({ ...payForm, period_month: String(filterMonth), period_year: String(filterYear), assignment_id: a.id, amount: String(Math.max(0, balance)), payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', status: 'paid', payment_type: 'rent', months_covered: '1' });
+                              setPayForm({ ...payForm, assignment_id: a.id, amount: String(Math.max(0, balance)), payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' });
                               setPayModal(true);
                             }}
                             style={{ padding: '6px 10px', fontSize: '0.78rem', borderRadius: '6px', background: overdue ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', color: overdue ? '#ef4444' : '#3b82f6', border: 'none', cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}
                           >
                             + Record
                           </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -592,6 +529,7 @@ export const LeasesView: React.FC = () => {
           propertyName={historyTarget.properties?.name || ''}
           unitNumber={historyTarget.unit_number}
           currentRent={historyTarget.current_rent}
+          backendBalance={getStatus(historyTarget.id).balance}
           onClose={() => setHistoryTarget(null)}
         />
       )}
@@ -661,25 +599,7 @@ export const LeasesView: React.FC = () => {
                     placeholder="TXN12345" 
                   />
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div className="lg-input-group">
-                    <label className="lg-input-label">Period Month</label>
-                    <div className="lg-input-wrapper">
-                      <CustomSelect
-                        value={payForm.period_month}
-                        onChange={(val) => setPayForm({ ...payForm, period_month: val })}
-                        options={monthNames.map((m, i) => ({ value: String(i + 1), label: m }))}
-                        menuPlacement="top"
-                      />
-                    </div>
-                  </div>
-                  <LiquidGlassInput 
-                    type="number" 
-                    label="Period Year" 
-                    value={payForm.period_year} 
-                    onChange={e => setPayForm({ ...payForm, period_year: e.target.value })} 
-                  />
-                </div>
+
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <div className="lg-input-group">
                     <label className="lg-input-label">Payment Type</label>
@@ -697,28 +617,6 @@ export const LeasesView: React.FC = () => {
                         menuPlacement="top"
                       />
                     </div>
-                  </div>
-                  <LiquidGlassInput 
-                    type="number" 
-                    label="Months Covered" 
-                    value={payForm.months_covered} 
-                    onChange={e => setPayForm({ ...payForm, months_covered: e.target.value })} 
-                    min="1" 
-                  />
-                </div>
-                <div className="lg-input-group">
-                  <label className="lg-input-label">Status</label>
-                  <div className="lg-input-wrapper">
-                    <CustomSelect
-                      value={payForm.status}
-                      onChange={(val) => setPayForm({ ...payForm, status: val })}
-                      options={[
-                        { value: 'paid', label: 'Paid' },
-                        { value: 'partial', label: 'Partial' },
-                        { value: 'pending', label: 'Pending' }
-                      ]}
-                      menuPlacement="top"
-                    />
                   </div>
                 </div>
                 <div className="lg-actions" style={{ marginTop: '16px' }}>

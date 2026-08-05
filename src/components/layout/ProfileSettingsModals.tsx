@@ -12,6 +12,24 @@ import {
 } from '../ui/LiquidGlassModal';
 import './layout.css';
 
+const GlassToggle = ({ checked, onChange }: { checked: boolean, onChange: () => void }) => (
+  <div 
+    onClick={onChange}
+    style={{ 
+      width: '50px', height: '28px', borderRadius: '14px',
+      background: checked ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'rgba(255,255,255,0.1)',
+      border: '1px solid rgba(255,255,255,0.2)',
+      position: 'relative', cursor: 'pointer', transition: 'all 0.3s'
+    }}
+  >
+    <div style={{
+      width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+      position: 'absolute', top: '3px', left: checked ? '25px' : '4px',
+      boxShadow: '0 2px 5px rgba(0,0,0,0.2)', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+    }} />
+  </div>
+);
+
 interface ProfileSettingsModalsProps {
   activeModal: 'profile' | 'settings' | null;
   onClose: () => void;
@@ -199,60 +217,91 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
 
         {/* ── SETTINGS MODAL ────────────────────────────────────────────── */}
         {activeModal === 'settings' && (
-          <div className="modal-body settings-modal">
-            <div className="settings-tabs">
-              <button className={`settings-tab ${settingsTab === 'preferences' ? 'active' : ''}`} onClick={() => setSettingsTab('preferences')}>Preferences</button>
-              <button className={`settings-tab ${settingsTab === 'security' ? 'active' : ''}`} onClick={() => setSettingsTab('security')}>Security</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            
+            {/* Glass Tabs */}
+            <div style={{ 
+              display: 'flex', background: 'rgba(0, 0, 0, 0.15)', borderRadius: '14px', 
+              padding: '6px', gap: '4px', border: '1px solid rgba(255, 255, 255, 0.05)',
+              boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
+            }}>
+              {['preferences', 'security'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setSettingsTab(tab as any)}
+                  style={{
+                    flex: 1, padding: '10px 0', borderRadius: '10px',
+                    border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
+                    textTransform: 'capitalize', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    background: settingsTab === tab ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
+                    color: settingsTab === tab ? '#1e293b' : 'var(--text-secondary)',
+                    boxShadow: settingsTab === tab ? '0 4px 15px rgba(0,0,0,0.1)' : 'none'
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
-            <div className="settings-content">
+
+            {/* Content Area */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {settingsTab === 'preferences' && (
-                <div className="settings-section">
-                  <div className="settings-row">
-                    <div className="settings-row-info">
-                      <Bell size={20} className="text-secondary" />
+                <>
+                  <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px', padding: '20px 24px', transition: 'all 0.2s',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px', borderRadius: '12px' }}>
+                        <Bell size={20} color="var(--text-primary)" />
+                      </div>
                       <div>
-                        <h5>Email Notifications</h5>
-                        <p>Receive daily summaries of rent collection.</p>
+                        <h5 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Email Notifications</h5>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Receive daily summaries of rent collection.</p>
                       </div>
                     </div>
-                    <label className="toggle-switch">
-                      <input type="checkbox" defaultChecked />
-                      <span className="slider"></span>
-                    </label>
+                    <GlassToggle checked={true} onChange={() => {}} />
                   </div>
-                  <div className="settings-row">
-                    <div className="settings-row-info">
-                      <Moon size={20} className="text-secondary" />
+
+                  <div style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px', padding: '20px 24px', transition: 'all 0.2s',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px', borderRadius: '12px' }}>
+                        <Moon size={20} color="var(--text-primary)" />
+                      </div>
                       <div>
-                        <h5>Dark Mode</h5>
-                        <p>Switch between light and dark themes.</p>
+                        <h5 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Dark Mode</h5>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Switch between light and dark themes.</p>
                       </div>
                     </div>
-                    <label className="toggle-switch">
-                      <input type="checkbox" checked={isDarkMode} onChange={toggleDarkMode} />
-                      <span className="slider"></span>
-                    </label>
+                    <GlassToggle checked={isDarkMode} onChange={toggleDarkMode} />
                   </div>
-                </div>
+                </>
               )}
+
               {settingsTab === 'security' && (
-                <div className="settings-section">
-                  <div className="settings-row">
-                    <div className="settings-row-info">
-                      <Lock size={20} className="text-secondary" />
-                      <div>
-                        <h5>Two-Factor Authentication</h5>
-                        <p>Add an extra layer of security to your account.</p>
-                      </div>
+                <div style={{ 
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '16px', padding: '20px 24px', transition: 'all 0.2s',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+                }}>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px', borderRadius: '12px' }}>
+                      <Lock size={20} color="var(--text-primary)" />
                     </div>
-                    <label className="toggle-switch">
-                      <input type="checkbox" defaultChecked />
-                      <span className="slider"></span>
-                    </label>
+                    <div>
+                      <h5 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Two-Factor Authentication</h5>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Add an extra layer of security to your account.</p>
+                    </div>
                   </div>
-                  <div className="settings-action-row">
-                    <button className="btn-secondary">Change Password</button>
-                  </div>
+                  <GlassToggle checked={true} onChange={() => {}} />
                 </div>
               )}
             </div>

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { X, TrendingUp, TrendingDown, Clock, Calendar, IndianRupee } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { LiquidGlassOverlay, LiquidGlassWindow, LiquidGlassContent } from './LiquidGlassModal';
 import { timingBadge } from '../../lib/paymentUtils';
 import type { PaymentTiming } from '../../lib/paymentUtils';
+import { GlassWorkspacePanel } from './GlassWorkspacePanel';
 
 interface HistoryPayment {
   id: string;
@@ -31,23 +30,17 @@ interface TenantHistoryDrawerProps {
   propertyName: string;
   unitNumber: string;
   currentRent: number;
+  backendBalance: number;
   onClose: () => void;
 }
 
 const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
-  assignmentId, tenantName, propertyName, unitNumber, currentRent, onClose
+  assignmentId, tenantName, propertyName, unitNumber, currentRent, backendBalance, onClose
 }) => {
   const [payments, setPayments] = useState<HistoryPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    document.body.classList.add('lg-drawer-active');
-    return () => {
-      document.body.classList.remove('lg-drawer-active');
-    };
-  }, []);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -58,6 +51,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
         .eq('assignment_id', assignmentId)
         .order('period_year', { ascending: false })
         .order('period_month', { ascending: false });
+      
       if (!error) setPayments((data as HistoryPayment[]) || []);
       setIsLoading(false);
     };
@@ -70,10 +64,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
   const onTimeCount = activePays.filter(p => p.payment_timing === 'on_time' || p.payment_timing === 'early').length;
   const lateCount = activePays.filter(p => p.payment_timing === 'late').length;
 
-  // Total balance = sum of (expected - paid) per period
-  // A negative value means the tenant has paid extra (credit); positive means they still owe
-  const totalExpectedAllTime = activePays.reduce((s, p) => s + Number(p.expected_amount || currentRent), 0);
-  const runningBalance = totalExpectedAllTime - totalPaid; // positive = owes money, negative = credit
+  const runningBalance = backendBalance; // positive = owes money, negative = credit
 
   const creditLabel = runningBalance < 0
     ? { text: `+₹${Math.abs(runningBalance).toLocaleString('en-IN')} credit`, color: '#10b981' }
@@ -81,146 +72,159 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
     ? { text: `-₹${runningBalance.toLocaleString('en-IN')} outstanding`, color: '#ef4444' }
     : { text: '₹0 balance', color: 'var(--text-secondary)' };
 
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <div
-        className="lg-drawer-backdrop"
-        onClick={onClose}
-      />
-      {/* Drawer */}
-      <div className="lg-drawer-surface" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)' }}>{tenantName}</h2>
-            <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-              {propertyName} — Unit {unitNumber} · ₹{currentRent.toLocaleString('en-IN')}/mo
-            </p>
-          </div>
-          <button className="lg-close-btn" onClick={onClose}>
-            <X size={20} />
-          </button>
+  return (
+    <GlassWorkspacePanel isOpen={true} onClose={onClose}>
+      {/* Header */}
+      <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)' }}>{tenantName}</h2>
+          <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            {propertyName} — Unit {unitNumber} · ₹{currentRent.toLocaleString('en-IN')}/mo
+          </p>
         </div>
+        <button className="lg-close-btn" onClick={onClose} style={{ 
+          background: 'rgba(255,255,255,0.1)', 
+          border: 'none', 
+          borderRadius: '50%', 
+          width: '32px', 
+          height: '32px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          color: 'var(--text-secondary)',
+          cursor: 'pointer'
+        }}>
+          <X size={20} />
+        </button>
+      </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', padding: 0, flex: 1, overflow: 'hidden' }}>
-          {/* Summary Stats */}
-          <div style={{ display: 'flex', gap: '12px', padding: '20px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', flexShrink: 0, flexWrap: 'wrap' }}>
-          {[
-            { label: 'Total Paid', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: '#10b981', icon: <IndianRupee size={14} /> },
-            { label: 'Payments Made', value: String(activePays.length), color: 'var(--text-primary)', icon: <Calendar size={14} /> },
-            { label: 'On Time / Early', value: String(onTimeCount), color: '#3b82f6', icon: <Clock size={14} /> },
-            { label: 'Late', value: String(lateCount), color: lateCount > 0 ? '#ef4444' : 'var(--text-secondary)', icon: <Clock size={14} /> },
-            { label: 'Balance', value: creditLabel.text, color: creditLabel.color, icon: runningBalance <= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} /> },
-          ].map(s => (
-            <div key={s.label} style={{ background: 'var(--bg-glass-container)', borderRadius: '10px', padding: '10px 14px', minWidth: '100px', flex: '1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.75rem', marginBottom: '4px' }}>
-                {s.icon}{s.label}
-              </div>
-              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.95rem', color: s.color }}>{s.value}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', padding: 0, flex: 1, overflow: 'hidden' }}>
+        {/* Summary Stats */}
+        <div style={{ display: 'flex', gap: '12px', padding: '20px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', flexShrink: 0, flexWrap: 'wrap' }}>
+        {[
+          { label: 'Total Paid', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: '#10b981', icon: <IndianRupee size={14} /> },
+          { label: 'Payments Made', value: String(activePays.length), color: 'var(--text-primary)', icon: <Calendar size={14} /> },
+          { label: 'On Time / Early', value: String(onTimeCount), color: '#3b82f6', icon: <Clock size={14} /> },
+          { label: 'Late', value: String(lateCount), color: lateCount > 0 ? '#ef4444' : 'var(--text-secondary)', icon: <Clock size={14} /> },
+          { label: 'Balance', value: creditLabel.text, color: creditLabel.color, icon: runningBalance <= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} /> },
+        ].map(s => (
+          <div key={s.label} style={{ 
+            background: 'rgba(255, 255, 255, 0.45)', 
+            backdropFilter: 'blur(12px)',
+            borderRadius: '12px', 
+            padding: '12px 14px', 
+            minWidth: '100px', 
+            flex: '1',
+            border: '1px solid rgba(255, 255, 255, 0.6)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.75rem', marginBottom: '4px' }}>
+              {s.icon}{s.label}
             </div>
-          ))}
-        </div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: '1.05rem', color: s.color }}>{s.value}</p>
+          </div>
+        ))}
+      </div>
 
-        {/* Payment Ledger */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
-          <h3 style={{ margin: '0 0 14px', fontSize: '0.95rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-            PAYMENT HISTORY
-          </h3>
+      {/* Payment Ledger */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
+        <h3 style={{ margin: '0 0 14px', fontSize: '0.95rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+          PAYMENT HISTORY
+        </h3>
 
-          {isLoading ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading...</div>
-          ) : payments.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>No payments recorded yet.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {payments.map(p => {
-                const badge = timingBadge(p.payment_timing, p.days_late);
-                const credit = Number(p.credit_amount || 0);
-                // const expected = Number(p.expected_amount || currentRent);
-                const isReversed = p.is_reversed;
-                const isAdvance = p.payment_type === 'advance';
+        {isLoading ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading...</div>
+        ) : payments.length === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>No payments recorded yet.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {payments.map(p => {
+              const badge = timingBadge(p.payment_timing, p.days_late);
+              const credit = Number(p.credit_amount || 0);
+              const isReversed = p.is_reversed;
+              const isAdvance = p.payment_type === 'advance';
 
-                return (
-                  <div key={p.id} style={{
-                    padding: '14px 16px', borderRadius: '12px',
-                    background: isReversed ? 'rgba(239,68,68,0.05)' : isAdvance ? 'rgba(139,92,246,0.05)' : 'var(--bg-glass-container)',
-                    border: `1px solid ${isReversed ? 'rgba(239,68,68,0.15)' : isAdvance ? 'rgba(139,92,246,0.15)' : 'var(--border-color)'}`,
-                    opacity: isReversed ? 0.6 : 1,
-                    position: 'relative'
-                  }}>
-                    {isReversed && (
-                      <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#ef4444', fontWeight: 600, background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
-                        REVERSED
+              return (
+                <div key={p.id} style={{
+                  padding: '16px 20px', borderRadius: '14px',
+                  background: isReversed ? 'rgba(239,68,68,0.1)' : isAdvance ? 'rgba(139,92,246,0.1)' : 'rgba(255, 255, 255, 0.45)',
+                  backdropFilter: 'blur(12px)',
+                  border: `1px solid ${isReversed ? 'rgba(239,68,68,0.3)' : isAdvance ? 'rgba(139,92,246,0.3)' : 'rgba(255, 255, 255, 0.6)'}`,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                  opacity: isReversed ? 0.6 : 1,
+                  position: 'relative'
+                }}>
+                  {isReversed && (
+                    <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#ef4444', fontWeight: 600, background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
+                      REVERSED
+                    </span>
+                  )}
+                  {isAdvance && !isReversed && (
+                    <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#8b5cf6', fontWeight: 600, background: 'rgba(139,92,246,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
+                      ADVANCE
+                    </span>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: '1rem' }}>
+                        {monthNames[p.period_month - 1]} {p.period_year}
                       </span>
-                    )}
-                    {isAdvance && !isReversed && (
-                      <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#8b5cf6', fontWeight: 600, background: 'rgba(139,92,246,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
-                        ADVANCE
+                      <span style={{ marginLeft: '10px', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                        {new Date(p.payment_date).toLocaleDateString('en-IN')}
                       </span>
-                    )}
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <div>
-                        <span style={{ fontWeight: 700, fontSize: '1rem' }}>
-                          {monthNames[p.period_month - 1]} {p.period_year}
-                        </span>
-                        <span style={{ marginLeft: '10px', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                          {new Date(p.payment_date).toLocaleDateString('en-IN')}
-                        </span>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 700, fontSize: '1rem' }}>₹{Number(p.amount).toLocaleString('en-IN')}</div>
-                        {credit !== 0 && (
-                          <div style={{ fontSize: '0.8rem', color: credit > 0 ? '#10b981' : '#ef4444', fontWeight: 500 }}>
-                            {credit > 0 ? `+₹${credit.toLocaleString('en-IN')} credit` : `-₹${Math.abs(credit).toLocaleString('en-IN')} short`}
-                          </div>
-                        )}
-                      </div>
                     </div>
-
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                      {/* Timing badge */}
-                      {!isReversed && p.payment_timing !== 'unknown' && (
-                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 500, background: badge.bg, color: badge.color }}>
-                          {badge.label}
-                        </span>
-                      )}
-                      {/* Method */}
-                      {p.payment_method && (
-                        <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
-                          {p.payment_method}
-                        </span>
-                      )}
-                      {/* Reference */}
-                      {p.reference_number && (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                          Ref: {p.reference_number}
-                        </span>
-                      )}
-                      {/* Type */}
-                      {p.payment_type !== 'rent' && (
-                        <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 500 }}>
-                          {p.payment_type.replace('_', ' ')}
-                        </span>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 700, fontSize: '1rem' }}>₹{Number(p.amount).toLocaleString('en-IN')}</div>
+                      {credit !== 0 && (
+                        <div style={{ fontSize: '0.8rem', color: credit > 0 ? '#10b981' : '#ef4444', fontWeight: 500 }}>
+                          {credit > 0 ? `+₹${credit.toLocaleString('en-IN')} credit` : `-₹${Math.abs(credit).toLocaleString('en-IN')} short`}
+                        </div>
                       )}
                     </div>
+                  </div>
 
-                    {/* Notes / reversal notes */}
-                    {(p.notes || p.reversal_notes) && (
-                      <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                        {p.reversal_notes || p.notes}
-                      </p>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* Timing badge */}
+                    {!isReversed && p.payment_timing !== 'unknown' && (
+                      <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 500, background: badge.bg, color: badge.color }}>
+                        {badge.label}
+                      </span>
+                    )}
+                    {/* Method */}
+                    {p.payment_method && (
+                      <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
+                        {p.payment_method}
+                      </span>
+                    )}
+                    {/* Reference */}
+                    {p.reference_number && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        Ref: {p.reference_number}
+                      </span>
+                    )}
+                    {/* Type */}
+                    {p.payment_type !== 'rent' && (
+                      <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 500 }}>
+                        {p.payment_type.replace('_', ' ')}
+                      </span>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-        </div>
+
+                  {/* Notes / reversal notes */}
+                  {(p.notes || p.reversal_notes) && (
+                    <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                      {p.reversal_notes || p.notes}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </>,
-    document.body
+      </div>
+    </GlassWorkspacePanel>
   );
 };
+
