@@ -407,7 +407,7 @@ export const TenantsView: React.FC = () => {
                               <TrendingUp size={13} style={{ pointerEvents: 'none' }} /> Increase
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); openRevisionHistory(a); }} title="Rent History" style={{ background: 'rgba(59,130,246,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#3b82f6', fontSize: '0.78rem' }}>
-                              History
+                              Rent Changes
                             </button>
                           </div>
                         </td>
