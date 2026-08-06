@@ -33,8 +33,31 @@ interface Assignment {
   security_deposit: number;
   status: string;
   property_id: string;
+  payment_mode?: string;
+  due_day?: number;
+  grace_days?: number;
   properties: { id: string; name: string } | null;
   payments?: { amount: number; is_reversed: boolean }[];
+  rent_revisions?: { previous_rent: number; new_rent: number; effective_from: string }[];
+}
+
+function getEffectiveRentAsOf(assignment: Assignment, date: Date = new Date()) {
+  if (!assignment.rent_revisions || assignment.rent_revisions.length === 0) {
+    return assignment.current_rent;
+  }
+  const sortedRevisions = [...assignment.rent_revisions].sort((a, b) => new Date(b.effective_from).getTime() - new Date(a.effective_from).getTime());
+  
+  const compareDate = new Date(date);
+  compareDate.setHours(0,0,0,0);
+
+  for (const rev of sortedRevisions) {
+    const effectiveDate = new Date(rev.effective_from);
+    effectiveDate.setHours(0,0,0,0);
+    if (compareDate >= effectiveDate) {
+      return rev.new_rent;
+    }
+  }
+  return sortedRevisions[sortedRevisions.length - 1].previous_rent;
 }
 
 interface Property {
@@ -74,6 +97,7 @@ export const TenantsView: React.FC = () => {
   // Assign modal
   const [assignModal, setAssignModal] = useState<Tenant | null>(null);
   const [assignForm, setAssignForm] = useState({ property_id: '', unit_number: '', current_rent: '', lease_start: '', lease_end: '', security_deposit: '', payment_mode: 'prepaid', due_day: '1', grace_days: '5' });
+  const [editAssignmentId, setEditAssignmentId] = useState<string | null>(null);
 
   // Expanded rows
   const [expandedTenant, setExpandedTenant] = useState<string | null>(null);
@@ -93,7 +117,7 @@ export const TenantsView: React.FC = () => {
     try {
       const [{ data: tData, error: tErr }, { data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
         supabase.from('tenants').select('*').order('created_at', { ascending: false }),
-        supabase.from('tenant_assignments').select('*, properties(id, name), payments(amount, is_reversed)').order('created_at', { ascending: false }),
+        supabase.from('tenant_assignments').select('*, properties(id, name), payments(amount, is_reversed), rent_revisions(previous_rent, new_rent, effective_from)').order('created_at', { ascending: false }),
         supabase.from('properties').select('id, name, total_units'),
       ]);
       if (tErr) throw tErr;
@@ -179,7 +203,24 @@ export const TenantsView: React.FC = () => {
 
   const openAssignModal = (t: Tenant) => {
     setAssignModal(t);
+    setEditAssignmentId(null);
     setAssignForm({ property_id: properties[0]?.id || '', unit_number: '', current_rent: '', lease_start: '', lease_end: '', security_deposit: '', payment_mode: 'prepaid', due_day: '1', grace_days: '5' });
+  };
+
+  const openEditAssignModal = (a: Assignment, t: Tenant) => {
+    setAssignModal(t);
+    setEditAssignmentId(a.id);
+    setAssignForm({ 
+      property_id: a.properties?.id || properties[0]?.id || '', 
+      unit_number: a.unit_number || '', 
+      current_rent: a.current_rent.toString(), 
+      lease_start: new Date(a.lease_start).toISOString().split('T')[0], 
+      lease_end: a.lease_end ? new Date(a.lease_end).toISOString().split('T')[0] : '', 
+      security_deposit: a.security_deposit.toString(), 
+      payment_mode: a.payment_mode || 'prepaid', 
+      due_day: a.due_day?.toString() || '1', 
+      grace_days: a.grace_days?.toString() || '5' 
+    });
   };
 
   const handleAssign = async (e: React.FormEvent) => {
@@ -193,8 +234,7 @@ export const TenantsView: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('tenant_assignments').insert([{
-        tenant_id: assignModal.id,
+      const payload = {
         property_id: assignForm.property_id,
         unit_number: assignForm.unit_number,
         current_rent: parseFloat(assignForm.current_rent) || 0,
@@ -203,10 +243,17 @@ export const TenantsView: React.FC = () => {
         security_deposit: parseFloat(assignForm.security_deposit) || 0,
         payment_mode: assignForm.payment_mode,
         due_day: parseInt(assignForm.due_day) || 1,
-        grace_days: parseInt(assignForm.grace_days) || 5,
-        status: 'active'
-      }]);
-      if (error) throw error;
+        grace_days: parseInt(assignForm.grace_days) || 5
+      };
+
+      if (editAssignmentId) {
+        const { error } = await supabase.from('tenant_assignments').update(payload).eq('id', editAssignmentId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('tenant_assignments').insert([{ ...payload, tenant_id: assignModal.id, status: 'active' }]);
+        if (error) throw error;
+      }
+      
       setAssignModal(null);
       fetchAll();
     } catch (err: any) {
@@ -330,7 +377,7 @@ export const TenantsView: React.FC = () => {
                       <td style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t.phone || '—'}</td>
                       <td style={{ padding: '14px 16px' }}>{activeAssign?.properties?.name || <span style={{ color: 'var(--text-secondary)' }}>Unassigned</span>}</td>
                       <td style={{ padding: '14px 16px' }}>{activeAssign?.unit_number || '—'}</td>
-                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{activeAssign ? `₹${Number(activeAssign.current_rent).toLocaleString('en-IN')}` : '—'}</td>
+                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{activeAssign ? `₹${Number(getEffectiveRentAsOf(activeAssign)).toLocaleString('en-IN')}` : '—'}</td>
                       <td style={{ padding: '14px 16px' }}>
                         {activeAssign ? (
                           <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(16,185,129,0.15)', color: '#10b981' }}>Active</span>
@@ -375,8 +422,11 @@ export const TenantsView: React.FC = () => {
                     {isExpanded && assigns.map(a => (
                       <tr key={a.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                         <td></td>
-                        <td colSpan={2} style={{ padding: '10px 16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <td style={{ padding: '10px 16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                           {a.properties?.name} — Unit {a.unit_number}
+                        </td>
+                        <td style={{ padding: '10px 16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                          {a.payment_mode ? <span style={{ textTransform: 'capitalize' }}>{a.payment_mode.replace(/_/g, ' ')}</span> : '—'}
                         </td>
                         <td style={{ padding: '10px 16px', fontSize: '0.85rem' }}>
                           {new Date(a.lease_start).toLocaleDateString()} — {a.lease_end ? new Date(a.lease_end).toLocaleDateString() : 'Ongoing'}
@@ -385,7 +435,7 @@ export const TenantsView: React.FC = () => {
                           Deposit: ₹{Number(a.security_deposit).toLocaleString('en-IN')}
                         </td>
                         <td style={{ padding: '10px 16px', fontWeight: 500, fontSize: '0.85rem' }}>
-                          <div>₹{Number(a.current_rent).toLocaleString('en-IN')}</div>
+                          <div>₹{Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')}</div>
                           <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '2px' }}>
                             Paid: ₹{a.payments ? a.payments.filter(p => !p.is_reversed).reduce((s, p) => s + Number(p.amount), 0).toLocaleString('en-IN') : 0}
                           </div>
@@ -416,6 +466,9 @@ export const TenantsView: React.FC = () => {
                             onMouseDown={e => e.stopPropagation()}
                             onTouchStart={e => e.stopPropagation()}
                           >
+                            <button onClick={(e) => { e.stopPropagation(); openEditAssignModal(a, t); }} title="Edit Assignment" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
+                              <Pencil size={13} style={{ pointerEvents: 'none' }} /> Edit
+                            </button>
                             <button onClick={(e) => { e.stopPropagation(); openRentModal(a); }} title="Increase Rent" style={{ background: 'rgba(245,158,11,0.15)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
                               <TrendingUp size={13} style={{ pointerEvents: 'none' }} /> Increase
                             </button>
@@ -426,7 +479,7 @@ export const TenantsView: React.FC = () => {
                                 tenantName: t.full_name,
                                 propertyName: a.properties?.name || 'Unknown Property',
                                 unitNumber: a.unit_number,
-                                currentRent: a.current_rent
+                                currentRent: getEffectiveRentAsOf(a)
                               });
                             }} title="Payment Ledger" style={{ background: 'rgba(16,185,129,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
                               <List size={13} style={{ pointerEvents: 'none' }} /> Ledger
@@ -545,7 +598,7 @@ export const TenantsView: React.FC = () => {
         <LiquidGlassOverlay onClose={() => !isSubmitting && setAssignModal(null)}>
           <LiquidGlassWindow>
             <div className="lg-modal-header">
-              <h2 className="modal-title">Assign {assignModal.full_name} to Property</h2>
+              <h2 className="modal-title">{editAssignmentId ? 'Edit Assignment' : 'Assign Property'} - {assignModal.full_name}</h2>
               <button className="lg-close-btn" onClick={() => setAssignModal(null)}><X size={20} /></button>
             </div>
             <LiquidGlassContent>
@@ -658,7 +711,7 @@ export const TenantsView: React.FC = () => {
                 </div>
                 <div className="lg-actions" style={{ marginTop: '16px' }}>
                   <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setAssignModal(null)}>Cancel</button>
-                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Assigning...' : 'Assign Tenant'}</button>
+                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : (editAssignmentId ? 'Save Changes' : 'Assign Tenant')}</button>
                 </div>
               </form>
             </LiquidGlassContent>
@@ -696,11 +749,10 @@ export const TenantsView: React.FC = () => {
                   required 
                   min="0" 
                 />
-                <LiquidGlassInput 
-                  type="date" 
+                <LiquidGlassDatePicker 
                   label="Effective From *" 
                   value={rentForm.effective_from} 
-                  onChange={e => setRentForm({ ...rentForm, effective_from: e.target.value })} 
+                  onChange={val => setRentForm({ ...rentForm, effective_from: val })} 
                   required 
                 />
                 <LiquidGlassInput 
@@ -794,6 +846,7 @@ export const TenantsView: React.FC = () => {
           propertyName={paymentLedgerTarget.propertyName}
           unitNumber={paymentLedgerTarget.unitNumber}
           currentRent={paymentLedgerTarget.currentRent}
+          backendBalance={0}
           onClose={() => setPaymentLedgerTarget(null)}
         />
       )}

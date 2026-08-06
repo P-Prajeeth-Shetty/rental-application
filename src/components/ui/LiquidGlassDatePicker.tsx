@@ -192,6 +192,7 @@ export const LiquidGlassDatePicker: React.FC<LiquidGlassDatePickerProps> = ({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <button 
+              type="button"
               onMouseDown={prevMonth} 
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', padding: '6px', borderRadius: '10px', display: 'flex' }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.4)'}
@@ -201,6 +202,7 @@ export const LiquidGlassDatePicker: React.FC<LiquidGlassDatePickerProps> = ({
             </button>
             <strong style={{ fontSize: '0.95rem' }}>{monthNames[currentMonth]} {currentYear}</strong>
             <button 
+              type="button"
               onMouseDown={nextMonth} 
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', padding: '6px', borderRadius: '10px', display: 'flex' }}
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.4)'}

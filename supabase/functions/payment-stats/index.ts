@@ -59,6 +59,28 @@ function getExpectedMonths(
   return result;
 }
 
+// ── Get expected rent for a specific month (mirrors process-payments) ───
+
+function getExpectedRentForMonth(
+  assignment: any,
+  month: number,
+  year: number,
+  revisions: any[]
+): number {
+  if (!revisions || revisions.length === 0) {
+    return assignment.current_rent;
+  }
+  const periodDate = new Date(year, month - 1, assignment.due_day || 1);
+  for (const rev of revisions) {
+    const effectiveDate = new Date(rev.effective_from);
+    if (periodDate >= effectiveDate) {
+      return rev.new_rent;
+    }
+  }
+  const earliestRev = revisions[revisions.length - 1];
+  return earliestRev.previous_rent;
+}
+
 // ── ACTION: dashboard ───────────────────────────────────────────────────
 // Returns: KPI stats + overdue items list
 
@@ -71,20 +93,29 @@ async function handleDashboard(supabase: any) {
     { data: properties },
     { data: activeAssignments },
     { data: allPayments },
+    { data: revisionsData }
   ] = await Promise.all([
     supabase.from('properties').select('total_units'),
     supabase.from('tenant_assignments')
       .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, tenant_id, unit_number, tenants(full_name), properties(name)')
       .eq('status', 'active'),
     supabase.from('payments').select('assignment_id, amount, period_month, period_year, is_reversed'),
+    supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
   ]);
 
   const totalUnits = (properties || []).reduce((s: number, p: any) => s + (p.total_units || 0), 0);
   const occupiedUnits = (activeAssignments || []).length;
 
+  const revisionsMap = new Map();
+  (revisionsData || []).forEach((r: any) => {
+    if (!revisionsMap.has(r.assignment_id)) {
+      revisionsMap.set(r.assignment_id, []);
+    }
+    revisionsMap.get(r.assignment_id).push(r);
+  });
+
   // Valid (non-reversed) payments
   const validPayments = (allPayments || []).filter((p: any) => !p.is_reversed);
-  const totalRevenue = validPayments.reduce((s: number, p: any) => s + Number(p.amount), 0);
 
   // Per-assignment totals
   const paidPerAssignment: Record<string, number> = {};
@@ -110,14 +141,20 @@ async function handleDashboard(supabase: any) {
 
   (activeAssignments || []).forEach((a: any) => {
     const expectedMonths = getExpectedMonths(a.lease_start, a.lease_end, currentMonth, currentYear);
-    const monthCount = expectedMonths.length;
+    const assignmentRevisions = revisionsMap.get(a.id) || [];
 
-    totalExpected += monthCount * Number(a.current_rent);
+    let assignmentTotalExpected = 0;
+    
+    expectedMonths.forEach(em => {
+      assignmentTotalExpected += getExpectedRentForMonth(a, em.month, em.year, assignmentRevisions);
+    });
+
+    totalExpected += assignmentTotalExpected;
     totalPaid += paidPerAssignment[a.id] || 0;
 
     // Add to current month expected if the lease is active this month
     if (expectedMonths.some(em => em.month === currentMonth && em.year === currentYear)) {
-      currentMonthExpected += Number(a.current_rent);
+      currentMonthExpected += getExpectedRentForMonth(a, currentMonth, currentYear, assignmentRevisions);
     }
 
     // Check for overdue months
@@ -145,14 +182,19 @@ async function handleDashboard(supabase: any) {
     });
 
     if (overdueMonths.length > 0) {
+      let totalOverdue = 0;
+      overdueMonths.forEach(om => {
+        totalOverdue += getExpectedRentForMonth(a, om.month, om.year, assignmentRevisions);
+      });
+
       overdueItems.push({
         assignmentId: a.id,
         tenantName: a.tenants?.full_name || 'Unknown',
         propertyName: a.properties?.name || '',
         unitNumber: a.unit_number,
-        monthlyRent: Number(a.current_rent),
+        monthlyRent: getExpectedRentForMonth(a, currentMonth, currentYear, assignmentRevisions),
         overdueMonths,
-        totalOverdue: overdueMonths.length * Number(a.current_rent),
+        totalOverdue,
       });
     }
   });
@@ -166,7 +208,7 @@ async function handleDashboard(supabase: any) {
 
   return {
     // KPI data
-    totalRevenue,
+    totalRevenue: totalPaid,
     pendingRent,
     availableUnits: Math.max(0, totalUnits - occupiedUnits),
     totalTenants: occupiedUnits,
@@ -186,7 +228,7 @@ async function handleDashboard(supabase: any) {
 async function handlePaymentStatus(supabase: any, filterMonth: number, filterYear: number) {
   const now = new Date();
 
-  const [{ data: assignments }, { data: payments }, { data: allPayments }] = await Promise.all([
+  const [{ data: assignments }, { data: payments }, { data: allPayments }, { data: revisionsData }] = await Promise.all([
     supabase.from('tenant_assignments')
       .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end')
       .eq('status', 'active'),
@@ -195,8 +237,17 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
       .eq('period_month', filterMonth)
       .eq('period_year', filterYear),
     supabase.from('payments')
-      .select('assignment_id, amount, is_reversed')
+      .select('assignment_id, amount, is_reversed'),
+    supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
   ]);
+
+  const revisionsMap = new Map();
+  (revisionsData || []).forEach((r: any) => {
+    if (!revisionsMap.has(r.assignment_id)) {
+      revisionsMap.set(r.assignment_id, []);
+    }
+    revisionsMap.get(r.assignment_id).push(r);
+  });
 
   // Sum payments per assignment for THIS period
   const paidPerAssignment: Record<string, number> = {};
@@ -218,28 +269,31 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
   const currentYear = now.getFullYear();
 
   (assignments || []).forEach((a: any) => {
-    const expected = Number(a.current_rent);
+    const assignmentRevisions = revisionsMap.get(a.id) || [];
+    const expected = getExpectedRentForMonth(a, filterMonth, filterYear, assignmentRevisions);
     const paidAmount = paidPerAssignment[a.id] || 0;
     const fullyPaid = paidAmount >= expected;
 
     // CUMULATIVE BALANCE CALCULATION (Anniversary Billing)
+    // We compute exactly the list of months expected to be paid up to 'now'
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const expectedMonths = getExpectedMonths(a.lease_start, a.lease_end, currentMonth, currentYear);
+    
+    // Check if we should include the current month based on due date/anniversary
     const start = new Date(a.lease_start);
-    let monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-    
-    // If we haven't reached the anniversary day of the current month, subtract 1
-    if (now.getDate() < start.getDate()) {
-      monthsElapsed -= 1;
+    let includedMonths = expectedMonths;
+    if (a.payment_mode !== 'prepaid' && a.payment_mode !== 'advance_on_entry') {
+        if (now.getDate() < start.getDate()) {
+            includedMonths = expectedMonths.slice(0, -1);
+        }
     }
-    
-    // Prepaid leases owe the first month immediately on move-in
-    if (a.payment_mode === 'prepaid' || a.payment_mode === 'advance_on_entry') {
-      monthsElapsed += 1;
-    }
-    
-    // Ensure we don't charge negative months if lease is in the future
-    monthsElapsed = Math.max(0, monthsElapsed);
-    
-    const totalExpectedAllTime = monthsElapsed * Number(a.current_rent);
+
+    let totalExpectedAllTime = 0;
+    includedMonths.forEach(em => {
+      totalExpectedAllTime += getExpectedRentForMonth(a, em.month, em.year, assignmentRevisions);
+    });
+
     const totalPaidAllTime = totalPaidPerAssignment[a.id] || 0;
     const cumulativeBalance = totalExpectedAllTime - totalPaidAllTime;
 

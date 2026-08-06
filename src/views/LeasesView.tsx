@@ -26,6 +26,26 @@ interface AssignmentWithTenant {
   lease_start: string;
   tenants: { id: string; full_name: string; phone: string | null; email: string | null } | null;
   properties: { id: string; name: string } | null;
+  rent_revisions?: { previous_rent: number; new_rent: number; effective_from: string }[];
+}
+
+function getEffectiveRentAsOf(assignment: AssignmentWithTenant, date: Date = new Date()) {
+  if (!assignment.rent_revisions || assignment.rent_revisions.length === 0) {
+    return assignment.current_rent;
+  }
+  const sortedRevisions = [...assignment.rent_revisions].sort((a, b) => new Date(b.effective_from).getTime() - new Date(a.effective_from).getTime());
+  
+  const compareDate = new Date(date);
+  compareDate.setHours(0,0,0,0);
+
+  for (const rev of sortedRevisions) {
+    const effectiveDate = new Date(rev.effective_from);
+    effectiveDate.setHours(0,0,0,0);
+    if (compareDate >= effectiveDate) {
+      return rev.new_rent;
+    }
+  }
+  return sortedRevisions[sortedRevisions.length - 1].previous_rent;
 }
 
 interface Payment {
@@ -63,6 +83,7 @@ interface ExcelRow {
   matched_assignment_id?: string;
   matched_assignment?: AssignmentWithTenant;
   error?: string;
+  notes?: string;
 }
 
 type Toast = { id: number; type: 'success' | 'error'; message: string };
@@ -107,7 +128,7 @@ export const LeasesView: React.FC = () => {
     setIsLoading(true);
     try {
       const [{ data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
-        supabase.from('tenant_assignments').select('id, unit_number, current_rent, tenant_id, status, payment_mode, due_day, grace_days, lease_start, tenants(id, full_name, phone, email), properties(id, name)').eq('status', 'active'),
+        supabase.from('tenant_assignments').select('id, unit_number, current_rent, tenant_id, status, payment_mode, due_day, grace_days, lease_start, tenants(id, full_name, phone, email), properties(id, name), rent_revisions(previous_rent, new_rent, effective_from)').eq('status', 'active'),
         supabase.from('payments').select('*').eq('period_month', filterMonth).eq('period_year', filterYear).order('payment_date', { ascending: false }),
       ]);
       if (aErr) throw aErr;
@@ -137,16 +158,14 @@ export const LeasesView: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const assignment = assignments.find(a => a.id === payForm.assignment_id);
-      const amount = parseFloat(payForm.amount);
-      const periodMonth = parseInt(payForm.period_month);
-      const periodYear = parseInt(payForm.period_year);
       const payload = [{
         assignment_id: payForm.assignment_id,
         amount: payForm.amount,
         payment_date: payForm.payment_date,
         payment_method: payForm.payment_method || null,
-        payment_type: payForm.payment_type || 'rent'
+        payment_type: payForm.payment_type || 'rent',
+        reference_number: payForm.reference_number || null,
+        notes: payForm.notes || null
       }];
 
       const { data, error } = await supabase.functions.invoke('process-payments', {
@@ -185,7 +204,7 @@ export const LeasesView: React.FC = () => {
         const tenantName = String(row['Tenant Name'] || row['tenant_name'] || row['Name'] || '').trim();
         const property = String(row['Property'] || row['property'] || '').trim();
         const unit = String(row['Unit'] || row['unit'] || '').trim();
-        const amount = parseFloat(row['Amount'] || row['amount'] || 0);
+        const amount = parseFloat(row['Paid Amount'] || row['paid_amount'] || row['Amount'] || row['amount'] || 0);
         const paymentDate = row['Payment Date'] || row['payment_date'] || row['Date'] || '';
         const method = String(row['Method'] || row['payment_method'] || row['Payment Method'] || 'UPI');
         const reference = String(row['Reference'] || row['reference_number'] || row['Reference No'] || '');
@@ -193,6 +212,7 @@ export const LeasesView: React.FC = () => {
         const year = parseInt(row['Year'] || row['year'] || filterYear);
         const paymentType = String(row['Payment Type'] || row['payment_type'] || 'rent').toLowerCase().replace(' ', '_');
         const monthsCovered = Math.max(1, parseInt(row['Months Covered'] || row['months_covered'] || '1') || 1);
+        const notes = String(row['Notes'] || row['notes'] || '');
 
         // Match by tenant name + property + unit (handles duplicate names)
         let match: AssignmentWithTenant | undefined;
@@ -213,7 +233,7 @@ export const LeasesView: React.FC = () => {
           match = assignments.find(a => a.tenants?.full_name.toLowerCase() === tenantName.toLowerCase());
         }
 
-        const parsed: ExcelRow = { tenant_name: tenantName, property, unit, amount, payment_date: formatExcelDate(paymentDate), method, reference, month, year, payment_type: paymentType, months_covered: monthsCovered };
+        const parsed: ExcelRow = { tenant_name: tenantName, property, unit, amount, payment_date: formatExcelDate(paymentDate), method, reference, month, year, payment_type: paymentType, months_covered: monthsCovered, notes };
 
         if (!tenantName) parsed.error = 'Missing tenant name';
         else if (!match) parsed.error = 'Tenant not found';
@@ -266,7 +286,8 @@ export const LeasesView: React.FC = () => {
         payment_date: r.payment_date,
         payment_method: r.method || null,
         reference_number: r.reference || null,
-        payment_type: r.payment_type || 'rent'
+        payment_type: r.payment_type || 'rent',
+        notes: r.notes || null
       }));
 
       const { data, error: insertErr } = await supabase.functions.invoke('process-payments', {
@@ -296,13 +317,15 @@ export const LeasesView: React.FC = () => {
           'Phone': a.tenants?.phone || '',
           'Property': a.properties?.name || '',
           'Unit': a.unit_number || '',
-          'Amount': a.current_rent,
+          'Paid Amount': getEffectiveRentAsOf(a, new Date(filterYear, filterMonth - 1, 1)),
+          'Bal Amount': getStatus(a.id).balance,
           'Payment Date': new Date().toISOString().split('T')[0],
           'Method': 'UPI',
           'Reference': '',
+          'Notes': '',
           'Payment Type': 'rent'
         }))
-      : [{ 'Tenant Name': 'Example Tenant', 'Email': 'example@email.com', 'Phone': '9876543210', 'Property': 'Example Property', 'Unit': '101', 'Amount': 25000, 'Payment Date': new Date().toISOString().split('T')[0], 'Method': 'UPI', 'Reference': 'TXN12345', 'Payment Type': 'rent' }];
+      : [{ 'Tenant Name': 'Example Tenant', 'Email': 'example@email.com', 'Phone': '9876543210', 'Property': 'Example Property', 'Unit': '101', 'Paid Amount': 25000, 'Bal Amount': 0, 'Payment Date': new Date().toISOString().split('T')[0], 'Method': 'UPI', 'Reference': 'TXN12345', 'Notes': '', 'Payment Type': 'rent' }];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
@@ -315,7 +338,12 @@ export const LeasesView: React.FC = () => {
   // Get ALL payments for an assignment in the current period
   const getPaymentsForAssignment = (assignId: string) => payments.filter(p => p.assignment_id === assignId);
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const totalExpected = assignments.reduce((s, a) => s + Number(a.current_rent), 0);
+  
+  // Calculate expected rent using the effective rent as of today, or the specific filter month. 
+  // We'll use the 1st of the filter month to evaluate rent for that period.
+  const filterPeriodDate = new Date(filterYear, filterMonth - 1, 1);
+  const totalExpected = assignments.reduce((s, a) => s + Number(getEffectiveRentAsOf(a, filterPeriodDate)), 0);
+  
   const totalCollected = payments.reduce((s, p) => s + Number(p.amount), 0);
   const collectionRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
 
@@ -431,7 +459,9 @@ export const LeasesView: React.FC = () => {
             <tbody>
               {filteredAssignments.map(a => {
                 const assignPays = getPaymentsForAssignment(a.id);
-                const expected = Number(a.current_rent);
+                // Expected rent for the filter period (e.g. this month's rent amount)
+                const filterPeriodDate = new Date(filterYear, filterMonth - 1, 1);
+                const expected = Number(getEffectiveRentAsOf(a, filterPeriodDate));
                 const latestPay = assignPays.length > 0 ? assignPays[0] : null; // sorted desc by payment_date
                 const badge = latestPay ? timingBadge(latestPay.payment_timing, latestPay.days_late) : null;
                 // Use server-computed status
@@ -528,7 +558,7 @@ export const LeasesView: React.FC = () => {
           tenantName={historyTarget.tenants?.full_name || 'Tenant'}
           propertyName={historyTarget.properties?.name || ''}
           unitNumber={historyTarget.unit_number}
-          currentRent={historyTarget.current_rent}
+          currentRent={getEffectiveRentAsOf(historyTarget)}
           backendBalance={getStatus(historyTarget.id).balance}
           onClose={() => setHistoryTarget(null)}
         />
@@ -554,7 +584,7 @@ export const LeasesView: React.FC = () => {
                       searchable={true}
                       options={assignments.map(a => ({
                         value: a.id,
-                        label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(a.current_rent).toLocaleString('en-IN')})`
+                        label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')})`
                       }))}
                     />
                   </div>
@@ -618,6 +648,13 @@ export const LeasesView: React.FC = () => {
                       />
                     </div>
                   </div>
+                  <LiquidGlassInput 
+                    type="text" 
+                    label="Notes (Optional)" 
+                    value={payForm.notes} 
+                    onChange={e => setPayForm({ ...payForm, notes: e.target.value })} 
+                    placeholder="Enter notes..." 
+                  />
                 </div>
                 <div className="lg-actions" style={{ marginTop: '16px' }}>
                   <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setPayModal(false)}>Cancel</button>

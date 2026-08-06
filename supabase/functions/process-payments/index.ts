@@ -54,6 +54,33 @@ function computeCredit(amountPaid: number, expectedRent: number): number {
   return amountPaid - expectedRent;
 }
 
+function getExpectedRentForMonth(
+  assignment: any,
+  month: number,
+  year: number,
+  revisions: any[]
+): number {
+  if (!revisions || revisions.length === 0) {
+    return assignment.current_rent;
+  }
+
+  // The due date for the month is roughly what we care about for rent periods,
+  // or just the 1st of the month.
+  const periodDate = new Date(year, month - 1, assignment.due_day || 1);
+
+  // Revisions are sorted by effective_from descending.
+  for (const rev of revisions) {
+    const effectiveDate = new Date(rev.effective_from);
+    if (periodDate >= effectiveDate) {
+      return rev.new_rent;
+    }
+  }
+
+  // If period is before ALL revisions, the rent was the previous_rent of the earliest revision.
+  const earliestRev = revisions[revisions.length - 1];
+  return earliestRev.previous_rent;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -95,13 +122,29 @@ serve(async (req) => {
     if (pErr) throw pErr;
     const existingPayments = existingPaymentsData || [];
 
+    // Fetch rent revisions to calculate historical expected rent
+    const { data: revisionsData, error: revErr } = await supabaseClient
+      .from('rent_revisions')
+      .select('assignment_id, previous_rent, new_rent, effective_from')
+      .in('assignment_id', assignmentIds)
+      .order('effective_from', { ascending: false });
+
+    if (revErr) throw revErr;
+    const revisionsMap = new Map();
+    (revisionsData || []).forEach(r => {
+      if (!revisionsMap.has(r.assignment_id)) {
+        revisionsMap.set(r.assignment_id, []);
+      }
+      revisionsMap.get(r.assignment_id).push(r);
+    });
+
     const allPayloads = [];
 
     for (const p of incomingPayments) {
       const assignment = assignmentsMap.get(p.assignment_id);
       if (!assignment) continue;
 
-      const expectedAmount = assignment.current_rent;
+      const assignmentRevisions = revisionsMap.get(assignment.id) || [];
       let remainingAmount = parseFloat(p.amount);
       if (isNaN(remainingAmount) || remainingAmount <= 0) continue;
 
@@ -126,8 +169,10 @@ serve(async (req) => {
 
         const totalPaidSoFarForMonth = alreadyPaidForMonth + newlyPaidForMonth;
         
+        const expectedAmountForMonth = getExpectedRentForMonth(assignment, currentMonth, currentYear, assignmentRevisions);
+        
         // If this month is already fully paid, move to next month
-        if (totalPaidSoFarForMonth >= expectedAmount) {
+        if (totalPaidSoFarForMonth >= expectedAmountForMonth) {
           currentMonth++;
           if (currentMonth > 12) { currentMonth = 1; currentYear++; }
           isFirstPayment = false;
@@ -135,7 +180,7 @@ serve(async (req) => {
         }
 
         // Amount needed to fully pay off this month
-        const amountNeeded = expectedAmount - totalPaidSoFarForMonth;
+        const amountNeeded = expectedAmountForMonth - totalPaidSoFarForMonth;
         
         // Amount we will apply to this month
         const amountToApply = Math.min(amountNeeded, remainingAmount);
@@ -152,8 +197,8 @@ serve(async (req) => {
         const { timing, daysLate } = classifyTiming(p.payment_date, dueDate, assignment.grace_days || 5);
 
         const newTotalPaidForMonth = totalPaidSoFarForMonth + roundedAmountToApply;
-        const creditAmount = computeCredit(newTotalPaidForMonth, expectedAmount);
-        const status = newTotalPaidForMonth >= expectedAmount ? 'paid' : 'partial';
+        const creditAmount = computeCredit(newTotalPaidForMonth, expectedAmountForMonth);
+        const status = newTotalPaidForMonth >= expectedAmountForMonth ? 'paid' : 'partial';
 
         allPayloads.push({
           assignment_id: p.assignment_id,
@@ -169,13 +214,13 @@ serve(async (req) => {
           payment_timing: timing,
           days_late: daysLate,
           credit_amount: creditAmount,
-          expected_amount: expectedAmount,
+          expected_amount: expectedAmountForMonth,
           upload_batch_id: upload_batch_id || null
         });
 
         remainingAmount -= roundedAmountToApply;
         
-        if (newTotalPaidForMonth >= expectedAmount) {
+        if (newTotalPaidForMonth >= expectedAmountForMonth) {
           currentMonth++;
           if (currentMonth > 12) { currentMonth = 1; currentYear++; }
         }
