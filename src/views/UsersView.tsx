@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import './views.css';
 import {
   UserPlus, Shield, X, Mail, Image as ImageIcon,
-  Pencil, Trash2, KeyRound, Check, AlertTriangle
+  Pencil, Trash2, KeyRound, Check, AlertTriangle,
+  Users, UserCheck, Search, Filter
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { 
@@ -13,6 +14,7 @@ import {
   LiquidGlassTextarea,
   LiquidGlassCustomSelect
 } from '../components/ui/LiquidGlassModal';
+import { CustomSelect } from '../components/ui/CustomSelect';
 
 interface UserRecord {
   user_id: string;
@@ -38,6 +40,8 @@ export const UsersView: React.FC = () => {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All Roles');
 
   // Create User modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -254,11 +258,60 @@ export const UsersView: React.FC = () => {
       </div>
       <style>{`@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }`}</style>
 
-      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 className="view-title" style={{ margin: 0 }}>Users Management</h1>
-        <button className="btn btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <UserPlus size={18} /> Create User
-        </button>
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', width: '100%', marginBottom: '8px' }}>
+        <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Users size={18} color="var(--primary)" />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>Total Users</p>
+          </div>
+          <p style={{ fontSize: '2rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{users.length}</p>
+        </div>
+        <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Shield size={18} color="#10b981" />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>Administrators</p>
+          </div>
+          <p style={{ fontSize: '2rem', fontWeight: 700, margin: 0, color: '#10b981' }}>{users.filter(u => u.role === 'admin').length}</p>
+        </div>
+        <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <UserCheck size={18} color="#3b82f6" />
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>Regular Users</p>
+          </div>
+          <p style={{ fontSize: '2rem', fontWeight: 700, margin: 0, color: '#3b82f6' }}>{users.filter(u => u.role === 'user').length}</p>
+        </div>
+      </div>
+
+      {/* Toolbar (Search + Filters + Actions) */}
+      <div className="search-filter-row">
+        <div className="search-input-container">
+          <Search size={18} color="var(--text-secondary)" />
+          <input 
+            type="text" 
+            placeholder="Search users by name, phone..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <CustomSelect
+              value={roleFilter}
+              onChange={val => setRoleFilter(val)}
+              options={[
+                { value: 'All Roles', label: 'All Roles' },
+                { value: 'admin', label: 'Administrators' },
+                { value: 'user', label: 'Users' }
+              ]}
+              width="160px"
+              height={48}
+            />
+          </div>
+          <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '8px' }}>
+            <UserPlus size={18} /> Create User
+          </button>
+        </div>
       </div>
 
       {/* ── Users Table ── */}
@@ -277,7 +330,17 @@ export const UsersView: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map(u => {
+              {users
+                .filter(u => roleFilter === 'All Roles' || u.role === roleFilter)
+                .filter(u => {
+                  if (!searchQuery) return true;
+                  const q = searchQuery.toLowerCase();
+                  return (
+                    u.profiles?.full_name?.toLowerCase().includes(q) ||
+                    u.profiles?.phone_number?.toLowerCase().includes(q)
+                  );
+                })
+                .map(u => {
                 const avatarUrl = getAvatarUrl(u.profiles?.avatar_url);
                 const displayName = u.profiles?.full_name || 'N/A';
                 return (

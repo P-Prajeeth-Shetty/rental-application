@@ -366,7 +366,7 @@ export const LeasesView: React.FC = () => {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="view-container">
+    <>
       {/* Toasts */}
       <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {toasts.map(t => (
@@ -379,34 +379,8 @@ export const LeasesView: React.FC = () => {
       </div>
       <style>{`@keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); }}`}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-        <h1 className="view-title" style={{ margin: 0 }}>Payments</h1>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Month/Year filter */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <CustomSelect
-              value={String(filterMonth)}
-              onChange={(val) => setFilterMonth(parseInt(val))}
-              options={monthNames.map((m, i) => ({ value: String(i + 1), label: m }))}
-              width="110px"
-            />
-            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '0 12px', height: '42px', borderRadius: '8px', background: 'var(--bg-surface)', border: '2px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
-          </div>
-          <button onClick={handleDownloadTemplate} className="btn-secondary" style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px', padding: '8px 16px', border: 'none', background: 'transparent', color: 'var(--text-secondary)' }}>
-            <Download size={16} /> Template
-          </button>
-          <input type="file" ref={fileRef} onChange={handleFileSelect} accept=".xlsx,.xls,.csv" style={{ display: 'none' }} />
-          <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px', padding: '8px 16px' }}>
-            <Upload size={16} /> Upload Excel
-          </button>
-          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
-            <Plus size={16} /> Record Payment
-          </button>
-        </div>
-      </div>
-
       {/* KPI Cards */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '24px', width: '100%' }}>
         <div className="surface-card glass-card" style={{ flex: 1, minWidth: '160px', padding: '18px 20px' }}>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '4px' }}>Expected</p>
           <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>₹{totalExpected.toLocaleString('en-IN')}</p>
@@ -425,20 +399,45 @@ export const LeasesView: React.FC = () => {
         </div>
       </div>
 
-      {/* Payments Table */}
-      <div className="surface-card glass-card static-card" style={{ padding: 0, overflow: 'auto' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <h3 style={{ margin: 0, fontSize: '1rem' }}>{monthNames[filterMonth - 1]} {filterYear} — Payment Status</h3>
-          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-surface)', borderRadius: '8px', padding: '6px 12px', border: '1px solid var(--border-color)' }}>
-            <Search size={14} style={{ color: 'var(--text-secondary)', marginRight: '8px' }} />
-            <input 
-              type="text" 
-              placeholder="Search tenant or unit..." 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ border: 'none', background: 'transparent', outline: 'none', color: 'var(--text-primary)', fontSize: '0.9rem', width: '200px' }}
+      {/* Toolbar (Search + Filters + Actions) */}
+      <div className="search-filter-row">
+        <div className="search-input-container">
+          <Search size={18} color="var(--text-secondary)" />
+          <input 
+            type="text" 
+            placeholder="Search tenant or unit..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <CustomSelect
+              value={String(filterMonth)}
+              onChange={(val) => setFilterMonth(parseInt(val))}
+              options={monthNames.map((m, i) => ({ value: String(i + 1), label: m }))}
+              width="120px"
+              height={48}
             />
+            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
+          <button onClick={handleDownloadTemplate} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1px solid var(--input-border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', height: '48px' }}>
+            <Download size={16} /> Template
+          </button>
+          <input type="file" ref={fileRef} onChange={handleFileSelect} accept=".xlsx,.xls,.csv" style={{ display: 'none' }} />
+          <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1px solid var(--input-border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', height: '48px' }}>
+            <Upload size={16} /> Upload Excel
+          </button>
+          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', height: '48px', fontWeight: 600 }}>
+            <Plus size={16} /> Record Payment
+          </button>
+        </div>
+      </div>
+
+      {/* Payments Table */}
+      <div className="surface-card glass-card static-card" style={{ padding: 0, overflow: 'auto', width: '100%' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem' }}>{monthNames[filterMonth - 1]} {filterYear} — Payment Status</h3>
         </div>
         {isLoading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading...</div>
@@ -718,6 +717,6 @@ export const LeasesView: React.FC = () => {
           </LiquidGlassWindow>
         </LiquidGlassOverlay>
       )}
-    </div>
+    </>
   );
 };

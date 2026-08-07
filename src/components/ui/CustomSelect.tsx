@@ -12,6 +12,7 @@ interface CustomSelectProps {
   options: Option[];
   placeholder?: string;
   width?: string;
+  height?: string;
   searchable?: boolean;
   menuPlacement?: 'bottom' | 'top';
 }
@@ -22,6 +23,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   options, 
   placeholder = 'Select...',
   width = '100%',
+  height = '48px',
   searchable = false,
   menuPlacement = 'bottom'
 }) => {
@@ -68,7 +70,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           boxShadow: isOpen ? '0 0 0 3px rgba(222, 163, 137, 0.2)' : 'none',
           borderColor: isOpen ? 'var(--primary-accent)' : 'var(--input-border)',
           transition: 'all 0.2s',
-          height: '42px', boxSizing: 'border-box'
+          height, boxSizing: 'border-box'
         }}
       >
         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>

@@ -35,14 +35,7 @@ export const LoginView: React.FC = () => {
     <div className="login-container">
       <div className="login-card">
         
-        {/* Left Side: Visual / Slanted Image */}
-        <div className="login-left">
-          <div className="login-left-skewed">
-            <div className="login-left-image"></div>
-          </div>
-        </div>
-
-        {/* Right Side: Form */}
+        {/* Right Side: Form Overlay */}
         <div className="login-right">
           <div className="login-form-content">
             <div className="brand-logo">

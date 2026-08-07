@@ -3,6 +3,7 @@
 /* Global resets for Vite default styles that might interfere */
 #root {
   width: 100%;
+  max-width: none;
   margin: 0 auto;
   text-align: left;
 }

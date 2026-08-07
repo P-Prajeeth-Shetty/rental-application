@@ -81,6 +81,7 @@
   display: grid;
   grid-template-columns: 1.2fr 2fr;
   gap: 24px;
+  width: 100%;
 }
 
 .dashboard-left-col {

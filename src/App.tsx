@@ -10,6 +10,7 @@ import { MaintenanceView } from './views/MaintenanceView';
 import { ReportsView } from './views/ReportsView';
 import { UsersView } from './views/UsersView';
 import { LeasedPropertiesView } from './views/LeasedPropertiesView';
+import { HelpCenterView } from './views/HelpCenterView';
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -93,6 +94,8 @@ function App() {
         return <ReportsView />;
       case 'users':
         return userRole === 'admin' ? <UsersView /> : <DashboardView />;
+      case 'help':
+        return <HelpCenterView />;
       default:
         return <DashboardView />;
     }

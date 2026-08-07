@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './views.css';
 import { RevenueChart } from '../components/dashboard/RevenueChart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Download } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { CustomSelect } from '../components/ui/CustomSelect';
 
 interface ExpenseRow {
   name: string;
@@ -35,6 +36,9 @@ export const ReportsView: React.FC = () => {
   const [expensesData, setExpensesData] = useState<ExpenseRow[]>(emptyExpenses());
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [loadingExp, setLoadingExp] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
 
   const [assignments, setAssignments] = useState<TenantAssignmentRow[]>([]);
   const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { status: string; isOverdue: boolean; balance: number }>>({});
@@ -153,35 +157,6 @@ export const ReportsView: React.FC = () => {
 
   return (
     <div className="view-container">
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 className="view-title" style={{ marginBottom: '4px' }}>Financial Reports</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-            Year-to-date summary for {new Date().getFullYear()}
-          </p>
-        </div>
-        <button
-          onClick={handleExportCSV}
-          style={{
-            display: 'flex',
-            gap: '8px',
-            alignItems: 'center',
-            background: 'var(--bg-surface)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border-color)',
-            padding: '8px 16px',
-            borderRadius: '100px',
-            fontWeight: 600,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <Download size={16} /> Export CSV
-        </button>
-      </div>
-
       {/* Summary KPI card for expenses */}
       <div style={{
         display: 'grid',
@@ -205,6 +180,54 @@ export const ReportsView: React.FC = () => {
           <p style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
             {loadingExp ? '—' : `₹${totalExpenses.toLocaleString('en-IN')}`}
           </p>
+        </div>
+      </div>
+
+      {/* Toolbar (Search + Filters + Actions) */}
+      <div className="search-filter-row">
+        <div className="search-input-container">
+          <Search size={18} color="var(--text-secondary)" />
+          <input 
+            type="text" 
+            placeholder="Search reports..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <CustomSelect
+              value={String(filterMonth)}
+              onChange={(val) => setFilterMonth(parseInt(val))}
+              options={MONTHS.map((m, i) => ({ value: String(i + 1), label: m }))}
+              width="120px"
+              height={48}
+            />
+            <input 
+              type="number" 
+              value={filterYear} 
+              onChange={e => setFilterYear(parseInt(e.target.value))} 
+              style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} 
+            />
+          </div>
+          <button
+            onClick={handleExportCSV}
+            className="btn-primary"
+            style={{
+              display: 'flex',
+              gap: '8px',
+              alignItems: 'center',
+              padding: '0 16px',
+              borderRadius: '8px',
+              height: '48px',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <Download size={16} /> Export CSV
+          </button>
         </div>
       </div>
 
@@ -289,7 +312,17 @@ export const ReportsView: React.FC = () => {
                   <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>No active tenants found.</td>
                 </tr>
               ) : (
-                assignments.map(a => {
+                assignments
+                  .filter(a => {
+                    if (!searchQuery) return true;
+                    const q = searchQuery.toLowerCase();
+                    return (
+                      a.tenants?.full_name?.toLowerCase().includes(q) ||
+                      a.properties?.name?.toLowerCase().includes(q) ||
+                      a.unit_number.toLowerCase().includes(q)
+                    );
+                  })
+                  .map(a => {
                   const statusInfo = paymentStatusMap[a.id];
                   const badgeClass = statusInfo?.status === 'paid' ? 'success' : statusInfo?.isOverdue ? 'danger' : statusInfo?.status === 'partial' ? 'warning' : 'default';
                   const badgeText = statusInfo?.status === 'paid' ? 'Paid' : statusInfo?.isOverdue ? 'Overdue' : statusInfo?.status === 'partial' ? 'Partial' : 'Pending';
@@ -332,7 +365,6 @@ export const ReportsView: React.FC = () => {
           </table>
         </div>
       </div>
-
     </div>
   );
 };

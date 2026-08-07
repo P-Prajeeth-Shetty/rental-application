@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, Users, FileText, Wallet } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
@@ -361,30 +361,83 @@ export const TenantsView: React.FC = () => {
     (t.phone && t.phone.includes(searchTerm))
   );
 
+  const totalTenants = tenants.length;
+  let activeLeases = 0;
+  let totalMonthlyRent = 0;
+  
+  tenants.forEach(t => {
+    const assigns = assignmentsMap[t.id] || [];
+    const active = assigns.find(a => a.status === 'active');
+    if (active) {
+      activeLeases++;
+      totalMonthlyRent += getEffectiveRentAsOf(active);
+    }
+  });
+
+  const vacatedOrNew = totalTenants - activeLeases;
+
   const computedNewRent = rentModal ? Math.round(rentModal.current_rent * (1 + (parseFloat(rentForm.increase_pct) || 0) / 100) * 100) / 100 : 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="view-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 className="view-title" style={{ margin: 0 }}>Tenants & Rent</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Search size={16} color="var(--text-secondary)" />
-            <input type="text" placeholder="Search tenants..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-              style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', width: '160px' }} />
+    <>
+      {error && <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: '#ff4d4d', padding: '10px 14px', borderRadius: '8px' }}>{error}</div>}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%' }}>
+        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
+              <Users size={20} />
+            </div>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Total Tenants</span>
           </div>
-          <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
-            <Plus size={16} /> Add Tenant
-          </button>
+          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{totalTenants}</h2>
+        </div>
+        
+        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
+              <FileText size={20} />
+            </div>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Active Leases</span>
+          </div>
+          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{activeLeases}</h2>
+        </div>
+        
+        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(236,72,153,0.1)', color: '#ec4899' }}>
+              <Wallet size={20} />
+            </div>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Monthly Rent Roll</span>
+          </div>
+          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>₹{totalMonthlyRent.toLocaleString('en-IN')}</h2>
+        </div>
+        
+        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
+              <Home size={20} />
+            </div>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Unassigned / Vacated</span>
+          </div>
+          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{vacatedOrNew}</h2>
         </div>
       </div>
 
-      {error && <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: '#ff4d4d', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}
+      <div className="search-filter-row">
+        <div className="search-input-container">
+          <Search size={18} color="var(--text-secondary)" />
+          <input type="text" placeholder="Search tenants..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        </div>
+        <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', fontWeight: 600, height: '48px', flexShrink: 0 }}>
+          <Plus size={18} /> Add Tenant
+        </button>
+      </div>
 
       {/* ── Table ── */}
-      <div className="surface-card glass-card static-card" style={{ padding: 0, overflow: 'auto' }}>
+      <div className="surface-card glass-card static-card" style={{ padding: 0, overflow: 'auto', width: '100%' }}>
         {isLoading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading tenants...</div>
         ) : (
@@ -956,6 +1009,6 @@ export const TenantsView: React.FC = () => {
           onClose={() => setPaymentLedgerTarget(null)}
         />
       )}
-    </div>
+    </>
   );
 };

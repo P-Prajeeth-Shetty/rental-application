@@ -29,9 +29,9 @@ export const KPIGrid: React.FC = () => {
   }, []);
 
   const kpis = [
-    { value: `₹${(stats.totalRevenue/1000).toFixed(1)}K`, subtitle: 'Total Revenue', icon: <Wallet size={24} strokeWidth={2} />, colorClass: 'pastel-purple', iconColor: '#6366f1' },
-    { value: `₹${(stats.pendingRent/1000).toFixed(1)}K`, subtitle: 'Pending Rent', icon: <PieChart size={24} strokeWidth={2} />, colorClass: 'pastel-blue', iconColor: '#3b82f6' },
-    { value: `${(stats.totalTenants/1000).toFixed(1)}K`, subtitle: 'Active Tenants', icon: <Contact size={24} strokeWidth={2} />, colorClass: 'pastel-pink', iconColor: '#ec4899' },
+    { value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`, subtitle: 'Total Revenue', icon: <Wallet size={24} strokeWidth={2} />, colorClass: 'pastel-purple', iconColor: '#6366f1' },
+    { value: `₹${stats.pendingRent.toLocaleString('en-IN')}`, subtitle: 'Pending Rent', icon: <PieChart size={24} strokeWidth={2} />, colorClass: 'pastel-blue', iconColor: '#3b82f6' },
+    { value: String(stats.totalTenants), subtitle: 'Active Tenants', icon: <Contact size={24} strokeWidth={2} />, colorClass: 'pastel-pink', iconColor: '#ec4899' },
     { value: String(stats.availableUnits), subtitle: 'Available Units', icon: <CreditCard size={24} strokeWidth={2} />, colorClass: 'pastel-green', iconColor: '#10b981' },
   ];
 

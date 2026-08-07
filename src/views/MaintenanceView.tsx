@@ -211,9 +211,6 @@ export const MaintenanceView: React.FC = () => {
 
   return (
     <div className="view-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 className="view-title" style={{ lineHeight: 1.2, margin: 0 }}>Maintenance Requests</h1>
-      </div>
 
       {isLoading ? (
         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading requests...</div>
@@ -226,17 +223,17 @@ export const MaintenanceView: React.FC = () => {
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'Reported')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '12px', width: '100%', boxSizing: 'border-box', background: 'var(--bg-surface)' }}>
               <AlertTriangle size={18} color="var(--warning)" />
-              <h3 className="kanban-title">Reported ({reported.length})</h3>
+              <h3 className="kanban-title" style={{ margin: 0 }}>Reported ({reported.length})</h3>
             </div>
             
             <div 
               onClick={() => setIsModalOpen(true)}
               className="surface-card glass-card ticket-card" 
-              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '2px dashed rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.1)', minHeight: '110px' }}
+              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '2px dashed var(--primary)', background: 'rgba(59, 130, 246, 0.05)', minHeight: '110px', color: 'var(--primary)', fontWeight: 600, transition: 'all 0.2s', marginBottom: '16px' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Plus size={20} /> New Request
               </div>
             </div>
@@ -250,9 +247,9 @@ export const MaintenanceView: React.FC = () => {
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'In Progress')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '12px', width: '100%', boxSizing: 'border-box', background: 'var(--bg-surface)' }}>
               <Wrench size={18} color="var(--primary-accent)" />
-              <h3 className="kanban-title">In Progress ({inProgress.length})</h3>
+              <h3 className="kanban-title" style={{ margin: 0 }}>In Progress ({inProgress.length})</h3>
             </div>
             {inProgress.map(renderTicketCard)}
           </div>
@@ -263,9 +260,9 @@ export const MaintenanceView: React.FC = () => {
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'Resolved')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '12px', width: '100%', boxSizing: 'border-box', background: 'var(--bg-surface)' }}>
               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--success)' }}></div>
-              <h3 className="kanban-title">Resolved ({resolved.length})</h3>
+              <h3 className="kanban-title" style={{ margin: 0 }}>Resolved ({resolved.length})</h3>
             </div>
             {resolved.map(renderTicketCard)}
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Home, Users, Plus, X, Pencil, Trash2, ChevronLeft, Building2, MapPin, TrendingUp } from 'lucide-react';
+import { Home, Users, Plus, X, Pencil, Trash2, ChevronLeft, Building2, MapPin, TrendingUp, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { 
@@ -52,6 +52,8 @@ export const PropertiesView: React.FC = () => {
   const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('All');
 
   // Modal
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -493,16 +495,48 @@ export const PropertiesView: React.FC = () => {
 
   return (
     <div className="view-container">
-      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 className="view-title" style={{ margin: 0 }}>Properties</h1>
-        {error && <div style={{ color: '#ff4d4d', fontSize: '0.9rem' }}>{error}</div>}
+      {error && <div style={{ color: '#ff4d4d', fontSize: '0.9rem', marginBottom: '16px' }}>{error}</div>}
+      <div className="search-filter-row">
+        <div className="search-input-container">
+          <Search size={18} color="var(--text-secondary)" />
+          <input 
+            type="text" 
+            placeholder="Search properties..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div style={{ width: '200px', flexShrink: 0 }}>
+          <CustomSelect 
+            value={filterType}
+            onChange={setFilterType}
+            options={[
+              { value: 'All', label: 'All Types' },
+              { value: 'Residential', label: 'Residential' },
+              { value: 'Commercial', label: 'Commercial' },
+              { value: 'Mixed', label: 'Mixed' }
+            ]}
+          />
+        </div>
       </div>
 
       {isLoading ? (
         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading properties...</div>
       ) : (
         <div className="properties-grid">
-          {properties.map(prop => {
+          {/* Add Property Card */}
+          <div className="surface-card property-card" onClick={openCreateModal}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px dashed var(--border-color)', background: 'var(--bg-surface)', gap: '16px', transition: 'all 0.3s ease', minHeight: '340px' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
+              <Plus size={32} />
+            </div>
+            <span style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Add Property</span>
+          </div>
+
+          {properties
+            .filter(p => filterType === 'All' || p.property_type === filterType)
+            .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.address.toLowerCase().includes(searchQuery.toLowerCase()))
+            .map(prop => {
             const occupied = occupancyMap[prop.id] || 0;
             const pct = prop.total_units > 0 ? Math.round((occupied / prop.total_units) * 100) : 0;
             return (
@@ -512,9 +546,9 @@ export const PropertiesView: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <h3 className="property-title">{prop.name}</h3>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>{prop.address}</p>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px' }}>{prop.address}</p>
                     </div>
-                    <div style={{ display: 'flex', gap: '4px' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: '8px' }} onClick={e => e.stopPropagation()}>
                       <button onClick={() => openEditModal(prop)} title="Edit" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#3b82f6' }}>
                         <Pencil size={14} />
                       </button>
@@ -523,33 +557,24 @@ export const PropertiesView: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '14px', marginTop: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Home size={14} /> {prop.total_units} Units</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={14} /> {occupied} Tenants</span>
-                    <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.15)' }}>{prop.property_type}</span>
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Home size={14} /> {prop.total_units} Units</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={14} /> {occupied} Tenants</span>
+                    <span style={{ padding: '4px 16px', borderRadius: '16px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.15)' }}>{prop.property_type}</span>
                   </div>
-                  <div style={{ marginTop: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
+                  <div style={{ marginTop: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '8px' }}>
                       <span>Occupancy</span>
                       <span style={{ fontWeight: 600 }}>{pct}%</span>
                     </div>
-                    <div className="progress-bar-container" style={{ height: '5px' }}>
-                      <div className="progress-bar-fill" style={{ width: `${pct}%` }}></div>
+                    <div className="progress-bar-container" style={{ height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div className="progress-bar-fill" style={{ width: `${pct}%`, height: '100%', borderRadius: '4px' }}></div>
                     </div>
                   </div>
                 </div>
               </div>
             );
           })}
-
-          {/* Add Property Card */}
-          <div className="surface-card glass-card" onClick={openCreateModal}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minHeight: '280px', border: '2px dashed rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.15)', gap: '16px', transition: 'all 0.3s ease' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Plus size={32} />
-            </div>
-            <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>Add Property</span>
-          </div>
         </div>
       )}
 

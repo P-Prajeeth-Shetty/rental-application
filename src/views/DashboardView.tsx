@@ -15,7 +15,7 @@ interface DashboardProps {
 
 export const DashboardView: React.FC<DashboardProps> = ({ onNavigate }) => {
   return (
-    <div className="dashboard-container">
+    <>
       <div className="dashboard-new-grid">
         <div className="dashboard-left-col">
           <KPIGrid />
@@ -28,15 +28,18 @@ export const DashboardView: React.FC<DashboardProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
-        <RecentActivities />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', width: '100%' }}>
         <OverdueAlerts />
       </div>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
-        <CalendarWidget />
-        <SideWidgets onNavigate={onNavigate} />
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', width: '100%' }}>
+        <RecentActivities />
       </div>
-    </div>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', width: '100%' }}>
+        <SideWidgets onNavigate={onNavigate} />
+        <CalendarWidget />
+      </div>
+    </>
   );
 };

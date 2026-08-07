@@ -44,26 +44,6 @@ export const SideWidgets: React.FC<SideWidgetsProps> = ({ onNavigate }) => {
 
   return (
     <>
-      {/* Occupancy Status Widget */}
-      <div className="surface-card widget-card glass-card">
-        <div className="widget-header">
-          <h3>Occupancy Status</h3>
-          <button className="arrow-link-btn" onClick={() => onNavigate?.('properties')}>
-            <ArrowUpRight size={18} />
-          </button>
-        </div>
-        <p className="widget-subtitle">Current Month</p>
-        
-        <div className="progress-bar-container">
-          <div className="progress-bar-fill" style={{ width: `${occupancyPct}%` }}></div>
-        </div>
-        
-        <div className="widget-details">
-          <h4>{occupancyPct}% Occupied</h4>
-          <p>Based on active tenant assignments</p>
-        </div>
-      </div>
-
       {/* Collection Rate Widget */}
       <div className="surface-card widget-card glass-card">
         <div className="widget-header">
@@ -98,6 +78,26 @@ export const SideWidgets: React.FC<SideWidgetsProps> = ({ onNavigate }) => {
             <span>Pending</span>
             <strong>₹{pending.toLocaleString('en-IN')}</strong>
           </div>
+        </div>
+      </div>
+
+      {/* Occupancy Status Widget */}
+      <div className="surface-card widget-card glass-card">
+        <div className="widget-header">
+          <h3>Occupancy Status</h3>
+          <button className="arrow-link-btn" onClick={() => onNavigate?.('properties')}>
+            <ArrowUpRight size={18} />
+          </button>
+        </div>
+        <p className="widget-subtitle">Current Month</p>
+        
+        <div className="progress-bar-container">
+          <div className="progress-bar-fill" style={{ width: `${occupancyPct}%` }}></div>
+        </div>
+        
+        <div className="widget-details">
+          <h4>{occupancyPct}% Occupied</h4>
+          <p>Based on active tenant assignments</p>
         </div>
       </div>
     </>
