@@ -417,7 +417,7 @@ export const LeasesView: React.FC = () => {
               onChange={(val) => setFilterMonth(parseInt(val))}
               options={monthNames.map((m, i) => ({ value: String(i + 1), label: m }))}
               width="120px"
-              height={48}
+              height="48px"
             />
             <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>

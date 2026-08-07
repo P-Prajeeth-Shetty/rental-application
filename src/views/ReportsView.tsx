@@ -201,7 +201,7 @@ export const ReportsView: React.FC = () => {
               onChange={(val) => setFilterMonth(parseInt(val))}
               options={MONTHS.map((m, i) => ({ value: String(i + 1), label: m }))}
               width="120px"
-              height={48}
+              height="48px"
             />
             <input 
               type="number" 

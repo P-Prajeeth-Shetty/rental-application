@@ -3,7 +3,7 @@ import './views.css';
 import {
   UserPlus, Shield, X, Mail, Image as ImageIcon,
   Pencil, Trash2, KeyRound, Check, AlertTriangle,
-  Users, UserCheck, Search, Filter
+  Users, UserCheck, Search
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { 
@@ -305,7 +305,7 @@ export const UsersView: React.FC = () => {
                 { value: 'user', label: 'Users' }
               ]}
               width="160px"
-              height={48}
+              height="48px"
             />
           </div>
           <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '8px' }}>
