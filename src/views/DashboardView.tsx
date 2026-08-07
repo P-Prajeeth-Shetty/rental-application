@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { KPIGrid } from '../components/dashboard/KPIGrid';
-import { OverdueAlerts } from '../components/dashboard/OverdueAlerts';
-import { RevenueChart } from '../components/dashboard/RevenueChart';
+import { DashboardDonutChart } from '../components/dashboard/DashboardDonutChart';
+import { DashboardLineChart } from '../components/dashboard/DashboardLineChart';
+import { DashboardAreaChart } from '../components/dashboard/DashboardAreaChart';
 import { RecentActivities } from '../components/dashboard/RecentActivities';
-import { SideWidgets } from '../components/dashboard/SideWidgets';
+import { OverdueAlerts } from '../components/dashboard/OverdueAlerts';
 import { CalendarWidget } from '../components/dashboard/CalendarWidget';
-import { supabase } from '../lib/supabase';
+import { SideWidgets } from '../components/dashboard/SideWidgets';
 import '../components/dashboard/dashboard.css';
 
 interface DashboardProps {
@@ -13,40 +14,28 @@ interface DashboardProps {
 }
 
 export const DashboardView: React.FC<DashboardProps> = ({ onNavigate }) => {
-  const [userName, setUserName] = useState('');
-
-  useEffect(() => {
-    const fetchName = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
-        setUserName(profile?.full_name || user.email?.split('@')[0] || 'User');
-      }
-    };
-    fetchName();
-  }, []);
-
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
-      <div className="dashboard-layout" style={{ height: 'auto', overflowY: 'visible', flex: 'none', paddingBottom: 'var(--spacing-lg)' }}>
-        <div className="main-column">
-          <h1 style={{ fontSize: '1.5rem', marginBottom: '-8px' }}>{greeting}, {userName}!</h1>
+    <div className="dashboard-container">
+      <div className="dashboard-new-grid">
+        <div className="dashboard-left-col">
           <KPIGrid />
-          <OverdueAlerts />
-          <RecentActivities />
+          <DashboardDonutChart />
         </div>
         
-        <div className="side-column">
-          <SideWidgets onNavigate={onNavigate} />
-          <CalendarWidget />
+        <div className="dashboard-right-col">
+          <DashboardLineChart />
+          <DashboardAreaChart />
         </div>
       </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+        <RecentActivities />
+        <OverdueAlerts />
+      </div>
       
-      <div style={{ padding: '0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg)', flexShrink: 0 }}>
-        <RevenueChart />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+        <CalendarWidget />
+        <SideWidgets onNavigate={onNavigate} />
       </div>
     </div>
   );

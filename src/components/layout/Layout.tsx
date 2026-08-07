@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, LogOut, ChevronDown, User, Users } from 'lucide-react';
+import { Bell, Settings, LogOut, ChevronDown, User } from 'lucide-react';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { TimePill } from './TimePill';
+// removed TimePill
 import { ProfileSettingsModals } from './ProfileSettingsModals';
 import { supabase } from '../../lib/supabase';
 import './layout.css';
@@ -66,42 +66,48 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
 
   const dueReminders = reminders.filter(r => r.status === 'pending' && new Date(r.date) <= new Date());
 
+  const getViewInfo = (view: string) => {
+    switch (view) {
+      case 'dashboard': return { title: 'Dashboard', subtitle: 'Use cases to plan, prioritize, and complete your tasks' };
+      case 'properties': return { title: 'Properties', subtitle: 'Manage your real estate portfolio' };
+      case 'leased-properties': return { title: 'Leased Properties', subtitle: 'View properties currently rented out' };
+      case 'tenants': return { title: 'Tenants & Rent', subtitle: 'Manage tenant information and details' };
+      case 'leases': return { title: 'Payments', subtitle: 'Track rent payments and invoices' };
+      case 'maintenance': return { title: 'Maintenance Requests', subtitle: 'Manage service requests and repairs' };
+      case 'reports': return { title: 'Financial Reports', subtitle: 'Financial and operational analytics' };
+      case 'users': return { title: 'Users Management', subtitle: 'Manage system administrators and staff' };
+      default: return { title: 'RentalApp', subtitle: 'Property Management System' };
+    }
+  };
+
+  const currentViewInfo = getViewInfo(activeView);
+
   return (
     <div className="app-container">
-      <div className="main-glass-container">
+      <div className="main-layout-grid">
         
-        {/* Top Header */}
-        <header className="top-header">
-          <div className="logo-container">
-            <TimePill />
+        {/* Logo Section */}
+        <div className="logo-section">
+          <div className="logo-icon"></div>
+          <span className="logo-text">RentalApp</span>
+        </div>
+
+        {/* Top Header Section */}
+        <header className="header-section">
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--text-primary)' }}>{currentViewInfo.title}</h1>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>{currentViewInfo.subtitle}</p>
           </div>
-          
-          <nav className="top-nav">
-            <button className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>Dashboard</button>
-            <button className={`nav-item ${activeView === 'properties' ? 'active' : ''}`} onClick={() => setActiveView('properties')}>Properties</button>
-            <button className={`nav-item ${activeView === 'leased-properties' ? 'active' : ''}`} onClick={() => setActiveView('leased-properties')}>Leased Properties</button>
-            <button className={`nav-item ${activeView === 'tenants' ? 'active' : ''}`} onClick={() => setActiveView('tenants')}>Tenants</button>
-            <button className={`nav-item ${activeView === 'leases' ? 'active' : ''}`} onClick={() => setActiveView('leases')}>Payments</button>
-            <button className={`nav-item ${activeView === 'maintenance' ? 'active' : ''}`} onClick={() => setActiveView('maintenance')}>Maintenance</button>
-            <button className={`nav-item ${activeView === 'reports' ? 'active' : ''}`} onClick={() => setActiveView('reports')}>Reports</button>
-            {userRole === 'admin' && (
-              <button className={`nav-item ${activeView === 'users' ? 'active' : ''}`} onClick={() => setActiveView('users')}>
-                <Users size={16} style={{ marginRight: '6px', verticalAlign: 'text-bottom' }} />
-                Users
-              </button>
-            )}
-          </nav>
-          
-          <div className="header-actions">
+          <div className="header-actions" style={{ marginLeft: 'auto' }}>
             
             <div style={{ position: 'relative' }}>
               <button className="action-btn" onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); setIsProfileOpen(false); }}>
-                <Bell size={20} />
-                {activeNotifications > 0 && <span className="notification-dot" style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', background: 'red', borderRadius: '50%' }}></span>}
+                <Bell size={18} />
+                {activeNotifications > 0 && <span className="notification-dot"></span>}
               </button>
               
               {isNotificationsOpen && (
-                <div className="profile-dropdown" style={{ right: '-60px', width: '320px', padding: '16px', zIndex: 100 }}>
+                <div className="profile-dropdown" style={{ right: '0px', width: '320px', padding: '16px', zIndex: 100 }}>
                   <div className="dropdown-header" style={{ padding: '0 0 12px 0' }}>
                     <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Notifications</h4>
                     {activeNotifications > 0 && <span style={{ fontSize: '0.8rem', color: 'red', fontWeight: 600 }}>{activeNotifications} Due</span>}
@@ -117,7 +123,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                           <p style={{ margin: '0 0 8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(r.date).toLocaleString()}</p>
                           <button 
                             onClick={() => updateReminder(r.id, { status: 'completed' })}
-                            style={{ background: '#dea389', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                            style={{ background: 'var(--primary-accent)', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
                           >
                             Mark Completed
                           </button>
@@ -135,19 +141,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                     src={avatarUrl} 
                     alt="Profile" 
                     className="avatar" 
-                    style={{ objectFit: 'cover' }} 
                     onError={(e) => { e.currentTarget.src = defaultAvatar; }}
                   />
-                  <ChevronDown size={16} className="text-secondary" />
+                  <div className="user-info">
+                    <span className="user-name">{displayName}</span>
+                    <span className="user-email" style={{textTransform: 'capitalize'}}>{userRole || 'User'}</span>
+                  </div>
+                  <ChevronDown size={14} className="text-secondary" style={{ marginLeft: '4px' }} />
                 </div>
               
               {isProfileOpen && (
                 <div className="profile-dropdown">
-                  <div className="dropdown-header">
-                    <p className="dropdown-name">{displayName}</p>
-                    <p className="dropdown-email" style={{textTransform: 'capitalize'}}>{userRole || 'User'} Account</p>
-                  </div>
-                  <div className="dropdown-divider"></div>
                   <button className="dropdown-item" onClick={() => { setActiveModal('profile'); setIsProfileOpen(false); }}>
                     <User size={16} />
                     My Profile
@@ -167,10 +171,63 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <main className="dashboard-content">
+        {/* Sidebar Menu Section */}
+        <aside className="sidebar-section">
+          <div className="sidebar-menu">
+            <div>
+              <p className="menu-label">MENU</p>
+              <nav className="nav-vertical">
+                <button className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>
+                   Dashboard
+                   {activeNotifications > 0 && <span className="notification-badge">{activeNotifications}</span>}
+                </button>
+                <button className={`nav-item ${activeView === 'properties' ? 'active' : ''}`} onClick={() => setActiveView('properties')}>Properties</button>
+                <button className={`nav-item ${activeView === 'leased-properties' ? 'active' : ''}`} onClick={() => setActiveView('leased-properties')}>Leased Properties</button>
+                <button className={`nav-item ${activeView === 'tenants' ? 'active' : ''}`} onClick={() => setActiveView('tenants')}>Tenants</button>
+                <button className={`nav-item ${activeView === 'leases' ? 'active' : ''}`} onClick={() => setActiveView('leases')}>Payments</button>
+                <button className={`nav-item ${activeView === 'maintenance' ? 'active' : ''}`} onClick={() => setActiveView('maintenance')}>Maintenance</button>
+                <button className={`nav-item ${activeView === 'reports' ? 'active' : ''}`} onClick={() => setActiveView('reports')}>Reports</button>
+                {userRole === 'admin' && (
+                  <button className={`nav-item ${activeView === 'users' ? 'active' : ''}`} onClick={() => setActiveView('users')}>
+                    Users
+                  </button>
+                )}
+              </nav>
+            </div>
+            
+            <div style={{ marginTop: '24px' }}>
+              <p className="menu-label">GENERAL</p>
+              <nav className="nav-vertical">
+                <button className="nav-item" onClick={() => setActiveModal('profile')}>
+                   Profile
+                </button>
+                <button className="nav-item" onClick={() => setActiveModal('settings')}>
+                   Settings
+                </button>
+                <button className="nav-item" onClick={() => {}}>
+                   Help Center
+                </button>
+                <button className="nav-item" onClick={onLogout} style={{ color: 'var(--danger)' }}>
+                   Log Out
+                </button>
+              </nav>
+            </div>
+          </div>
+          
+          <div className="sidebar-footer">
+            <div className="support-card">
+               <h4>Need Help?</h4>
+               <p>Contact Support</p>
+               <button className="support-btn">Contact Us</button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="content-section">
           {children}
         </main>
+      </div>
         
         
         <ProfileSettingsModals 
@@ -181,7 +238,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
           userRole={userRole || 'user'}
           onProfileUpdate={fetchProfile}
         />
-      </div>
     </div>
   );
 };

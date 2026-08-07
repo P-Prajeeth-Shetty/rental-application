@@ -29,26 +29,22 @@ export const KPIGrid: React.FC = () => {
   }, []);
 
   const kpis = [
-    { value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`, subtitle: 'Total\nRevenue', icon: <Wallet size={24} strokeWidth={1.5} /> },
-    { value: `₹${stats.pendingRent.toLocaleString('en-IN')}`, subtitle: 'Pending\nRent', icon: <PieChart size={24} strokeWidth={1.5} /> },
-    { value: String(stats.availableUnits), subtitle: 'Available\nUnits', icon: <Contact size={24} strokeWidth={1.5} /> },
-    { value: String(stats.totalTenants), subtitle: 'Active\nTenants', icon: <CreditCard size={24} strokeWidth={1.5} /> },
+    { value: `₹${(stats.totalRevenue/1000).toFixed(1)}K`, subtitle: 'Total Revenue', icon: <Wallet size={24} strokeWidth={2} />, colorClass: 'pastel-purple', iconColor: '#6366f1' },
+    { value: `₹${(stats.pendingRent/1000).toFixed(1)}K`, subtitle: 'Pending Rent', icon: <PieChart size={24} strokeWidth={2} />, colorClass: 'pastel-blue', iconColor: '#3b82f6' },
+    { value: `${(stats.totalTenants/1000).toFixed(1)}K`, subtitle: 'Active Tenants', icon: <Contact size={24} strokeWidth={2} />, colorClass: 'pastel-pink', iconColor: '#ec4899' },
+    { value: String(stats.availableUnits), subtitle: 'Available Units', icon: <CreditCard size={24} strokeWidth={2} />, colorClass: 'pastel-green', iconColor: '#10b981' },
   ];
 
   return (
     <div className="kpi-grid">
       {kpis.map((kpi, index) => (
-        <div key={index} className="surface-card kpi-card glass-card">
-          <div className="kpi-header">
-            <div className="kpi-icon">{kpi.icon}</div>
+        <div key={index} className={`kpi-card ${kpi.colorClass}`}>
+          <div className="kpi-header-new">
+            <div className="kpi-icon-wrap" style={{ color: kpi.iconColor }}>{kpi.icon}</div>
           </div>
-          <div className="kpi-body">
-            <h2 className="kpi-value">{kpi.value}</h2>
-            <p className="kpi-subtitle text-muted">
-              {kpi.subtitle.split('\n').map((line, i) => (
-                <React.Fragment key={i}>{line}<br /></React.Fragment>
-              ))}
-            </p>
+          <div className="kpi-body-new">
+            <p className="kpi-subtitle-new">{kpi.subtitle}</p>
+            <h2 className="kpi-value-new">{kpi.value}</h2>
           </div>
         </div>
       ))}
