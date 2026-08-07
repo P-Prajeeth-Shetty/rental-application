@@ -23,7 +23,6 @@ body.lg-modal-active #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 1000px;
 }
 
 .lg-atmospheric-glass {
@@ -92,7 +91,7 @@ body.lg-modal-active #root {
 /* GLASS SURFACE */
 .lg-glass-surface {
   position: relative;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(64px) saturate(220%);
   -webkit-backdrop-filter: blur(64px) saturate(220%);
   border-radius: 36px;
@@ -101,6 +100,11 @@ body.lg-modal-active #root {
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   padding: 32px;
+  /* Hardware acceleration to fix backdrop-filter bug */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* REFLECTION LAYER */

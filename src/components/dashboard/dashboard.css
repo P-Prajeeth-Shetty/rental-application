@@ -346,8 +346,8 @@
 }
 
 .premium-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -358,7 +358,6 @@
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   cursor: pointer;
   position: relative;
-  overflow: hidden;
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -402,14 +401,12 @@
   overflow: hidden;
   margin: 0 0 16px 0;
   line-height: 1.4;
-  flex: 1;
 }
 
 .premium-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-top: auto;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   padding-top: 12px;
 }

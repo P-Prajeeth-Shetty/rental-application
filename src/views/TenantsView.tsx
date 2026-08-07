@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
@@ -110,6 +110,19 @@ export const TenantsView: React.FC = () => {
   const [revisionTarget, setRevisionTarget] = useState<Assignment | null>(null);
   const [revisions, setRevisions] = useState<RentRevision[]>([]);
 
+  // Vacate property
+  const [vacateTarget, setVacateTarget] = useState<Assignment | null>(null);
+  const [vacateDate, setVacateDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Action Menu
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClick = () => setActionMenuOpen(null);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
   // ── Fetch ─────────────────────────────────────────────────────────────────
 
   const fetchAll = async () => {
@@ -186,6 +199,14 @@ export const TenantsView: React.FC = () => {
 
   const handleDeleteTenant = async () => {
     if (!deleteTarget) return;
+    
+    const hasAssignments = assignmentsMap[deleteTarget.id]?.length > 0;
+    if (hasAssignments) {
+      setError("Cannot delete a tenant who has assignment history. Please use the 'Vacate' feature on their property assignment instead to preserve payment data.");
+      setDeleteTarget(null);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('tenants').delete().eq('id', deleteTarget.id);
@@ -303,6 +324,27 @@ export const TenantsView: React.FC = () => {
     }
   };
 
+  // ── Vacate Assignment ─────────────────────────────────────────────────────
+
+  const handleVacate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vacateTarget || !vacateDate) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('tenant_assignments').update({
+        status: 'vacated',
+        lease_end: vacateDate
+      }).eq('id', vacateTarget.id);
+      if (error) throw error;
+      setVacateTarget(null);
+      fetchAll();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // ── Rent Revision History ─────────────────────────────────────────────────
 
   const openRevisionHistory = async (a: Assignment) => {
@@ -346,17 +388,17 @@ export const TenantsView: React.FC = () => {
         {isLoading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading tenants...</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '30px' }}></th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Tenant</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Phone</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Property</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Unit</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Rent</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>Status</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '4%' }}></th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '22%' }}>Tenant</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '16%' }}>Phone</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '20%' }}>Property</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '10%' }}>Unit</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '12%' }}>Rent</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '8%' }}>Status</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '8%', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -460,33 +502,66 @@ export const TenantsView: React.FC = () => {
                           }}
                         >
                           <div 
-                            style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}
+                            style={{ position: 'relative' }}
                             onClick={e => e.stopPropagation()}
                             onPointerDown={e => e.stopPropagation()}
                             onMouseDown={e => e.stopPropagation()}
                             onTouchStart={e => e.stopPropagation()}
                           >
-                            <button onClick={(e) => { e.stopPropagation(); openEditAssignModal(a, t); }} title="Edit Assignment" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
-                              <Pencil size={13} style={{ pointerEvents: 'none' }} /> Edit
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setActionMenuOpen(actionMenuOpen === a.id ? null : a.id); }} 
+                              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: 'var(--text-primary)' }}
+                            >
+                              <MoreVertical size={16} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); openRentModal(a); }} title="Increase Rent" style={{ background: 'rgba(245,158,11,0.15)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
-                              <TrendingUp size={13} style={{ pointerEvents: 'none' }} /> Increase
-                            </button>
-                            <button onClick={(e) => { 
-                              e.stopPropagation(); 
-                              setPaymentLedgerTarget({
-                                assignmentId: a.id,
-                                tenantName: t.full_name,
-                                propertyName: a.properties?.name || 'Unknown Property',
-                                unitNumber: a.unit_number,
-                                currentRent: getEffectiveRentAsOf(a)
-                              });
-                            }} title="Payment Ledger" style={{ background: 'rgba(16,185,129,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}>
-                              <List size={13} style={{ pointerEvents: 'none' }} /> Ledger
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); openRevisionHistory(a); }} title="Rent History" style={{ background: 'rgba(59,130,246,0.1)', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: '#3b82f6', fontSize: '0.78rem' }}>
-                              Rent Changes
-                            </button>
+                            {actionMenuOpen === a.id && (
+                              <div style={{
+                                position: 'absolute',
+                                right: 0,
+                                top: '100%',
+                                marginTop: '4px',
+                                background: 'rgba(255, 255, 255, 0.4)',
+                                backdropFilter: 'blur(32px)',
+                                WebkitBackdropFilter: 'blur(32px)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: '10px',
+                                padding: '6px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '2px',
+                                zIndex: 100,
+                                minWidth: '160px',
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+                              }}>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openEditAssignModal(a, t); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                  <Pencil size={14} color="#3b82f6" /> Edit
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRentModal(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                  <TrendingUp size={14} color="#f59e0b" /> Increase Rent
+                                </button>
+                                <button onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setActionMenuOpen(null);
+                                  setPaymentLedgerTarget({
+                                    assignmentId: a.id,
+                                    tenantName: t.full_name,
+                                    propertyName: a.properties?.name || 'Unknown Property',
+                                    unitNumber: a.unit_number,
+                                    currentRent: getEffectiveRentAsOf(a)
+                                  });
+                                }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                  <List size={14} color="#10b981" /> Payment Ledger
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRevisionHistory(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                  <TrendingUp size={14} color="#3b82f6" /> Rent History
+                                </button>
+                                {a.status === 'active' && (
+                                  <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); setVacateTarget(a); setVacateDate(new Date().toISOString().split('T')[0]); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                    <X size={14} /> Vacate
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -808,6 +883,37 @@ export const TenantsView: React.FC = () => {
                   </table>
                 )}
               </div>
+            </LiquidGlassContent>
+          </LiquidGlassWindow>
+        </LiquidGlassOverlay>
+      )}
+
+      {/* Vacate Tenant Confirmation */}
+      {vacateTarget && (
+        <LiquidGlassOverlay onClose={() => !isSubmitting && setVacateTarget(null)}>
+          <LiquidGlassWindow style={{ maxWidth: '400px' }}>
+            <div className="lg-modal-header">
+              <h2 className="modal-title">Vacate Property</h2>
+              <button className="lg-close-btn" onClick={() => !isSubmitting && setVacateTarget(null)}><X size={20} /></button>
+            </div>
+            <LiquidGlassContent>
+              <form onSubmit={handleVacate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>
+                  This will end the lease for unit <strong>{vacateTarget.unit_number}</strong> at <strong>{vacateTarget.properties?.name}</strong>. Their payment history will be preserved.
+                </p>
+                <LiquidGlassDatePicker 
+                  label="Vacate / Lease End Date *" 
+                  value={vacateDate} 
+                  onChange={val => setVacateDate(val)} 
+                  required 
+                />
+                <div className="lg-actions" style={{ marginTop: '8px' }}>
+                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setVacateTarget(null)}>Cancel</button>
+                  <button type="submit" className="lg-btn" style={{ background: 'var(--danger)', color: '#fff' }} disabled={isSubmitting}>
+                    {isSubmitting ? 'Processing...' : 'Confirm Vacate'}
+                  </button>
+                </div>
+              </form>
             </LiquidGlassContent>
           </LiquidGlassWindow>
         </LiquidGlassOverlay>

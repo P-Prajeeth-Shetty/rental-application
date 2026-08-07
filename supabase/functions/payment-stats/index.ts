@@ -91,20 +91,20 @@ async function handleDashboard(supabase: any) {
 
   const [
     { data: properties },
-    { data: activeAssignments },
+    { data: assignments },
     { data: allPayments },
     { data: revisionsData }
   ] = await Promise.all([
     supabase.from('properties').select('total_units'),
     supabase.from('tenant_assignments')
-      .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, tenant_id, unit_number, tenants(full_name), properties(name)')
-      .eq('status', 'active'),
+      .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, tenant_id, unit_number, tenants(full_name), properties(name), status')
+      .in('status', ['active', 'vacated']),
     supabase.from('payments').select('assignment_id, amount, period_month, period_year, is_reversed'),
     supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
   ]);
 
   const totalUnits = (properties || []).reduce((s: number, p: any) => s + (p.total_units || 0), 0);
-  const occupiedUnits = (activeAssignments || []).length;
+  const occupiedUnits = (assignments || []).filter((a: any) => a.status === 'active').length;
 
   const revisionsMap = new Map();
   (revisionsData || []).forEach((r: any) => {
@@ -139,7 +139,7 @@ async function handleDashboard(supabase: any) {
   const currentMonthPaid = currentMonthPayments.reduce((s: number, p: any) => s + Number(p.amount), 0);
   let currentMonthExpected = 0;
 
-  (activeAssignments || []).forEach((a: any) => {
+  (assignments || []).forEach((a: any) => {
     const expectedMonths = getExpectedMonths(a.lease_start, a.lease_end, currentMonth, currentYear);
     const assignmentRevisions = revisionsMap.get(a.id) || [];
 
@@ -231,7 +231,7 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
   const [{ data: assignments }, { data: payments }, { data: allPayments }, { data: revisionsData }] = await Promise.all([
     supabase.from('tenant_assignments')
       .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end')
-      .eq('status', 'active'),
+      .in('status', ['active', 'vacated']),
     supabase.from('payments')
       .select('assignment_id, amount, is_reversed')
       .eq('period_month', filterMonth)

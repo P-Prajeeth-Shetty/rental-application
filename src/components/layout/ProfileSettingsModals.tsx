@@ -138,7 +138,13 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
             {/* Avatar section */}
             <div className="profile-avatar-section">
               <div className="avatar-wrapper">
-                <img src={avatarUrl} alt="Profile" className="large-avatar" style={{ objectFit: 'cover' }} />
+                <img 
+                  src={avatarUrl} 
+                  alt="Profile" 
+                  className="large-avatar" 
+                  style={{ objectFit: 'cover' }} 
+                  onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+                />
                 {isAdmin && (
                   <>
                     <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} accept="image/*" style={{ opacity: 0, position: 'absolute', width: 0, height: 0, zIndex: -1 }} />

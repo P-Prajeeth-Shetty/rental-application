@@ -53,9 +53,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
   }, []);
 
   const defaultAvatar = "https://i.pravatar.cc/150?img=68";
-  const avatarUrl = profile?.avatar_url 
-    ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.avatar_url}`
-    : defaultAvatar;
+  
+  const getAvatarUrl = (url?: string | null) => {
+    if (!url) return defaultAvatar;
+    if (url.startsWith('http')) return url;
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/avatars/${url}`;
+  };
+
+  const avatarUrl = getAvatarUrl(profile?.avatar_url);
 
   const displayName = profile?.full_name || 'User';
 
@@ -74,6 +79,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
           <nav className="top-nav">
             <button className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>Dashboard</button>
             <button className={`nav-item ${activeView === 'properties' ? 'active' : ''}`} onClick={() => setActiveView('properties')}>Properties</button>
+            <button className={`nav-item ${activeView === 'leased-properties' ? 'active' : ''}`} onClick={() => setActiveView('leased-properties')}>Leased Properties</button>
             <button className={`nav-item ${activeView === 'tenants' ? 'active' : ''}`} onClick={() => setActiveView('tenants')}>Tenants</button>
             <button className={`nav-item ${activeView === 'leases' ? 'active' : ''}`} onClick={() => setActiveView('leases')}>Payments</button>
             <button className={`nav-item ${activeView === 'maintenance' ? 'active' : ''}`} onClick={() => setActiveView('maintenance')}>Maintenance</button>
@@ -124,10 +130,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
             </div>
 
             <div className="user-profile-container" style={{ position: 'relative' }}>
-              <div className="user-profile" onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotificationsOpen(false); }}>
-                <img src={avatarUrl} alt="Profile" className="avatar" style={{ objectFit: 'cover' }} />
-                <ChevronDown size={16} className="text-secondary" />
-              </div>
+                <div className="user-profile" onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotificationsOpen(false); }}>
+                  <img 
+                    src={avatarUrl} 
+                    alt="Profile" 
+                    className="avatar" 
+                    style={{ objectFit: 'cover' }} 
+                    onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+                  />
+                  <ChevronDown size={16} className="text-secondary" />
+                </div>
               
               {isProfileOpen && (
                 <div className="profile-dropdown">

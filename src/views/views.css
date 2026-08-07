@@ -64,6 +64,7 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .glass-table th, .glass-table td {
@@ -86,9 +87,6 @@
   border-bottom: none;
 }
 
-.glass-table tr:hover td {
-  background: rgba(255, 255, 255, 0.08);
-}
 
 .status-badge {
   display: inline-block;
@@ -106,8 +104,8 @@
 .kanban-board {
   display: flex;
   gap: var(--spacing-lg);
-  height: 100%;
   overflow-x: auto;
+  padding-bottom: 24px;
 }
 
 .kanban-column {
@@ -123,6 +121,7 @@
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
   color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .ticket-card {
@@ -130,6 +129,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 /* Modal Styles - Enhanced Liquid Glass */
@@ -198,6 +198,15 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
   }
 }
 
