@@ -76,7 +76,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
       case 'reports': return { title: 'Financial Reports', subtitle: 'Financial and operational analytics' };
       case 'users': return { title: 'Users Management', subtitle: 'Manage system administrators and staff' };
       case 'help': return { title: 'Help Center', subtitle: 'Support, documentation and resources' };
-      default: return { title: 'RentalApp', subtitle: 'Property Management System' };
+      default: return { title: 'RentBook', subtitle: 'Property Management System' };
     }
   };
 
@@ -90,10 +90,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
         <aside className="sidebar">
           {/* Logo Section */}
           <div className="logo-section">
-            <div className="logo-icon">
-              <Home size={16} color="white" strokeWidth={2.5} />
+            <div className="logo-icon" style={{ background: '#FF7700', borderRadius: '10px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Home size={18} color="white" strokeWidth={2.5} />
             </div>
-            <span className="logo-text">RentalApp</span>
+            <span className="logo-text" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px' }}>
+              rent<span style={{ color: '#FF7700' }}>book</span>
+            </span>
           </div>
 
           <div className="sidebar-menu">

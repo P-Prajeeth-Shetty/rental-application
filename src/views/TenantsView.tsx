@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, Users, FileText, Wallet } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
@@ -385,44 +385,24 @@ export const TenantsView: React.FC = () => {
       {error && <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: '#ff4d4d', padding: '10px 14px', borderRadius: '8px' }}>{error}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%' }}>
-        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
-              <Users size={20} />
-            </div>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Total Tenants</span>
-          </div>
-          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{totalTenants}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Total Tenants</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>{totalTenants}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
-              <FileText size={20} />
-            </div>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Active Leases</span>
-          </div>
-          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{activeLeases}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
+          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Active Leases</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{activeLeases}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(236,72,153,0.1)', color: '#ec4899' }}>
-              <Wallet size={20} />
-            </div>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Monthly Rent Roll</span>
-          </div>
-          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>₹{totalMonthlyRent.toLocaleString('en-IN')}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Monthly Rent Roll</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>₹{totalMonthlyRent.toLocaleString('en-IN')}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
-              <Home size={20} />
-            </div>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>Unassigned / Vacated</span>
-          </div>
-          <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{vacatedOrNew}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
+          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Unassigned / Vacated</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{vacatedOrNew}</h2>
         </div>
       </div>
 
@@ -431,7 +411,7 @@ export const TenantsView: React.FC = () => {
           <Search size={18} color="var(--text-secondary)" />
           <input type="text" placeholder="Search tenants..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         </div>
-        <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', fontWeight: 600, height: '48px', flexShrink: 0 }}>
+        <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', fontWeight: 600, height: '48px', flexShrink: 0, background: '#FF7700', color: '#ffffff', border: 'none' }}>
           <Plus size={18} /> Add Tenant
         </button>
       </div>
@@ -443,7 +423,7 @@ export const TenantsView: React.FC = () => {
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
+              <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.08)', textAlign: 'left' }}>
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '4%' }}></th>
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '22%' }}>Tenant</th>
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '16%' }}>Phone</th>
@@ -461,7 +441,7 @@ export const TenantsView: React.FC = () => {
                 const isExpanded = expandedTenant === t.id;
                 return (
                   <React.Fragment key={t.id}>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: assigns.length > 0 ? 'pointer' : undefined }} onClick={() => assigns.length > 0 && setExpandedTenant(isExpanded ? null : t.id)}>
+                    <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: assigns.length > 0 ? 'pointer' : undefined }} onClick={() => assigns.length > 0 && setExpandedTenant(isExpanded ? null : t.id)}>
                       <td style={{ padding: '14px 8px 14px 16px' }}>
                         {assigns.length > 0 && (isExpanded ? <ChevronUp size={14} color="var(--text-secondary)" /> : <ChevronDown size={14} color="var(--text-secondary)" />)}
                       </td>
@@ -501,13 +481,13 @@ export const TenantsView: React.FC = () => {
                           onMouseDown={e => e.stopPropagation()}
                           onTouchStart={e => e.stopPropagation()}
                         >
-                          <button onClick={(e) => { e.stopPropagation(); openAssignModal(t); }} title="Assign to Property" style={{ background: 'rgba(16,185,129,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#10b981', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); openAssignModal(t); }} title="Assign to Property" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
                             <Home size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); openEditTenant(t); }} title="Edit" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); openEditTenant(t); }} title="Edit" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
                             <Pencil size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} title="Delete" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} title="Delete" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
                             <Trash2 size={14} style={{ pointerEvents: 'none' }} />
                           </button>
                         </div>
@@ -794,7 +774,7 @@ export const TenantsView: React.FC = () => {
                   min="0" 
                 />
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', marginTop: '8px' }}>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '10px', fontWeight: 500 }}>💳 Payment Terms</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '10px', fontWeight: 500 }}>Payment Terms</p>
                   <div className="lg-input-group">
                     <label className="lg-input-label">Payment Mode *
                       <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: '6px' }}>

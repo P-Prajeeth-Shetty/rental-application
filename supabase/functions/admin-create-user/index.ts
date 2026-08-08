@@ -43,6 +43,7 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true,
+      user_metadata: { full_name, phone_number, email }
     });
     if (createUserError) throw createUserError;
 
@@ -53,12 +54,19 @@ serve(async (req) => {
       .from('user_roles').insert([{ user_id: newUserId, role }]);
     if (insertRoleError) throw insertRoleError;
 
-    // Update profile with name and phone if provided
-    if (full_name || phone_number) {
+    // Update profile with email, name, and phone
+    try {
       await supabaseAdmin
         .from('profiles')
-        .update({ full_name: full_name || null, phone_number: phone_number || null })
-        .eq('id', newUserId);
+        .upsert({ id: newUserId, email, full_name: full_name || null, phone_number: phone_number || null });
+    } catch (e) {
+      // Ignore if email column doesn't exist yet in DB schema
+      if (full_name || phone_number) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ full_name: full_name || null, phone_number: phone_number || null })
+          .eq('id', newUserId);
+      }
     }
 
     // Audit log

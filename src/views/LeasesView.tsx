@@ -10,6 +10,7 @@ import {
   LiquidGlassContent, 
   LiquidGlassInput 
 } from '../components/ui/LiquidGlassModal';
+import { LiquidGlassDatePicker } from '../components/ui/LiquidGlassDatePicker';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { timingBadge } from '../lib/paymentUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
@@ -380,22 +381,25 @@ export const LeasesView: React.FC = () => {
       <style>{`@keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); }}`}</style>
 
       {/* KPI Cards */}
-      <div style={{ display: 'flex', gap: '24px', width: '100%' }}>
-        <div className="surface-card glass-card" style={{ flex: 1, minWidth: '160px', padding: '18px 20px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '4px' }}>Expected</p>
-          <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>₹{totalExpected.toLocaleString('en-IN')}</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Expected</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>₹{totalExpected.toLocaleString('en-IN')}</h2>
         </div>
-        <div className="surface-card glass-card" style={{ flex: 1, minWidth: '160px', padding: '18px 20px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '4px' }}>Collected</p>
-          <p style={{ fontSize: '1.4rem', fontWeight: 700, color: '#10b981' }}>₹{totalCollected.toLocaleString('en-IN')}</p>
+        
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
+          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Collected</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>₹{totalCollected.toLocaleString('en-IN')}</h2>
         </div>
-        <div className="surface-card glass-card" style={{ flex: 1, minWidth: '160px', padding: '18px 20px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '4px' }}>Outstanding</p>
-          <p style={{ fontSize: '1.4rem', fontWeight: 700, color: totalExpected - totalCollected > 0 ? '#ef4444' : '#10b981' }}>₹{Math.max(0, totalExpected - totalCollected).toLocaleString('en-IN')}</p>
+        
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Outstanding</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>₹{Math.max(0, totalExpected - totalCollected).toLocaleString('en-IN')}</h2>
         </div>
-        <div className="surface-card glass-card" style={{ flex: 1, minWidth: '160px', padding: '18px 20px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '4px' }}>Collection Rate</p>
-          <p style={{ fontSize: '1.4rem', fontWeight: 700 }}>{collectionRate}%</p>
+        
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
+          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Collection Rate</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{collectionRate}%</h2>
         </div>
       </div>
 
@@ -419,16 +423,16 @@ export const LeasesView: React.FC = () => {
               width="120px"
               height="48px"
             />
-            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
+            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', color: '#111827', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box', fontWeight: 600 }} />
           </div>
-          <button onClick={handleDownloadTemplate} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1px solid var(--input-border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', height: '48px' }}>
-            <Download size={16} /> Template
+          <button onClick={handleDownloadTemplate} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1.5px solid #fed7aa', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
+            <Download size={16} color="#FF7700" /> Template
           </button>
           <input type="file" ref={fileRef} onChange={handleFileSelect} accept=".xlsx,.xls,.csv" style={{ display: 'none' }} />
-          <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1px solid var(--input-border)', background: 'var(--bg-surface)', color: 'var(--text-primary)', height: '48px' }}>
-            <Upload size={16} /> Upload Excel
+          <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1.5px solid #fed7aa', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
+            <Upload size={16} color="#FF7700" /> Upload Excel
           </button>
-          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', height: '48px', fontWeight: 600 }}>
+          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', height: '48px', fontWeight: 600, background: '#FF7700', color: '#ffffff', border: 'none', cursor: 'pointer' }}>
             <Plus size={16} /> Record Payment
           </button>
         </div>
@@ -589,21 +593,24 @@ export const LeasesView: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <LiquidGlassInput 
-                    type="number" 
-                    label="Amount (₹) *" 
-                    value={payForm.amount} 
-                    onChange={e => setPayForm({ ...payForm, amount: e.target.value })} 
-                    required 
-                    min="0" 
-                  />
-                  <LiquidGlassInput 
-                    type="date" 
-                    label="Payment Date *" 
-                    value={payForm.payment_date} 
-                    onChange={e => setPayForm({ ...payForm, payment_date: e.target.value })} 
-                    required 
-                  />
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassInput 
+                      type="number" 
+                      label="Amount (₹) *" 
+                      value={payForm.amount} 
+                      onChange={e => setPayForm({ ...payForm, amount: e.target.value })} 
+                      required 
+                      min="0" 
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <LiquidGlassDatePicker 
+                      label="Payment Date *" 
+                      value={payForm.payment_date} 
+                      onChange={val => setPayForm({ ...payForm, payment_date: val })} 
+                      required 
+                    />
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <div className="lg-input-group">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './login.css';
-import { Share2, Globe, MessageSquare, Camera, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export const LoginView: React.FC = () => {
@@ -32,82 +32,115 @@ export const LoginView: React.FC = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
+    <div className="login-white-saffron-bg">
+      {/* Low-Poly Triangle Vector Mesh Background in White & Saffron Tints */}
+      <svg className="poly-bg-svg" viewBox="0 0 1440 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1440" height="900" fill="#FFFBF7" />
         
-        {/* Right Side: Form Overlay */}
-        <div className="login-right">
-          <div className="login-form-content">
-            <div className="brand-logo">
-              <img src="/cac9d6c4-f595-40f8-8b4f-61c2bf168679.png" alt="Login Logo" style={{ height: '220px', width: 'auto', objectFit: 'contain' }} />
+        {/* Low-poly triangle facets */}
+        <polygon points="0,0 480,0 240,320" fill="#FFEDD5" opacity="0.6" />
+        <polygon points="480,0 960,0 720,360" fill="#FED7AA" opacity="0.55" />
+        <polygon points="960,0 1440,0 1200,300" fill="#FFEDD5" opacity="0.75" />
+        <polygon points="1440,0 1440,480 1200,300" fill="#FDBA74" opacity="0.4" />
+        
+        <polygon points="0,0 240,320 0,550" fill="#FF7700" opacity="0.1" />
+        <polygon points="240,320 720,360 460,660" fill="#FFEDD5" opacity="0.85" />
+        <polygon points="720,360 1200,300 960,620" fill="#FED7AA" opacity="0.45" />
+        <polygon points="1200,300 1440,480 1440,900" fill="#FFD8A8" opacity="0.55" />
+        
+        <polygon points="0,550 240,320 460,660" fill="#FED7AA" opacity="0.65" />
+        <polygon points="0,550 460,660 0,900" fill="#FFEDD5" opacity="0.75" />
+        <polygon points="460,660 960,620 720,900" fill="#FF7700" opacity="0.15" />
+        <polygon points="0,900 460,660 720,900" fill="#FED7AA" opacity="0.45" />
+        
+        <polygon points="960,620 1440,480 1440,900" fill="#FDBA74" opacity="0.35" />
+        <polygon points="720,900 960,620 1440,900" fill="#FFEDD5" opacity="0.65" />
+      </svg>
+
+      <div className="login-poly-container">
+        
+        {/* Left Side: Brand Section */}
+        <div className="login-poly-left">
+          <div className="rentbook-logo-wrap">
+            <div className="home-badge-light">
+              <Home size={38} strokeWidth={2.5} color="#FF7700" />
             </div>
-            
-            <h2>Hi Manager</h2>
-            <p>Welcome to RentalApp Platform</p>
+            <h1 className="rentbook-brand-title-light">
+              rent<span className="saffron-highlight">book</span>
+            </h1>
+          </div>
+          <p className="rentbook-brand-desc-light">
+            RentBook helps you manage properties, track leases, connect with tenants, and monitor rental revenue all in one place.
+          </p>
+        </div>
 
-            {error && (
-              <div style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', color: '#ff4d4d', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>
-                {error}
-              </div>
-            )}
+        {/* Center Vertical Divider Line */}
+        <div className="login-poly-divider-light"></div>
 
-            <form className="login-form" onSubmit={handleSubmit}>
+        {/* Right Side: Form Section */}
+        <div className="login-poly-right">
+          {/* Hello Message */}
+          <div className="hello-message-box">
+            <h2 className="hello-title">Hello!</h2>
+            <p className="hello-subtitle">Sign in to get started</p>
+          </div>
+
+          {error && (
+            <div className="login-error-badge-light">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="login-poly-form">
+            {/* Username / Email Input */}
+            <div className="poly-input-group">
               <input 
                 type="email" 
-                className="dribbble-input" 
-                placeholder="Email"
+                className="poly-input-clean" 
+                placeholder="Username or Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              
-              <div style={{ position: 'relative', width: '100%' }}>
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  className="dribbble-input" 
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ paddingRight: '44px' }}
-                  required
-                />
-                <button 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ 
-                    position: 'absolute', 
-                    right: '14px', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)', 
-                    background: 'none', 
-                    border: 'none', 
-                    color: '#9ca3af', 
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '4px'
-                  }}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+            </div>
 
-              <button type="submit" className="btn-continue" disabled={isLoading}>
-                {isLoading ? 'Signing In...' : 'Login'}
+            {/* Password Input */}
+            <div className="poly-input-group">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                className="poly-input-clean" 
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button 
+                type="button" 
+                className="poly-pwd-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label="Toggle password view"
+              >
+                {showPassword ? <EyeOff size={18} color="#6B7280" /> : <Eye size={18} color="#6B7280" />}
               </button>
-            </form>
-          </div>
+            </div>
 
-          <div className="social-footer">
-            <div className="social-icon"><Globe size={18} /></div>
-            <div className="social-icon"><Share2 size={18} /></div>
-            <div className="social-icon"><MessageSquare size={18} /></div>
-            <div className="social-icon"><Camera size={18} /></div>
-          </div>
+            {/* LOGIN Button */}
+            <button 
+              type="submit" 
+              className="btn-poly-login-saffron" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'LOGGING IN...' : 'LOGIN'}
+            </button>
+          </form>
         </div>
 
       </div>
     </div>
   );
 };
+
+
+
+
+

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Wallet, PieChart, Contact, CreditCard } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import './dashboard.css';
 
@@ -29,19 +28,16 @@ export const KPIGrid: React.FC = () => {
   }, []);
 
   const kpis = [
-    { value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`, subtitle: 'Total Revenue', icon: <Wallet size={24} strokeWidth={2} />, colorClass: 'pastel-purple', iconColor: '#6366f1' },
-    { value: `₹${stats.pendingRent.toLocaleString('en-IN')}`, subtitle: 'Pending Rent', icon: <PieChart size={24} strokeWidth={2} />, colorClass: 'pastel-blue', iconColor: '#3b82f6' },
-    { value: String(stats.totalTenants), subtitle: 'Active Tenants', icon: <Contact size={24} strokeWidth={2} />, colorClass: 'pastel-pink', iconColor: '#ec4899' },
-    { value: String(stats.availableUnits), subtitle: 'Available Units', icon: <CreditCard size={24} strokeWidth={2} />, colorClass: 'pastel-green', iconColor: '#10b981' },
+    { value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`, subtitle: 'Total Revenue', colorClass: 'pastel-purple' },
+    { value: `₹${stats.pendingRent.toLocaleString('en-IN')}`, subtitle: 'Pending Rent', colorClass: 'pastel-blue' },
+    { value: String(stats.totalTenants), subtitle: 'Active Tenants', colorClass: 'pastel-pink' },
+    { value: String(stats.availableUnits), subtitle: 'Available Units', colorClass: 'pastel-green' },
   ];
 
   return (
     <div className="kpi-grid">
       {kpis.map((kpi, index) => (
         <div key={index} className={`kpi-card ${kpi.colorClass}`}>
-          <div className="kpi-header-new">
-            <div className="kpi-icon-wrap" style={{ color: kpi.iconColor }}>{kpi.icon}</div>
-          </div>
           <div className="kpi-body-new">
             <p className="kpi-subtitle-new">{kpi.subtitle}</p>
             <h2 className="kpi-value-new">{kpi.value}</h2>
@@ -51,3 +47,4 @@ export const KPIGrid: React.FC = () => {
     </div>
   );
 };
+

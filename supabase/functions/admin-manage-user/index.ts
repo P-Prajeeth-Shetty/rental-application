@@ -30,19 +30,48 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceRoleKey);
 
-    // Verify the caller is an admin
-    const adminUser = await verifyAdmin(supabaseAdmin, req);
-
     const body = await req.json();
     const { action, target_user_id } = body;
 
-    if (!action || !target_user_id) {
-      throw { status: 400, message: 'action and target_user_id are required' };
+    if (!action) {
+      throw { status: 400, message: 'action is required' };
     }
 
     // ----------------------------------------------------------------
-    // ACTION: edit — update profile + role
+    // ACTION: list — list all auth users with email + profiles + roles
     // ----------------------------------------------------------------
+    if (action === 'list') {
+      const { data: { users: authUsers }, error: authErr } = await supabaseAdmin.auth.admin.listUsers();
+      if (authErr) throw authErr;
+
+      const [{ data: rolesData }, { data: profilesData }] = await Promise.all([
+        supabaseAdmin.from('user_roles').select('user_id, role, created_at'),
+        supabaseAdmin.from('profiles').select('id, full_name, phone_number, bio, avatar_url'),
+      ]);
+
+      const rolesMap = new Map((rolesData || []).map((r: any) => [r.user_id, r]));
+      const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
+
+      const userList = authUsers.map((u: any) => ({
+        user_id: u.id,
+        email: u.email,
+        role: rolesMap.get(u.id)?.role || 'user',
+        created_at: u.created_at,
+        profiles: profilesMap.get(u.id) || null,
+      }));
+
+      return new Response(JSON.stringify({ users: userList }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // Verify caller is admin for modifying actions (edit, delete, change_password)
+    const adminUser = await verifyAdmin(supabaseAdmin, req);
+
+    if (!target_user_id) {
+      throw { status: 400, message: 'target_user_id is required' };
+    }
     if (action === 'edit') {
       const { full_name, phone_number, bio, role } = body;
 

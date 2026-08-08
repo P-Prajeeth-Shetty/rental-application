@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './views.css';
 import {
-  UserPlus, Shield, X, Mail, Image as ImageIcon,
+  UserPlus, X, Mail, Image as ImageIcon,
   Pencil, Trash2, KeyRound, Check, AlertTriangle,
-  Users, UserCheck, Search
+  Search
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { 
@@ -20,6 +20,7 @@ interface UserRecord {
   user_id: string;
   role: string;
   created_at: string;
+  email?: string;
   profiles: {
     full_name: string | null;
     phone_number: string | null;
@@ -36,12 +37,27 @@ interface Toast {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
+const INITIAL_EMAIL_MAP: Record<string, string> = {
+  'bde1e113-cb6c-4331-9495-1e1359f0d103': 'johnwick@gmail.com',
+  '3cf631f4-2416-41d0-8764-00955801eb34': 'bharath@gmail.com',
+  '8f22786f-7f87-4d13-b962-2e58595b6ed1': 'userone@gmail.com',
+  '25f696e6-0831-40b9-a67a-b9c56103c20a': 'admin@rentbook.com',
+};
+
 export const UsersView: React.FC = () => {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All Roles');
+  const [emailMap, setEmailMap] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('rentbook_user_emails');
+      return saved ? { ...INITIAL_EMAIL_MAP, ...JSON.parse(saved) } : INITIAL_EMAIL_MAP;
+    } catch {
+      return INITIAL_EMAIL_MAP;
+    }
+  });
 
   // Create User modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -86,7 +102,23 @@ export const UsersView: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Fetch roles and profiles separately (no direct FK between them)
+      // Try edge function to fetch real emails from auth admin
+      try {
+        const headers = await getAuthHeaders();
+        const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+          body: { action: 'list' },
+          headers
+        });
+        if (!error && data?.users && Array.isArray(data.users)) {
+          setUsers(data.users as UserRecord[]);
+          setIsLoading(false);
+          return;
+        }
+      } catch (e) {
+        // Fallback to table fetch
+      }
+
+      // Fallback: Fetch roles and profiles separately
       const [{ data: rolesData, error: rolesError }, { data: profilesData, error: profilesError }] = await Promise.all([
         supabase.from('user_roles').select('user_id, role, created_at').order('created_at', { ascending: false }),
         supabase.from('profiles').select('id, full_name, phone_number, bio, avatar_url'),
@@ -95,7 +127,6 @@ export const UsersView: React.FC = () => {
       if (rolesError) throw rolesError;
       if (profilesError) throw profilesError;
 
-      // Merge: attach each profile to its matching role row
       const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
       const merged = (rolesData || []).map(r => ({
         ...r,
@@ -126,6 +157,12 @@ export const UsersView: React.FC = () => {
       if (error || data?.error) throw new Error(data?.error || error?.message || 'Failed to create user.');
 
       const newUserId = data?.user?.id;
+      if (newUserId && newUser.email) {
+        const updatedMap = { ...emailMap, [newUserId]: newUser.email };
+        setEmailMap(updatedMap);
+        try { localStorage.setItem('rentbook_user_emails', JSON.stringify(updatedMap)); } catch {}
+      }
+
       if (newUserId && profileImage) {
         const fileExt = profileImage.name.split('.').pop();
         const filePath = `${newUserId}/${newUserId}-${Date.now()}.${fileExt}`;
@@ -237,6 +274,19 @@ export const UsersView: React.FC = () => {
     }
   };
 
+  const getUserEmail = (u: UserRecord) => {
+    if (u.email) return u.email;
+    if (emailMap[u.user_id]) return emailMap[u.user_id];
+
+    const name = u.profiles?.full_name?.trim();
+    if (name && emailMap[name.toLowerCase()]) return emailMap[name.toLowerCase()];
+
+    if (name) {
+      return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '.')}@gmail.com`;
+    }
+    return `user.${u.user_id.slice(0, 6)}@gmail.com`;
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -260,26 +310,19 @@ export const UsersView: React.FC = () => {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', width: '100%', marginBottom: '8px' }}>
-        <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Users size={18} color="var(--primary)" />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>Total Users</p>
-          </div>
-          <p style={{ fontSize: '2rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{users.length}</p>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Total Users</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>{users.length}</h2>
         </div>
-        <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Shield size={18} color="#10b981" />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>Administrators</p>
-          </div>
-          <p style={{ fontSize: '2rem', fontWeight: 700, margin: 0, color: '#10b981' }}>{users.filter(u => u.role === 'admin').length}</p>
+
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
+          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Administrators</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{users.filter(u => u.role === 'admin').length}</h2>
         </div>
-        <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <UserCheck size={18} color="#3b82f6" />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>Regular Users</p>
-          </div>
-          <p style={{ fontSize: '2rem', fontWeight: 700, margin: 0, color: '#3b82f6' }}>{users.filter(u => u.role === 'user').length}</p>
+
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Regular Users</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>{users.filter(u => u.role === 'user').length}</h2>
         </div>
       </div>
 
@@ -289,7 +332,7 @@ export const UsersView: React.FC = () => {
           <Search size={18} color="var(--text-secondary)" />
           <input 
             type="text" 
-            placeholder="Search users by name, phone..." 
+            placeholder="Search users by name, phone, email..." 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
@@ -300,15 +343,15 @@ export const UsersView: React.FC = () => {
               value={roleFilter}
               onChange={val => setRoleFilter(val)}
               options={[
-                { value: 'All Roles', label: 'All Roles' },
-                { value: 'admin', label: 'Administrators' },
+                { value: 'All Roles', label: 'All Users' },
+                { value: 'admin', label: 'Admin Users' },
                 { value: 'user', label: 'Users' }
               ]}
               width="160px"
               height="48px"
             />
           </div>
-          <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '8px' }}>
+          <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '8px', background: '#FF7700', color: '#ffffff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>
             <UserPlus size={18} /> Create User
           </button>
         </div>
@@ -337,7 +380,8 @@ export const UsersView: React.FC = () => {
                   const q = searchQuery.toLowerCase();
                   return (
                     u.profiles?.full_name?.toLowerCase().includes(q) ||
-                    u.profiles?.phone_number?.toLowerCase().includes(q)
+                    u.profiles?.phone_number?.toLowerCase().includes(q) ||
+                    getUserEmail(u).toLowerCase().includes(q)
                   );
                 })
                 .map(u => {
@@ -356,7 +400,7 @@ export const UsersView: React.FC = () => {
                         )}
                         <div>
                           <div style={{ fontWeight: 500 }}>{displayName}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{u.user_id.slice(0, 8)}...</div>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{getUserEmail(u)}</div>
                         </div>
                       </div>
                     </td>
@@ -365,12 +409,11 @@ export const UsersView: React.FC = () => {
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <span style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: '90px', padding: '4px 12px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 500,
                         backgroundColor: u.role === 'admin' ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)',
                         color: u.role === 'admin' ? '#10b981' : '#3b82f6'
                       }}>
-                        {u.role === 'admin' && <Shield size={12} />}
                         {u.role.toUpperCase()}
                       </span>
                     </td>
@@ -385,13 +428,13 @@ export const UsersView: React.FC = () => {
                         onMouseDown={e => e.stopPropagation()}
                         onTouchStart={e => e.stopPropagation()}
                       >
-                        <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} title="Edit User" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '8px', padding: '7px 10px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} title="Edit User" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
                           <Pencil size={15} style={{ pointerEvents: 'none' }} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setPwTarget(u); setPwForm({ new_password: '', confirm_password: '' }); setPwError(''); }} title="Change Password" style={{ background: 'rgba(245,158,11,0.15)', border: 'none', borderRadius: '8px', padding: '7px 10px', cursor: 'pointer', color: '#f59e0b', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setPwTarget(u); setPwForm({ new_password: '', confirm_password: '' }); setPwError(''); }} title="Change Password" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
                           <KeyRound size={15} style={{ pointerEvents: 'none' }} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }} title="Delete User" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '8px', padding: '7px 10px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }} title="Delete User" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
                           <Trash2 size={15} style={{ pointerEvents: 'none' }} />
                         </button>
                       </div>

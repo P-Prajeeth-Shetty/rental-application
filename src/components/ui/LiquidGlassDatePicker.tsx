@@ -69,6 +69,21 @@ export const LiquidGlassDatePicker: React.FC<LiquidGlassDatePickerProps> = ({
     setIsOpen(false);
   };
 
+  const handleSelectToday = () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = (now.getMonth() + 1).toString().padStart(2, '0');
+    const d = now.getDate().toString().padStart(2, '0');
+    onChange(`${y}-${m}-${d}`);
+    setViewDate(now);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    onChange('');
+    setIsOpen(false);
+  };
+
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const daysOfWeek = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -157,11 +172,13 @@ export const LiquidGlassDatePicker: React.FC<LiquidGlassDatePickerProps> = ({
           onClick={() => setIsOpen(!isOpen)}
           style={{ 
             position: 'absolute', 
-            right: '16px', 
+            right: '14px', 
             top: '50%', 
             transform: 'translateY(-50%)', 
             cursor: 'pointer',
-            opacity: 0.5 
+            color: '#FF7700',
+            display: 'flex',
+            alignItems: 'center'
           }}
         >
           <Calendar size={18} />
@@ -175,47 +192,42 @@ export const LiquidGlassDatePicker: React.FC<LiquidGlassDatePickerProps> = ({
             position: 'absolute',
             top: 'calc(100% + 8px)',
             left: 0,
-            zIndex: 1000,
-            width: '280px',
-            background: 'rgba(250, 252, 255, 0.85)', /* High opacity to block text bleeding */
-            backdropFilter: 'blur(32px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-            transform: 'translateZ(0)', /* Forces new stacking context to fix nested blur bug */
-            borderRadius: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.8)',
-            borderTop: '1px solid #fff',
-            boxShadow: '0 16px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.05)',
-            padding: '16px',
-            color: 'var(--text-primary)',
+            zIndex: 10000,
+            width: '300px',
+            background: '#ffffff',
+            borderRadius: '16px',
+            border: '1.5px solid #fed7aa',
+            boxShadow: '0 16px 40px rgba(0,0,0,0.15), 0 4px 14px rgba(255, 119, 0, 0.1)',
+            padding: '18px',
+            color: '#111827',
             animation: 'lgInputEnter 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
           }}
         >
+          {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <button 
               type="button"
               onMouseDown={prevMonth} 
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', padding: '6px', borderRadius: '10px', display: 'flex' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.4)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              style={{ background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer', color: '#FF7700', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
-            <strong style={{ fontSize: '0.95rem' }}>{monthNames[currentMonth]} {currentYear}</strong>
+            <strong style={{ fontSize: '0.95rem', color: '#111827', fontWeight: 700 }}>{monthNames[currentMonth]} {currentYear}</strong>
             <button 
               type="button"
               onMouseDown={nextMonth} 
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', padding: '6px', borderRadius: '10px', display: 'flex' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.4)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              style={{ background: '#fff7ed', border: '1px solid #fed7aa', cursor: 'pointer', color: '#FF7700', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '10px', fontSize: '0.75rem', fontWeight: 600, opacity: 0.5 }}>
+          {/* Days of Week Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '8px', fontSize: '0.78rem', fontWeight: 600, color: '#6b7280' }}>
             {daysOfWeek.map(d => <div key={d}>{d}</div>)}
           </div>
 
+          {/* Days Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
             {Array.from({ length: firstDay }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -237,19 +249,38 @@ export const LiquidGlassDatePicker: React.FC<LiquidGlassDatePickerProps> = ({
                     height: '34px',
                     fontSize: '0.85rem',
                     fontWeight: isSelected ? 700 : 500,
-                    borderRadius: '10px',
-                    background: isSelected ? 'var(--text-primary)' : isToday ? 'rgba(0,0,0,0.05)' : 'transparent',
-                    color: isSelected ? '#fff' : 'inherit',
-                    border: isToday && !isSelected ? '1px solid rgba(0,0,0,0.1)' : '1px solid transparent',
-                    transition: 'all 0.2s'
+                    borderRadius: '8px',
+                    background: isSelected ? '#FF7700' : isToday ? '#fff7ed' : 'transparent',
+                    color: isSelected ? '#ffffff' : isToday ? '#FF7700' : '#111827',
+                    border: isToday && !isSelected ? '1.5px solid #fed7aa' : '1px solid transparent',
+                    boxShadow: isSelected ? '0 4px 10px rgba(255, 119, 0, 0.3)' : 'none',
+                    transition: 'all 0.15s ease'
                   }}
-                  onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}
-                  onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = isToday ? 'rgba(0,0,0,0.05)' : 'transparent' }}
+                  onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = '#ffedd5' }}
+                  onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = isToday ? '#fff7ed' : 'transparent' }}
                 >
                   {day}
                 </div>
               )
             })}
+          </div>
+
+          {/* Quick Footer Controls */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
+            <button 
+              type="button"
+              onClick={handleClear}
+              style={{ background: 'transparent', border: 'none', color: '#6b7280', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', padding: '4px 8px' }}
+            >
+              Clear
+            </button>
+            <button 
+              type="button"
+              onClick={handleSelectToday}
+              style={{ background: '#fff7ed', border: '1px solid #fed7aa', color: '#FF7700', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', padding: '4px 12px', borderRadius: '6px' }}
+            >
+              Today
+            </button>
           </div>
         </div>
       )}
