@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Home, Users, Plus, X, Pencil, Trash2, ChevronLeft, Building2, MapPin, TrendingUp, Search } from 'lucide-react';
+import { Home, Users, Plus, Pencil, Trash2, ChevronLeft, Building2, MapPin, TrendingUp, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
-import { 
-  LiquidGlassOverlay, 
-  LiquidGlassWindow, 
-  LiquidGlassContent, 
-  LiquidGlassInput, 
-  LiquidGlassTextarea 
-} from '../components/ui/LiquidGlassModal';
+import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
 interface Property {
   id: string;
   name: string;
@@ -43,6 +37,8 @@ interface PropertyPayment {
   days_late: number;
   payment_type: string;
   assignment_id: string;
+  gst_amount: number;
+  tds_amount: number;
 }
 
 type ModalMode = 'create' | 'edit' | null;
@@ -126,7 +122,7 @@ export const PropertiesView: React.FC = () => {
       if (assignmentIds.length > 0) {
         const { data: pData, error: pErr } = await supabase
           .from('payments')
-          .select('id, amount, payment_date, payment_method, period_month, period_year, status, payment_timing, days_late, payment_type, assignment_id')
+          .select('id, amount, payment_date, payment_method, period_month, period_year, status, payment_timing, days_late, payment_type, assignment_id, gst_amount, tds_amount')
           .in('assignment_id', assignmentIds)
           .order('payment_date', { ascending: false });
 
@@ -378,7 +374,16 @@ export const PropertiesView: React.FC = () => {
                       <td style={{ padding: '12px 16px', fontWeight: 500 }}>{lookup.name}</td>
                       <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>{lookup.unit}</td>
                       <td style={{ padding: '12px 16px' }}>{monthNames[p.period_month - 1]} {p.period_year}</td>
-                      <td style={{ padding: '12px 16px', fontWeight: 600, color: '#10b981' }}>₹{Number(p.amount).toLocaleString('en-IN')}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ fontWeight: 600, color: '#10b981' }}>₹{Number(p.amount).toLocaleString('en-IN')}</div>
+                        {(Number(p.gst_amount) > 0 || Number(p.tds_amount) > 0) && (
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            {Number(p.gst_amount) > 0 && <span style={{ color: '#f59e0b' }}>GST ₹{Number(p.gst_amount).toLocaleString('en-IN')}</span>}
+                            {Number(p.gst_amount) > 0 && Number(p.tds_amount) > 0 && ' · '}
+                            {Number(p.tds_amount) > 0 && <span style={{ color: '#ef4444' }}>TDS ₹{Number(p.tds_amount).toLocaleString('en-IN')}</span>}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: '12px 16px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{new Date(p.payment_date).toLocaleDateString('en-IN')}</td>
                       <td style={{ padding: '12px 16px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{p.payment_method || '—'}</td>
                       <td style={{ padding: '12px 16px' }}>
@@ -415,79 +420,71 @@ export const PropertiesView: React.FC = () => {
 
   function renderFormModal() {
     if (!modalMode) return null;
+    
     return (
-      <LiquidGlassOverlay onClose={() => !isSubmitting && setModalMode(null)}>
-        <LiquidGlassWindow>
-          <div className="lg-modal-header">
-            <h2 className="modal-title">{modalMode === 'create' ? 'Add New Property' : 'Edit Property'}</h2>
-            <button className="lg-close-btn" onClick={() => setModalMode(null)} disabled={isSubmitting}><X size={20} /></button>
+      <Modal isOpen={!!modalMode} onClose={() => !isSubmitting && setModalMode(null)} title={modalMode === 'create' ? 'Add New Property' : 'Edit Property'} maxWidth="600px">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <ModalInput 
+            label="Property Name *" 
+            value={formData.name} 
+            onChange={e => setFormData({ ...formData, name: e.target.value })} 
+            placeholder="e.g. Sunset Apartments" 
+            required 
+          />
+          <ModalInput 
+            label="Address *" 
+            value={formData.address} 
+            onChange={e => setFormData({ ...formData, address: e.target.value })} 
+            placeholder="e.g. 123 Main St, City" 
+            required 
+          />
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ flex: 1 }}>
+              <ModalInput 
+                type="number"
+                label="Total Units *" 
+                value={formData.total_units} 
+                onChange={e => setFormData({ ...formData, total_units: e.target.value })} 
+                placeholder="e.g. 20" 
+                required 
+                min="1" 
+              />
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Property Type</label>
+              <div style={{ position: 'relative' }}>
+                <CustomSelect
+                  value={formData.property_type}
+                  onChange={(val) => setFormData({ ...formData, property_type: val })}
+                  options={[
+                    { value: 'Residential', label: 'Residential' },
+                    { value: 'Commercial', label: 'Commercial' },
+                    { value: 'Mixed', label: 'Mixed' }
+                  ]}
+                />
+              </div>
+            </div>
           </div>
-          <LiquidGlassContent>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <LiquidGlassInput 
-                label="Property Name *" 
-                value={formData.name} 
-                onChange={e => setFormData({ ...formData, name: e.target.value })} 
-                placeholder="e.g. Sunset Apartments" 
-                required 
-              />
-              <LiquidGlassInput 
-                label="Address *" 
-                value={formData.address} 
-                onChange={e => setFormData({ ...formData, address: e.target.value })} 
-                placeholder="e.g. 123 Main St, City" 
-                required 
-              />
-              <div style={{ display: 'flex', gap: '14px' }}>
-                <div style={{ flex: 1 }}>
-                  <LiquidGlassInput 
-                    type="number" 
-                    label="Total Units *" 
-                    value={formData.total_units} 
-                    onChange={e => setFormData({ ...formData, total_units: e.target.value })} 
-                    placeholder="e.g. 20" 
-                    required 
-                    min="1" 
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div className="lg-input-group">
-                    <label className="lg-input-label">Property Type</label>
-                    <div className="lg-input-wrapper">
-                      <CustomSelect
-                        value={formData.property_type}
-                        onChange={(val) => setFormData({ ...formData, property_type: val })}
-                        options={[
-                          { value: 'Residential', label: 'Residential' },
-                          { value: 'Commercial', label: 'Commercial' },
-                          { value: 'Mixed', label: 'Mixed' }
-                        ]}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <LiquidGlassTextarea 
-                label="Description" 
-                rows={2} 
-                value={formData.description} 
-                onChange={e => setFormData({ ...formData, description: e.target.value })} 
-                placeholder="Brief description of the property..." 
-              />
-              <LiquidGlassInput 
-                label="Image URL" 
-                value={formData.image} 
-                onChange={e => setFormData({ ...formData, image: e.target.value })} 
-                placeholder="https://example.com/image.jpg" 
-              />
-              <div className="lg-actions">
-                <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setModalMode(null)} disabled={isSubmitting}>Cancel</button>
-                <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : modalMode === 'create' ? 'Add Property' : 'Save Changes'}</button>
-              </div>
-            </form>
-          </LiquidGlassContent>
-        </LiquidGlassWindow>
-      </LiquidGlassOverlay>
+          <ModalTextarea 
+            label="Description"
+            rows={2} 
+            value={formData.description} 
+            onChange={e => setFormData({ ...formData, description: e.target.value })} 
+            placeholder="Brief description of the property..." 
+          />
+          <ModalInput 
+            label="Image URL" 
+            value={formData.image} 
+            onChange={e => setFormData({ ...formData, image: e.target.value })} 
+            placeholder="https://example.com/image.jpg" 
+          />
+          <ModalActionButtons 
+            onCancel={() => setModalMode(null)} 
+            submitText={modalMode === 'create' ? 'Add Property' : 'Save Changes'}
+            isSubmitting={isSubmitting} 
+          />
+        </form>
+      </Modal>
     );
   }
 
@@ -581,29 +578,20 @@ export const PropertiesView: React.FC = () => {
       {renderFormModal()}
 
       {/* Delete Confirmation */}
-      {deleteTarget && (
-        <LiquidGlassOverlay onClose={() => !isSubmitting && setDeleteTarget(null)}>
-          <LiquidGlassWindow className="delete-modal-window">
-            <div className="lg-modal-header">
-              <h2 className="modal-title" style={{ color: '#ef4444' }}>Delete Property</h2>
-              <button className="lg-close-btn" onClick={() => setDeleteTarget(null)}><X size={20} /></button>
-            </div>
-            <LiquidGlassContent>
-              <div style={{ padding: '8px 4px 10px' }}>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
-                  Are you sure you want to delete <strong style={{ color: 'white' }}>{deleteTarget.name}</strong>? All tenant assignments linked to this property will also be removed.
-                </p>
-                <div className="lg-actions" style={{ marginTop: '24px' }}>
-                  <button className="lg-btn lg-btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
-                  <button className="lg-btn lg-btn-primary" onClick={handleDelete} disabled={isSubmitting} style={{ background: '#ef4444', color: 'white' }}>
-                    {isSubmitting ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+      <Modal isOpen={!!deleteTarget} onClose={() => !isSubmitting && setDeleteTarget(null)} title="Delete Property" maxWidth="440px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+            Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>{deleteTarget?.name}</strong>? All tenant assignments linked to this property will also be removed.
+          </p>
+          <ModalActionButtons 
+            onCancel={() => setDeleteTarget(null)} 
+            submitText="Delete"
+            isSubmitting={isSubmitting}
+            isDanger={true}
+            customSubmitAction={handleDelete}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

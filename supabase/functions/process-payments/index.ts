@@ -60,25 +60,39 @@ function getExpectedRentForMonth(
   year: number,
   revisions: any[]
 ): number {
+  let baseRent: number;
   if (!revisions || revisions.length === 0) {
-    return assignment.current_rent;
-  }
-
-  // The due date for the month is roughly what we care about for rent periods,
-  // or just the 1st of the month.
-  const periodDate = new Date(year, month - 1, assignment.due_day || 1);
-
-  // Revisions are sorted by effective_from descending.
-  for (const rev of revisions) {
-    const effectiveDate = new Date(rev.effective_from);
-    if (periodDate >= effectiveDate) {
-      return rev.new_rent;
+    baseRent = assignment.current_rent;
+  } else {
+    const periodDate = new Date(year, month - 1, assignment.due_day || 1);
+    baseRent = assignment.current_rent; // fallback
+    for (const rev of revisions) {
+      const effectiveDate = new Date(rev.effective_from);
+      if (periodDate >= effectiveDate) {
+        baseRent = rev.new_rent;
+        break;
+      }
+    }
+    if (baseRent === assignment.current_rent && revisions.length > 0) {
+      const earliestRev = revisions[revisions.length - 1];
+      const periodDate2 = new Date(year, month - 1, assignment.due_day || 1);
+      if (periodDate2 < new Date(earliestRev.effective_from)) {
+        baseRent = earliestRev.previous_rent;
+      }
     }
   }
+  return baseRent;
+}
 
-  // If period is before ALL revisions, the rent was the previous_rent of the earliest revision.
-  const earliestRev = revisions[revisions.length - 1];
-  return earliestRev.previous_rent;
+function computeNetPayable(
+  baseRent: number,
+  gstRate: number,
+  tdsRate: number
+): { net: number; gstAmount: number; tdsAmount: number } {
+  const gstAmount = Math.round(baseRent * gstRate / 100 * 100) / 100;
+  const tdsAmount = Math.round(baseRent * tdsRate / 100 * 100) / 100;
+  const net = Math.round((baseRent + gstAmount - tdsAmount) * 100) / 100;
+  return { net, gstAmount, tdsAmount };
 }
 
 serve(async (req) => {
@@ -106,7 +120,7 @@ serve(async (req) => {
     // Fetch assignments
     const { data: assignmentsData, error: aErr } = await supabaseClient
       .from('tenant_assignments')
-      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start')
+      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, gst_rate, tds_rate')
       .in('id', assignmentIds);
 
     if (aErr) throw aErr;
@@ -169,7 +183,10 @@ serve(async (req) => {
 
         const totalPaidSoFarForMonth = alreadyPaidForMonth + newlyPaidForMonth;
         
-        const expectedAmountForMonth = getExpectedRentForMonth(assignment, currentMonth, currentYear, assignmentRevisions);
+        const baseRentForMonth = getExpectedRentForMonth(assignment, currentMonth, currentYear, assignmentRevisions);
+        const gstRate = Number(assignment.gst_rate ?? 18);
+        const tdsRate = Number(assignment.tds_rate ?? 10);
+        const { net: expectedAmountForMonth, gstAmount, tdsAmount } = computeNetPayable(baseRentForMonth, gstRate, tdsRate);
         
         // If this month is already fully paid, move to next month
         if (totalPaidSoFarForMonth >= expectedAmountForMonth) {
@@ -215,7 +232,9 @@ serve(async (req) => {
           days_late: daysLate,
           credit_amount: creditAmount,
           expected_amount: expectedAmountForMonth,
-          upload_batch_id: upload_batch_id || null
+          upload_batch_id: upload_batch_id || null,
+          gst_amount: gstAmount,
+          tds_amount: tdsAmount
         });
 
         remainingAmount -= roundedAmountToApply;

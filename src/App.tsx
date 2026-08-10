@@ -6,7 +6,7 @@ import { DashboardView } from './views/DashboardView';
 import { PropertiesView } from './views/PropertiesView';
 import { TenantsView } from './views/TenantsView';
 import { LeasesView } from './views/LeasesView';
-import { MaintenanceView } from './views/MaintenanceView';
+import { MaintenanceBillingView } from './views/MaintenanceBillingView';
 import { ReportsView } from './views/ReportsView';
 import { UsersView } from './views/UsersView';
 import { LeasedPropertiesView } from './views/LeasedPropertiesView';
@@ -89,7 +89,7 @@ function App() {
       case 'leases':
         return <LeasesView />;
       case 'maintenance':
-        return <MaintenanceView />;
+        return <MaintenanceBillingView />;
       case 'reports':
         return <ReportsView />;
       case 'users':

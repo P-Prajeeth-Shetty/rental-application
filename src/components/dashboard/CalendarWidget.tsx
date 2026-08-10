@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { X, Plus, Trash2, Edit2, CheckCircle, Circle, ChevronLeft, Calendar as CalendarIcon, FileText, MoreVertical } from 'lucide-react';
 import './dashboard.css';
 import '../../views/views.css';
-import { LiquidGlassButton } from '../ui/LiquidGlassButton';
+
 import { CustomSelect } from '../ui/CustomSelect';
 import { CustomDatePicker } from '../ui/CustomDatePicker';
 import { WidgetPortalOverlay } from '../ui/WidgetPortalOverlay';
@@ -229,13 +229,13 @@ export const CalendarWidget: React.FC = () => {
       )}
 
       {/* Footer */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '24px', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '20px', gap: '16px', flexWrap: 'wrap' }}>
-        <LiquidGlassButton onClick={() => { setIsReminderModalOpen(true); setReminderView('list'); setReminderSearch(''); }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', gap: '16px', flexWrap: 'wrap' }}>
+        <button className="btn btn-primary" onClick={() => { setIsReminderModalOpen(true); setReminderView('list'); setReminderSearch(''); }}>
           Reminder
-        </LiquidGlassButton>
-        <LiquidGlassButton onClick={() => { setIsNotebookModalOpen(true); setNotebookView('list'); setNotebookSearch(''); }}>
+        </button>
+        <button className="btn btn-secondary" onClick={() => { setIsNotebookModalOpen(true); setNotebookView('list'); setNotebookSearch(''); }}>
           Notebook
-        </LiquidGlassButton>
+        </button>
       </div>
 
       {/* --- Reminder Modal --- */}

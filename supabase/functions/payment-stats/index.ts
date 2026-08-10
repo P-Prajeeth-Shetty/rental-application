@@ -81,6 +81,16 @@ function getExpectedRentForMonth(
   return earliestRev.previous_rent;
 }
 
+function computeNetPayable(
+  baseRent: number,
+  gstRate: number,
+  tdsRate: number
+): number {
+  const gstAmount = Math.round(baseRent * gstRate / 100 * 100) / 100;
+  const tdsAmount = Math.round(baseRent * tdsRate / 100 * 100) / 100;
+  return Math.round((baseRent + gstAmount - tdsAmount) * 100) / 100;
+}
+
 // ── ACTION: dashboard ───────────────────────────────────────────────────
 // Returns: KPI stats + overdue items list
 
@@ -97,7 +107,7 @@ async function handleDashboard(supabase: any) {
   ] = await Promise.all([
     supabase.from('properties').select('total_units'),
     supabase.from('tenant_assignments')
-      .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, tenant_id, unit_number, tenants(full_name), properties(name), status')
+      .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, gst_rate, tds_rate, tenant_id, unit_number, tenants(full_name), properties(name), status')
       .in('status', ['active', 'vacated']),
     supabase.from('payments').select('assignment_id, amount, period_month, period_year, is_reversed'),
     supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
@@ -144,9 +154,12 @@ async function handleDashboard(supabase: any) {
     const assignmentRevisions = revisionsMap.get(a.id) || [];
 
     let assignmentTotalExpected = 0;
+    const gstRate = Number(a.gst_rate ?? 18);
+    const tdsRate = Number(a.tds_rate ?? 10);
     
     expectedMonths.forEach(em => {
-      assignmentTotalExpected += getExpectedRentForMonth(a, em.month, em.year, assignmentRevisions);
+      const baseRent = getExpectedRentForMonth(a, em.month, em.year, assignmentRevisions);
+      assignmentTotalExpected += computeNetPayable(baseRent, gstRate, tdsRate);
     });
 
     totalExpected += assignmentTotalExpected;
@@ -154,7 +167,7 @@ async function handleDashboard(supabase: any) {
 
     // Add to current month expected if the lease is active this month
     if (expectedMonths.some(em => em.month === currentMonth && em.year === currentYear)) {
-      currentMonthExpected += getExpectedRentForMonth(a, currentMonth, currentYear, assignmentRevisions);
+      currentMonthExpected += computeNetPayable(getExpectedRentForMonth(a, currentMonth, currentYear, assignmentRevisions), gstRate, tdsRate);
     }
 
     // Check for overdue months
@@ -184,7 +197,7 @@ async function handleDashboard(supabase: any) {
     if (overdueMonths.length > 0) {
       let totalOverdue = 0;
       overdueMonths.forEach(om => {
-        totalOverdue += getExpectedRentForMonth(a, om.month, om.year, assignmentRevisions);
+        totalOverdue += computeNetPayable(getExpectedRentForMonth(a, om.month, om.year, assignmentRevisions), gstRate, tdsRate);
       });
 
       overdueItems.push({
@@ -192,7 +205,7 @@ async function handleDashboard(supabase: any) {
         tenantName: a.tenants?.full_name || 'Unknown',
         propertyName: a.properties?.name || '',
         unitNumber: a.unit_number,
-        monthlyRent: getExpectedRentForMonth(a, currentMonth, currentYear, assignmentRevisions),
+        monthlyRent: computeNetPayable(getExpectedRentForMonth(a, currentMonth, currentYear, assignmentRevisions), gstRate, tdsRate),
         overdueMonths,
         totalOverdue,
       });
@@ -230,7 +243,7 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
 
   const [{ data: assignments }, { data: payments }, { data: allPayments }, { data: revisionsData }] = await Promise.all([
     supabase.from('tenant_assignments')
-      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end')
+      .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end, gst_rate, tds_rate')
       .in('status', ['active', 'vacated']),
     supabase.from('payments')
       .select('assignment_id, amount, is_reversed')
@@ -270,7 +283,10 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
 
   (assignments || []).forEach((a: any) => {
     const assignmentRevisions = revisionsMap.get(a.id) || [];
-    const expected = getExpectedRentForMonth(a, filterMonth, filterYear, assignmentRevisions);
+    const baseRent = getExpectedRentForMonth(a, filterMonth, filterYear, assignmentRevisions);
+    const gstRate = Number(a.gst_rate ?? 18);
+    const tdsRate = Number(a.tds_rate ?? 10);
+    const expected = computeNetPayable(baseRent, gstRate, tdsRate);
     const paidAmount = paidPerAssignment[a.id] || 0;
     const fullyPaid = paidAmount >= expected;
 
@@ -291,7 +307,8 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
 
     let totalExpectedAllTime = 0;
     includedMonths.forEach(em => {
-      totalExpectedAllTime += getExpectedRentForMonth(a, em.month, em.year, assignmentRevisions);
+      const baseRentForMonth = getExpectedRentForMonth(a, em.month, em.year, assignmentRevisions);
+      totalExpectedAllTime += computeNetPayable(baseRentForMonth, gstRate, tdsRate);
     });
 
     const totalPaidAllTime = totalPaidPerAssignment[a.id] || 0;

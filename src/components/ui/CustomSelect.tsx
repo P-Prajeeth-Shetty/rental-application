@@ -59,7 +59,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [options, searchable, searchQuery]);
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width, userSelect: 'none' }}>
+    <div ref={containerRef} style={{ position: 'relative', width, userSelect: 'none', zIndex: isOpen ? 1000 : 1 }}>
       <div 
         onClick={() => setIsOpen(!isOpen)}
         style={{

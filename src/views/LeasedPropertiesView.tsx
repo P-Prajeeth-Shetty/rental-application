@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Building2, User, FileText, IndianRupee } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Building2, User, FileText, IndianRupee } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
-import { 
-  LiquidGlassOverlay, 
-  LiquidGlassWindow, 
-  LiquidGlassContent, 
-  LiquidGlassInput, 
-  LiquidGlassTextarea 
-} from '../components/ui/LiquidGlassModal';
+import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
 import type { Landlord, LeasedProperty, LeaseAgreement, OutgoingPayment } from '../types/leased';
 
 type Tab = 'properties' | 'landlords' | 'agreements' | 'payments';
@@ -423,172 +417,151 @@ export const LeasedPropertiesView: React.FC = () => {
       </div>
 
       {/* Dynamic Form Modal */}
-      {modalMode && modalType && (
-        <LiquidGlassOverlay onClose={() => !isSubmitting && setModalMode(null)}>
-          <LiquidGlassWindow>
-            <div className="lg-modal-header">
-              <h2 className="modal-title">
-                {modalMode === 'create' ? 'Add ' : 'Edit '}
-                {modalType === 'landlords' ? 'Landlord' : modalType === 'properties' ? 'Leased Property' : modalType === 'agreements' ? 'Agreement' : 'Outgoing Payment'}
-              </h2>
-              <button className="lg-close-btn" onClick={() => setModalMode(null)} disabled={isSubmitting}><X size={20} /></button>
-            </div>
-            <LiquidGlassContent>
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                
-                {/* Landlord Fields */}
-                {modalType === 'landlords' && (
-                  <>
-                    <LiquidGlassInput label="Full Name *" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} required />
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}><LiquidGlassInput label="Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="email" label="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}><LiquidGlassInput label="PAN Number" value={formData.pan_number} onChange={e => setFormData({...formData, pan_number: e.target.value})} /></div>
-                      <div style={{ flex: 1 }}><LiquidGlassInput label="GST Number" value={formData.gst_number} onChange={e => setFormData({...formData, gst_number: e.target.value})} /></div>
-                    </div>
-                    <h4 style={{ margin: '12px 0 4px', color: 'var(--text-primary)' }}>Bank Details</h4>
-                    <LiquidGlassInput label="Account Name" value={formData.bank_account_name} onChange={e => setFormData({...formData, bank_account_name: e.target.value})} />
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}><LiquidGlassInput label="Account Number" value={formData.bank_account_number} onChange={e => setFormData({...formData, bank_account_number: e.target.value})} /></div>
-                      <div style={{ flex: 1 }}><LiquidGlassInput label="Bank IFSC" value={formData.bank_ifsc} onChange={e => setFormData({...formData, bank_ifsc: e.target.value})} /></div>
-                    </div>
-                    <LiquidGlassInput label="Bank Name" value={formData.bank_name} onChange={e => setFormData({...formData, bank_name: e.target.value})} />
-                    <LiquidGlassTextarea label="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} />
-                  </>
-                )}
+      <Modal isOpen={!!(modalMode && modalType)} onClose={() => !isSubmitting && setModalMode(null)} title={`${modalMode === 'create' ? 'Add ' : 'Edit '}${modalType === 'landlords' ? 'Landlord' : modalType === 'properties' ? 'Leased Property' : modalType === 'agreements' ? 'Agreement' : 'Outgoing Payment'}`}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Landlord Fields */}
+          {modalType === 'landlords' && (
+            <>
+              <ModalInput label="Full Name *" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} required />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput label="Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
+                <div style={{ flex: 1 }}><ModalInput type="email" label="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput label="PAN Number" value={formData.pan_number} onChange={e => setFormData({...formData, pan_number: e.target.value})} /></div>
+                <div style={{ flex: 1 }}><ModalInput label="GST Number" value={formData.gst_number} onChange={e => setFormData({...formData, gst_number: e.target.value})} /></div>
+              </div>
+              <h4 style={{ margin: '12px 0 4px', color: 'var(--text-primary)' }}>Bank Details</h4>
+              <ModalInput label="Account Name" value={formData.bank_account_name} onChange={e => setFormData({...formData, bank_account_name: e.target.value})} />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput label="Account Number" value={formData.bank_account_number} onChange={e => setFormData({...formData, bank_account_number: e.target.value})} /></div>
+                <div style={{ flex: 1 }}><ModalInput label="Bank IFSC" value={formData.bank_ifsc} onChange={e => setFormData({...formData, bank_ifsc: e.target.value})} /></div>
+              </div>
+              <ModalInput label="Bank Name" value={formData.bank_name} onChange={e => setFormData({...formData, bank_name: e.target.value})} />
+              <ModalTextarea label="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} />
+            </>
+          )}
 
-                {/* Properties Fields */}
-                {modalType === 'properties' && (
-                  <>
-                    <LiquidGlassInput label="Property Name *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                    <LiquidGlassInput label="Address *" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required />
-                    <div className="lg-input-group">
-                      <label className="lg-input-label">Landlord *</label>
-                      <div className="lg-input-wrapper">
-                        <select className="lg-input" value={formData.landlord_id} onChange={e => setFormData({...formData, landlord_id: e.target.value})} required style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', padding: '0', outline: 'none' }}>
-                          <option value="" style={{ color: 'black' }}>Select Landlord...</option>
-                          {filteredLandlords.map(l => (
-                            <option key={l.id} value={l.id} style={{ color: 'black' }}>{l.full_name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}>
-                        <div className="lg-input-group">
-                          <label className="lg-input-label">Property Type</label>
-                          <div className="lg-input-wrapper">
-                            <CustomSelect value={formData.property_type} onChange={val => setFormData({...formData, property_type: val})} options={[{value: 'Commercial', label: 'Commercial'}, {value: 'Residential', label: 'Residential'}]} />
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="number" label="Total Units" value={formData.total_units} onChange={e => setFormData({...formData, total_units: parseInt(e.target.value)})} min="1" /></div>
-                    </div>
-                    <LiquidGlassTextarea label="Description" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} />
-                  </>
-                )}
-
-                {/* Agreements Fields */}
-                {modalType === 'agreements' && (
-                  <>
-                    <div className="lg-input-group">
-                      <label className="lg-input-label">Leased Property *</label>
-                      <div className="lg-input-wrapper">
-                        <select className="lg-input" value={formData.property_id} onChange={e => setFormData({...formData, property_id: e.target.value})} required style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', padding: '0', outline: 'none' }}>
-                          <option value="" style={{ color: 'black' }}>Select Property...</option>
-                          {filteredProperties.map(p => (
-                            <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="date" label="Start Date *" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} required /></div>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="date" label="End Date" value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} /></div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="number" label="Rent/Lease Amount *" value={formData.rent_amount} onChange={e => setFormData({...formData, rent_amount: parseFloat(e.target.value)})} required /></div>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="number" label="Security Deposit" value={formData.security_deposit} onChange={e => setFormData({...formData, security_deposit: parseFloat(e.target.value)})} /></div>
-                    </div>
-                    <div className="lg-input-group">
-                      <label className="lg-input-label">Status</label>
-                      <div className="lg-input-wrapper">
-                        <CustomSelect value={formData.status} onChange={val => setFormData({...formData, status: val})} options={[{value: 'active', label: 'Active'}, {value: 'expired', label: 'Expired'}, {value: 'terminated', label: 'Terminated'}]} />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Payments Fields */}
-                {modalType === 'payments' && (
-                  <>
-                    <div className="lg-input-group">
-                      <label className="lg-input-label">Agreement (Property) *</label>
-                      <div className="lg-input-wrapper">
-                        <select className="lg-input" value={formData.agreement_id} onChange={e => setFormData({...formData, agreement_id: e.target.value})} required style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', padding: '0', outline: 'none' }}>
-                          <option value="" style={{ color: 'black' }}>Select Agreement...</option>
-                          {filteredAgreements.map(a => (
-                            <option key={a.id} value={a.id} style={{ color: 'black' }}>{getPropertyName(a.property_id)} (₹{a.rent_amount})</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="number" label="Amount *" value={formData.amount} onChange={e => setFormData({...formData, amount: parseFloat(e.target.value)})} required /></div>
-                      <div style={{ flex: 1 }}>
-                        <div className="lg-input-group">
-                          <label className="lg-input-label">Payment Type</label>
-                          <div className="lg-input-wrapper">
-                            <CustomSelect value={formData.payment_type} onChange={val => setFormData({...formData, payment_type: val})} options={[{value: 'rent', label: 'Rent/Lease'}, {value: 'deposit', label: 'Deposit'}, {value: 'other', label: 'Other'}]} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ flex: 1 }}><LiquidGlassInput type="date" label="Payment Date *" value={formData.payment_date} onChange={e => setFormData({...formData, payment_date: e.target.value})} required /></div>
-                      <div style={{ flex: 1 }}><LiquidGlassInput label="Payment Method" value={formData.payment_method} onChange={e => setFormData({...formData, payment_method: e.target.value})} placeholder="e.g. UPI, NEFT" /></div>
-                    </div>
-                    <LiquidGlassInput label="Reference Number" value={formData.reference_number} onChange={e => setFormData({...formData, reference_number: e.target.value})} />
-                    <LiquidGlassTextarea label="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} />
-                  </>
-                )}
-
-                <div className="lg-actions" style={{ marginTop: '16px' }}>
-                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setModalMode(null)} disabled={isSubmitting}>Cancel</button>
-                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Record'}</button>
-                </div>
-              </form>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <LiquidGlassOverlay onClose={() => !isLoading && setDeleteTarget(null)}>
-          <LiquidGlassWindow className="delete-modal-window">
-            <div className="lg-modal-header">
-              <h2 className="modal-title" style={{ color: '#ef4444' }}>Delete Record</h2>
-              <button className="lg-close-btn" onClick={() => setDeleteTarget(null)}><X size={20} /></button>
-            </div>
-            <LiquidGlassContent>
-              <div style={{ padding: '8px 4px 10px' }}>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
-                  Are you sure you want to delete <strong style={{ color: 'white' }}>{deleteTarget.name}</strong>? This action cannot be undone.
-                </p>
-                <div className="lg-actions" style={{ marginTop: '24px' }}>
-                  <button className="lg-btn lg-btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
-                  <button className="lg-btn lg-btn-primary" onClick={handleDelete} disabled={isLoading} style={{ background: '#ef4444', color: 'white' }}>
-                    {isLoading ? 'Deleting...' : 'Delete'}
-                  </button>
+          {/* Properties Fields */}
+          {modalType === 'properties' && (
+            <>
+              <ModalInput label="Property Name *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+              <ModalInput label="Address *" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} required />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Landlord *</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={formData.landlord_id} onChange={e => setFormData({...formData, landlord_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
+                    <option value="" style={{ color: 'var(--text-primary)' }}>Select Landlord...</option>
+                    {filteredLandlords.map(l => (
+                      <option key={l.id} value={l.id} style={{ color: 'var(--text-primary)' }}>{l.full_name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Property Type</label>
+                    <div style={{ position: 'relative' }}>
+                      <CustomSelect value={formData.property_type} onChange={val => setFormData({...formData, property_type: val})} options={[{value: 'Commercial', label: 'Commercial'}, {value: 'Residential', label: 'Residential'}]} />
+                    </div>
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}><ModalInput type="number" label="Total Units" value={formData.total_units} onChange={e => setFormData({...formData, total_units: parseInt(e.target.value)})} min="1" /></div>
+              </div>
+              <ModalTextarea label="Description" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={2} />
+            </>
+          )}
+
+          {/* Agreements Fields */}
+          {modalType === 'agreements' && (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Leased Property *</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={formData.property_id} onChange={e => setFormData({...formData, property_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
+                    <option value="" style={{ color: 'var(--text-primary)' }}>Select Property...</option>
+                    {filteredProperties.map(p => (
+                      <option key={p.id} value={p.id} style={{ color: 'var(--text-primary)' }}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput type="date" label="Start Date *" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} required /></div>
+                <div style={{ flex: 1 }}><ModalInput type="date" label="End Date" value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} /></div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput type="number" label="Rent/Lease Amount *" value={formData.rent_amount} onChange={e => setFormData({...formData, rent_amount: parseFloat(e.target.value)})} required /></div>
+                <div style={{ flex: 1 }}><ModalInput type="number" label="Security Deposit" value={formData.security_deposit} onChange={e => setFormData({...formData, security_deposit: parseFloat(e.target.value)})} /></div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</label>
+                <div style={{ position: 'relative' }}>
+                  <CustomSelect value={formData.status} onChange={val => setFormData({...formData, status: val})} options={[{value: 'active', label: 'Active'}, {value: 'expired', label: 'Expired'}, {value: 'terminated', label: 'Terminated'}]} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Payments Fields */}
+          {modalType === 'payments' && (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Agreement (Property) *</label>
+                <div style={{ position: 'relative' }}>
+                  <select value={formData.agreement_id} onChange={e => setFormData({...formData, agreement_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
+                    <option value="" style={{ color: 'var(--text-primary)' }}>Select Agreement...</option>
+                    {filteredAgreements.map(a => (
+                      <option key={a.id} value={a.id} style={{ color: 'var(--text-primary)' }}>{getPropertyName(a.property_id)} (₹{a.rent_amount})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput type="number" label="Amount *" value={formData.amount} onChange={e => setFormData({...formData, amount: parseFloat(e.target.value)})} required /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Type</label>
+                    <div style={{ position: 'relative' }}>
+                      <CustomSelect value={formData.payment_type} onChange={val => setFormData({...formData, payment_type: val})} options={[{value: 'rent', label: 'Rent/Lease'}, {value: 'deposit', label: 'Deposit'}, {value: 'other', label: 'Other'}]} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput type="date" label="Payment Date *" value={formData.payment_date} onChange={e => setFormData({...formData, payment_date: e.target.value})} required /></div>
+                <div style={{ flex: 1 }}><ModalInput label="Payment Method" value={formData.payment_method} onChange={e => setFormData({...formData, payment_method: e.target.value})} placeholder="e.g. UPI, NEFT" /></div>
+              </div>
+              <ModalInput label="Reference Number" value={formData.reference_number} onChange={e => setFormData({...formData, reference_number: e.target.value})} />
+              <ModalTextarea label="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} />
+            </>
+          )}
+
+          <ModalActionButtons 
+            onCancel={() => setModalMode(null)} 
+            submitText="Save Record"
+            isSubmitting={isSubmitting} 
+          />
+        </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={!!deleteTarget} onClose={() => !isLoading && setDeleteTarget(null)} title="Delete Record" maxWidth="440px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>{deleteTarget?.name}</strong>? This action cannot be undone.
+          </p>
+          <ModalActionButtons 
+            onCancel={() => setDeleteTarget(null)} 
+            submitText="Delete"
+            isSubmitting={isLoading} 
+            isDanger={true}
+            customSubmitAction={handleDelete}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

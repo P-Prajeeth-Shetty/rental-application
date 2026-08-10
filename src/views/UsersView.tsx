@@ -1,19 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './views.css';
 import {
-  UserPlus, X, Mail, Image as ImageIcon,
+  UserPlus, Mail, Image as ImageIcon,
   Pencil, Trash2, KeyRound, Check, AlertTriangle,
   Search
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { 
-  LiquidGlassOverlay, 
-  LiquidGlassWindow, 
-  LiquidGlassContent, 
-  LiquidGlassInput, 
-  LiquidGlassTextarea,
-  LiquidGlassCustomSelect
-} from '../components/ui/LiquidGlassModal';
+import { Modal, ModalInput, ModalTextarea, ModalSelect, ModalActionButtons } from '../components/ui/Modal';
 import { CustomSelect } from '../components/ui/CustomSelect';
 
 interface UserRecord {
@@ -453,205 +446,181 @@ export const UsersView: React.FC = () => {
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {/* CREATE USER MODAL                                                       */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
-      {isCreateOpen && (
-        <LiquidGlassOverlay onClose={() => !isSubmitting && setIsCreateOpen(false)}>
-          <LiquidGlassWindow style={{ maxHeight: '90vh' }}>
-            <div className="lg-modal-header">
-              <h2 className="modal-title">Create New User</h2>
-              <button className="lg-close-btn" onClick={() => setIsCreateOpen(false)} disabled={isSubmitting}><X size={20} /></button>
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* CREATE USER MODAL                                                       */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      <Modal isOpen={isCreateOpen} onClose={() => !isSubmitting && setIsCreateOpen(false)} title="Create New User">
+        <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Profile Image */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+            <div onClick={() => fileInputRef.current?.click()} style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', border: '2px dashed var(--border-color)', flexShrink: 0 }}>
+              {profileImage ? <img src={URL.createObjectURL(profileImage)} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={24} color="var(--text-secondary)" />}
             </div>
-            <LiquidGlassContent>
-              <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {/* Profile Image */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-                  <div onClick={() => fileInputRef.current?.click()} style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', border: '2px dashed rgba(255,255,255,0.2)', flexShrink: 0 }}>
-                    {profileImage ? <img src={URL.createObjectURL(profileImage)} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={24} color="rgba(255,255,255,0.4)" />}
-                  </div>
-                  <div>
-                    <p className="lg-input-label" style={{ marginBottom: '4px' }}>Profile Picture <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>(Optional)</span></p>
-                    <input type="file" ref={fileInputRef} onChange={e => e.target.files && setProfileImage(e.target.files[0])} accept="image/*" style={{ display: 'none' }} />
-                    <button type="button" className="lg-btn lg-btn-secondary" onClick={() => fileInputRef.current?.click()} style={{ padding: '4px 14px', fontSize: '0.82rem' }}>Upload</button>
-                  </div>
-                </div>
+            <div>
+              <p style={{ marginBottom: '4px', fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Profile Picture <span style={{ textTransform: 'none', fontSize: '0.8rem' }}>(Optional)</span></p>
+              <input type="file" ref={fileInputRef} onChange={e => e.target.files && setProfileImage(e.target.files[0])} accept="image/*" style={{ display: 'none' }} />
+              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ padding: '6px 14px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer', color: 'var(--text-primary)' }}>Upload</button>
+            </div>
+          </div>
 
-                <LiquidGlassInput 
-                  label="Full Name (Optional)" 
-                  value={newUser.full_name} 
-                  onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} 
-                  placeholder="John Doe" 
-                />
-                <LiquidGlassInput 
-                  type="tel" 
-                  label="Phone Number (Optional)" 
-                  value={newUser.phone_number} 
-                  onChange={e => setNewUser({ ...newUser, phone_number: e.target.value })} 
-                  placeholder="(555) 000-0000" 
-                />
-                
-                <div className="lg-input-group">
-                  <label className="lg-input-label">Email Address *</label>
-                  <div className="lg-input-wrapper" style={{ position: 'relative' }}>
-                    <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', zIndex: 1 }} />
-                    <input type="email" className="lg-input" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="user@example.com" style={{ paddingLeft: '38px' }} required />
-                  </div>
-                </div>
-                
-                <LiquidGlassInput 
-                  type="password" 
-                  label="Temporary Password *" 
-                  value={newUser.password} 
-                  onChange={e => setNewUser({ ...newUser, password: e.target.value })} 
-                  placeholder="Min 6 characters" 
-                  minLength={6} 
-                  required 
-                />
-                <LiquidGlassCustomSelect
-                  label="Role *"
-                  value={newUser.role}
-                  onChange={(value) => setNewUser({ ...newUser, role: value })}
-                  options={[
-                    { label: 'User', value: 'user' },
-                    { label: 'Admin', value: 'admin' }
-                  ]}
-                />
-                <div className="lg-actions" style={{ marginTop: '16px' }}>
-                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setIsCreateOpen(false)} disabled={isSubmitting}>Cancel</button>
-                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Creating...' : 'Create User'}</button>
-                </div>
-              </form>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+          <ModalInput 
+            label="Full Name (Optional)" 
+            value={newUser.full_name} 
+            onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} 
+            placeholder="John Doe" 
+          />
+          <ModalInput 
+            type="tel" 
+            label="Phone Number (Optional)" 
+            value={newUser.phone_number} 
+            onChange={e => setNewUser({ ...newUser, phone_number: e.target.value })} 
+            placeholder="(555) 000-0000" 
+          />
+          
+          <div>
+            <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email Address *</label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', zIndex: 1 }} />
+              <input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="user@example.com" style={{ padding: '10px 14px', paddingLeft: '38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none', width: '100%', fontFamily: 'inherit' }} required />
+            </div>
+          </div>
+          
+          <ModalInput 
+            type="password" 
+            label="Temporary Password *" 
+            value={newUser.password} 
+            onChange={e => setNewUser({ ...newUser, password: e.target.value })} 
+            placeholder="Min 6 characters" 
+            minLength={6} 
+            required 
+          />
+          <ModalSelect
+            label="Role *"
+            value={newUser.role}
+            onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+            options={[
+              { label: 'User', value: 'user' },
+              { label: 'Admin', value: 'admin' }
+            ]}
+          />
+          <ModalActionButtons 
+            onCancel={() => setIsCreateOpen(false)} 
+            submitText="Create User" 
+            isSubmitting={isSubmitting} 
+          />
+        </form>
+      </Modal>
 
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {/* EDIT USER MODAL                                                         */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
-      {editTarget && (
-        <LiquidGlassOverlay onClose={() => !isSubmitting && setEditTarget(null)}>
-          <LiquidGlassWindow>
-            <div className="lg-modal-header">
-              <h2 className="modal-title">Edit User</h2>
-              <button className="lg-close-btn" onClick={() => setEditTarget(null)} disabled={isSubmitting}><X size={20} /></button>
-            </div>
-            <LiquidGlassContent>
-              <form onSubmit={handleEditUser} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <LiquidGlassInput 
-                  label="Full Name" 
-                  value={editForm.full_name} 
-                  onChange={e => setEditForm({ ...editForm, full_name: e.target.value })} 
-                  placeholder="Full name" 
-                />
-                <LiquidGlassInput 
-                  type="tel" 
-                  label="Phone Number" 
-                  value={editForm.phone_number} 
-                  onChange={e => setEditForm({ ...editForm, phone_number: e.target.value })} 
-                  placeholder="(555) 000-0000" 
-                />
-                <LiquidGlassTextarea 
-                  label="Bio / Notes" 
-                  rows={3} 
-                  value={editForm.bio} 
-                  onChange={e => setEditForm({ ...editForm, bio: e.target.value })} 
-                  placeholder="A short bio..." 
-                />
-                <LiquidGlassCustomSelect
-                  label="Role"
-                  value={editForm.role}
-                  onChange={(value) => setEditForm({ ...editForm, role: value })}
-                  options={[
-                    { label: 'User', value: 'user' },
-                    { label: 'Admin', value: 'admin' }
-                  ]}
-                />
-                <div className="lg-actions" style={{ marginTop: '16px' }}>
-                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setEditTarget(null)} disabled={isSubmitting}>Cancel</button>
-                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Changes'}</button>
-                </div>
-              </form>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* EDIT USER MODAL                                                         */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      <Modal isOpen={!!editTarget} onClose={() => !isSubmitting && setEditTarget(null)} title="Edit User">
+        <form onSubmit={handleEditUser} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <ModalInput 
+            label="Full Name" 
+            value={editForm.full_name} 
+            onChange={e => setEditForm({ ...editForm, full_name: e.target.value })} 
+            placeholder="Full name" 
+          />
+          <ModalInput 
+            type="tel" 
+            label="Phone Number" 
+            value={editForm.phone_number} 
+            onChange={e => setEditForm({ ...editForm, phone_number: e.target.value })} 
+            placeholder="(555) 000-0000" 
+          />
+          <ModalTextarea 
+            label="Bio / Notes" 
+            rows={3} 
+            value={editForm.bio} 
+            onChange={e => setEditForm({ ...editForm, bio: e.target.value })} 
+            placeholder="A short bio..." 
+          />
+          <ModalSelect
+            label="Role"
+            value={editForm.role}
+            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+            options={[
+              { label: 'User', value: 'user' },
+              { label: 'Admin', value: 'admin' }
+            ]}
+          />
+          <ModalActionButtons 
+            onCancel={() => setEditTarget(null)} 
+            submitText="Save Changes" 
+            isSubmitting={isSubmitting} 
+          />
+        </form>
+      </Modal>
 
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {/* DELETE CONFIRMATION DIALOG                                              */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
-      {deleteTarget && (
-        <LiquidGlassOverlay onClose={() => !isSubmitting && setDeleteTarget(null)}>
-          <LiquidGlassWindow style={{ maxWidth: '440px' }}>
-            <div className="lg-modal-header">
-              <h2 className="modal-title" style={{ color: '#ef4444' }}>Delete User</h2>
-              <button className="lg-close-btn" onClick={() => setDeleteTarget(null)} disabled={isSubmitting}><X size={20} /></button>
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* DELETE CONFIRMATION DIALOG                                              */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      <Modal isOpen={!!deleteTarget} onClose={() => !isSubmitting && setDeleteTarget(null)} title="Delete User" maxWidth="440px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px', backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <AlertTriangle size={22} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <p style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>This action is permanent!</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                You are about to delete <strong style={{ color: 'var(--text-primary)' }}>{deleteTarget?.profiles?.full_name || 'this user'}</strong>. Their profile, role, and all associated data will be permanently removed and cannot be recovered.
+              </p>
             </div>
-            <LiquidGlassContent>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px', backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  <AlertTriangle size={22} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <p style={{ fontWeight: 600, marginBottom: '4px' }}>This action is permanent!</p>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                      You are about to delete <strong style={{ color: 'white' }}>{deleteTarget.profiles?.full_name || 'this user'}</strong>. Their profile, role, and all associated data will be permanently removed and cannot be recovered.
-                    </p>
-                  </div>
-                </div>
-                <div className="lg-actions" style={{ marginTop: '8px' }}>
-                  <button className="lg-btn lg-btn-secondary" onClick={() => setDeleteTarget(null)} disabled={isSubmitting}>Cancel</button>
-                  <button className="lg-btn lg-btn-primary" onClick={handleDeleteUser} disabled={isSubmitting} style={{ background: '#ef4444', color: 'white' }}>
-                    {isSubmitting ? 'Deleting...' : 'Yes, Delete User'}
-                  </button>
-                </div>
-              </div>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+          </div>
+          <ModalActionButtons 
+            onCancel={() => setDeleteTarget(null)} 
+            submitText="Yes, Delete User" 
+            isSubmitting={isSubmitting} 
+            isDanger={true}
+            customSubmitAction={handleDeleteUser}
+          />
+        </div>
+      </Modal>
 
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {/* CHANGE PASSWORD MODAL                                                   */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
-      {pwTarget && (
-        <LiquidGlassOverlay onClose={() => !isSubmitting && setPwTarget(null)}>
-          <LiquidGlassWindow style={{ maxWidth: '440px' }}>
-            <div className="lg-modal-header">
-              <h2 className="modal-title">Change Password</h2>
-              <button className="lg-close-btn" onClick={() => setPwTarget(null)} disabled={isSubmitting}><X size={20} /></button>
-            </div>
-            <LiquidGlassContent>
-              <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px', lineHeight: 1.5 }}>
-                  Setting a new password for <strong style={{ color: 'white' }}>{pwTarget.profiles?.full_name || 'this user'}</strong>. Their current session will be invalidated after the change.
-                </p>
-                {pwError && (
-                  <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '10px 14px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '8px' }}>{pwError}</div>
-                )}
-                <LiquidGlassInput 
-                  type="password" 
-                  label="New Password *" 
-                  value={pwForm.new_password} 
-                  onChange={e => setPwForm({ ...pwForm, new_password: e.target.value })} 
-                  placeholder="Min 6 characters" 
-                  minLength={6} 
-                  required 
-                />
-                <LiquidGlassInput 
-                  type="password" 
-                  label="Confirm Password *" 
-                  value={pwForm.confirm_password} 
-                  onChange={e => setPwForm({ ...pwForm, confirm_password: e.target.value })} 
-                  placeholder="Re-enter password" 
-                  required 
-                />
-                <div className="lg-actions" style={{ marginTop: '16px' }}>
-                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setPwTarget(null)} disabled={isSubmitting}>Cancel</button>
-                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Updating...' : 'Change Password'}</button>
-                </div>
-              </form>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* CHANGE PASSWORD MODAL                                                   */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      <Modal isOpen={!!pwTarget} onClose={() => !isSubmitting && setPwTarget(null)} title="Change Password" maxWidth="440px">
+        <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '-8px', lineHeight: 1.5 }}>
+            Setting a new password for <strong style={{ color: 'var(--text-primary)' }}>{pwTarget?.profiles?.full_name || 'this user'}</strong>. Their current session will be invalidated after the change.
+          </p>
+          {pwError && (
+            <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '10px 14px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '-8px' }}>{pwError}</div>
+          )}
+          <ModalInput 
+            type="password" 
+            label="New Password *" 
+            value={pwForm.new_password} 
+            onChange={e => setPwForm({ ...pwForm, new_password: e.target.value })} 
+            placeholder="Min 6 characters" 
+            minLength={6} 
+            required 
+          />
+          <ModalInput 
+            type="password" 
+            label="Confirm Password *" 
+            value={pwForm.confirm_password} 
+            onChange={e => setPwForm({ ...pwForm, confirm_password: e.target.value })} 
+            placeholder="Re-enter password" 
+            required 
+          />
+          <ModalActionButtons 
+            onCancel={() => setPwTarget(null)} 
+            submitText="Change Password" 
+            isSubmitting={isSubmitting} 
+          />
+        </form>
+      </Modal>
     </div>
   );
 };

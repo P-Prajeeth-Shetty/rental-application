@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, TrendingUp, TrendingDown, Clock, Calendar, IndianRupee } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, Calendar, IndianRupee } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { timingBadge } from '../../lib/paymentUtils';
 import type { PaymentTiming } from '../../lib/paymentUtils';
-import { GlassWorkspacePanel } from './GlassWorkspacePanel';
+import { Drawer } from './Modal';
 
 interface HistoryPayment {
   id: string;
@@ -19,6 +19,8 @@ interface HistoryPayment {
   days_late: number;
   credit_amount: number;
   expected_amount: number | null;
+  gst_amount: number;
+  tds_amount: number;
   is_reversed: boolean;
   reversal_notes: string | null;
   notes: string | null;
@@ -31,13 +33,15 @@ interface TenantHistoryDrawerProps {
   unitNumber: string;
   currentRent: number;
   backendBalance: number;
+  gstRate?: number;
+  tdsRate?: number;
   onClose: () => void;
 }
 
 const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
-  assignmentId, tenantName, propertyName, unitNumber, currentRent, backendBalance, onClose
+  assignmentId, tenantName, propertyName, unitNumber, currentRent, backendBalance, gstRate = 18, tdsRate = 10, onClose
 }) => {
   const [payments, setPayments] = useState<HistoryPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,34 +77,19 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
     : { text: '₹0 balance', color: 'var(--text-secondary)' };
 
   return (
-    <GlassWorkspacePanel isOpen={true} onClose={onClose}>
-      {/* Header */}
-      <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)' }}>{tenantName}</h2>
-          <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-            {propertyName} — Unit {unitNumber} · ₹{currentRent.toLocaleString('en-IN')}/mo
-          </p>
-        </div>
-        <button className="lg-close-btn" onClick={onClose} style={{ 
-          background: 'rgba(255,255,255,0.1)', 
-          border: 'none', 
-          borderRadius: '50%', 
-          width: '32px', 
-          height: '32px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          color: 'var(--text-secondary)',
-          cursor: 'pointer'
-        }}>
-          <X size={20} />
-        </button>
-      </div>
+    <Drawer isOpen={true} onClose={onClose} title={tenantName} maxWidth="800px">
+      <div style={{ display: 'flex', flexDirection: 'column', padding: 0, gap: '24px' }}>
+        <p style={{ margin: '-16px 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+          {propertyName} — Unit {unitNumber} · ₹{currentRent.toLocaleString('en-IN')}/mo
+          {(gstRate > 0 || tdsRate > 0) && (
+            <span style={{ fontSize: '0.8rem', marginLeft: '8px', color: 'var(--text-muted)' }}>
+              (GST {gstRate}% · TDS {tdsRate}% · Net ₹{(currentRent + Math.round(currentRent * gstRate / 100) - Math.round(currentRent * tdsRate / 100)).toLocaleString('en-IN')})
+            </span>
+          )}
+        </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', padding: 0, flex: 1, overflow: 'hidden' }}>
         {/* Summary Stats */}
-        <div style={{ display: 'flex', gap: '12px', padding: '20px 32px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         {[
           { label: 'Total Paid', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: '#10b981', icon: <IndianRupee size={14} /> },
           { label: 'Payments Made', value: String(activePays.length), color: 'var(--text-primary)', icon: <Calendar size={14} /> },
@@ -108,14 +97,11 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
           { label: 'Late', value: String(lateCount), color: lateCount > 0 ? '#ef4444' : 'var(--text-secondary)', icon: <Clock size={14} /> },
           { label: 'Balance', value: creditLabel.text, color: creditLabel.color, icon: runningBalance <= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} /> },
         ].map(s => (
-          <div key={s.label} style={{ 
-            background: 'rgba(255, 255, 255, 0.45)', 
-            backdropFilter: 'blur(12px)',
-            borderRadius: '12px', 
+          <div key={s.label} className="surface-card" style={{ 
             padding: '12px 14px', 
             minWidth: '100px', 
             flex: '1',
-            border: '1px solid rgba(255, 255, 255, 0.6)',
+            border: '1px solid var(--border-color)',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.75rem', marginBottom: '4px' }}>
@@ -124,10 +110,10 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
             <p style={{ margin: 0, fontWeight: 700, fontSize: '1.05rem', color: s.color }}>{s.value}</p>
           </div>
         ))}
-      </div>
+        </div>
 
       {/* Payment Ledger */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
+      <div>
         <h3 style={{ margin: '0 0 14px', fontSize: '0.95rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
           PAYMENT HISTORY
         </h3>
@@ -145,12 +131,10 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
               const isAdvance = p.payment_type === 'advance';
 
               return (
-                <div key={p.id} style={{
+                <div key={p.id} className="surface-card" style={{
                   padding: '16px 20px', borderRadius: '14px',
-                  background: isReversed ? 'rgba(239,68,68,0.1)' : isAdvance ? 'rgba(139,92,246,0.1)' : 'rgba(255, 255, 255, 0.45)',
-                  backdropFilter: 'blur(12px)',
-                  border: `1px solid ${isReversed ? 'rgba(239,68,68,0.3)' : isAdvance ? 'rgba(139,92,246,0.3)' : 'rgba(255, 255, 255, 0.6)'}`,
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                  background: isReversed ? 'rgba(239,68,68,0.05)' : isAdvance ? 'rgba(139,92,246,0.05)' : 'var(--bg-main)',
+                  border: `1px solid ${isReversed ? 'rgba(239,68,68,0.2)' : isAdvance ? 'rgba(139,92,246,0.2)' : 'var(--border-color)'}`,
                   opacity: isReversed ? 0.6 : 1,
                   position: 'relative'
                 }}>
@@ -211,6 +195,18 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
                     )}
                   </div>
 
+                  {/* GST/TDS breakdown */}
+                  {(Number(p.gst_amount) > 0 || Number(p.tds_amount) > 0) && (
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '4px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {Number(p.gst_amount) > 0 && (
+                        <span style={{ color: '#f59e0b' }}>GST: ₹{Number(p.gst_amount).toLocaleString('en-IN')}</span>
+                      )}
+                      {Number(p.tds_amount) > 0 && (
+                        <span style={{ color: '#ef4444' }}>TDS: ₹{Number(p.tds_amount).toLocaleString('en-IN')}</span>
+                      )}
+                    </div>
+                  )}
+
                   {/* Notes / reversal notes */}
                   {(p.notes || p.reversal_notes) && (
                     <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
@@ -224,7 +220,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
         )}
       </div>
       </div>
-    </GlassWorkspacePanel>
+    </Drawer>
   );
 };
 
