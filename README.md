@@ -8,7 +8,7 @@
   [![Vite](https://img.shields.io/badge/Vite-5.0+-646CFF.svg?style=for-the-badge&logo=vite)](https://vitejs.dev/)
   [![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E.svg?style=for-the-badge&logo=supabase)](https://supabase.com/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-  [![Netlify](https://img.shields.io/badge/Netlify-Ready-00C7B7.svg?style=for-the-badge&logo=netlify)](https://www.netlify.com/)
+  [![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=for-the-badge&logo=vercel)](https://vercel.com/)
 
 </div>
 
@@ -72,12 +72,12 @@ npm run dev
 
 Your app will be running at `http://localhost:5173`.
 
-## 🌐 Deployment (Netlify)
+## 🌐 Deployment (Vercel)
 
-This project includes a `netlify.toml` file, making it instantly ready to deploy on Netlify!
+This project is optimized for deployment on Vercel.
 
-1. Connect your GitHub repository to Netlify.
-2. In the Netlify setup, add the `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your Environment Variables.
+1. Connect your GitHub repository to Vercel.
+2. In the Vercel project settings, add the `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your Environment Variables.
 3. Deploy!
 
 ## 📸 Screenshots
