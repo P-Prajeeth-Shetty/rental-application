@@ -72,7 +72,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
       case 'leased-properties': return { title: 'Leased Properties', subtitle: 'View properties currently rented out' };
       case 'tenants': return { title: 'Tenants & Rent', subtitle: 'Manage tenant information and details' };
       case 'leases': return { title: 'Payments', subtitle: 'Track rent payments and invoices' };
-      case 'maintenance': return { title: 'Maintenance Requests', subtitle: 'Manage service requests and repairs' };
+      case 'maintenance': return { title: 'Maintenance Billing', subtitle: 'Generate and track maintenance invoices for your properties' };
       case 'reports': return { title: 'Financial Reports', subtitle: 'Financial and operational analytics' };
       case 'users': return { title: 'Users Management', subtitle: 'Manage system administrators and staff' };
       case 'help': return { title: 'Help Center', subtitle: 'Support, documentation and resources' };

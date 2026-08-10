@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './views.css';
-import { Upload, Plus, X, FileSpreadsheet, Check, AlertTriangle, Download, Search, History } from 'lucide-react';
+import { Upload, Plus, Search, History, Download, Check, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 import { CustomSelect } from '../components/ui/CustomSelect';
-import { 
-  LiquidGlassOverlay, 
-  LiquidGlassWindow, 
-  LiquidGlassContent, 
-  LiquidGlassInput 
-} from '../components/ui/LiquidGlassModal';
-import { LiquidGlassDatePicker } from '../components/ui/LiquidGlassDatePicker';
+import { Modal, ModalInput, ModalActionButtons } from '../components/ui/Modal';
+
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { timingBadge } from '../lib/paymentUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
@@ -25,6 +20,8 @@ interface AssignmentWithTenant {
   due_day: number;
   grace_days: number;
   lease_start: string;
+  gst_rate: number;
+  tds_rate: number;
   tenants: { id: string; full_name: string; phone: string | null; email: string | null } | null;
   properties: { id: string; name: string } | null;
   rent_revisions?: { previous_rent: number; new_rent: number; effective_from: string }[];
@@ -102,6 +99,7 @@ export const LeasesView: React.FC = () => {
   // Filters
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [filterPropertyId, setFilterPropertyId] = useState('');
 
   // Record Payment modal
   const [payModal, setPayModal] = useState(false);
@@ -129,7 +127,7 @@ export const LeasesView: React.FC = () => {
     setIsLoading(true);
     try {
       const [{ data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
-        supabase.from('tenant_assignments').select('id, unit_number, current_rent, tenant_id, status, payment_mode, due_day, grace_days, lease_start, tenants(id, full_name, phone, email), properties(id, name), rent_revisions(previous_rent, new_rent, effective_from)').eq('status', 'active'),
+        supabase.from('tenant_assignments').select('id, unit_number, current_rent, tenant_id, status, payment_mode, due_day, grace_days, lease_start, gst_rate, tds_rate, tenants(id, full_name, phone, email), properties(id, name), rent_revisions(previous_rent, new_rent, effective_from)').eq('status', 'active'),
         supabase.from('payments').select('*').eq('period_month', filterMonth).eq('period_year', filterYear).order('payment_date', { ascending: false }),
       ]);
       if (aErr) throw aErr;
@@ -312,21 +310,35 @@ export const LeasesView: React.FC = () => {
 
   const handleDownloadTemplate = () => {
     const templateData = assignments.length > 0 
-      ? assignments.map(a => ({
-          'Tenant Name': a.tenants?.full_name || '',
-          'Email': a.tenants?.email || '',
-          'Phone': a.tenants?.phone || '',
-          'Property': a.properties?.name || '',
-          'Unit': a.unit_number || '',
-          'Paid Amount': getEffectiveRentAsOf(a, new Date(filterYear, filterMonth - 1, 1)),
-          'Bal Amount': getStatus(a.id).balance,
-          'Payment Date': new Date().toISOString().split('T')[0],
-          'Method': 'UPI',
-          'Reference': '',
-          'Notes': '',
-          'Payment Type': 'rent'
-        }))
-      : [{ 'Tenant Name': 'Example Tenant', 'Email': 'example@email.com', 'Phone': '9876543210', 'Property': 'Example Property', 'Unit': '101', 'Paid Amount': 25000, 'Bal Amount': 0, 'Payment Date': new Date().toISOString().split('T')[0], 'Method': 'UPI', 'Reference': 'TXN12345', 'Notes': '', 'Payment Type': 'rent' }];
+      ? assignments.map(a => {
+          const rent = getEffectiveRentAsOf(a, new Date(filterYear, filterMonth - 1, 1));
+          const gR = Number(a.gst_rate ?? 18);
+          const tR = Number(a.tds_rate ?? 10);
+          const gstAmt = Math.round(rent * gR / 100);
+          const tdsAmt = Math.round(rent * tR / 100);
+          const net = rent + gstAmt - tdsAmt;
+          return {
+            'Tenant Name': a.tenants?.full_name || '',
+            'Email': a.tenants?.email || '',
+            'Phone': a.tenants?.phone || '',
+            'Property': a.properties?.name || '',
+            'Unit': a.unit_number || '',
+            'Rent': rent,
+            'GST Rate (%)': gR,
+            'TDS Rate (%)': tR,
+            'GST Amount': gstAmt,
+            'TDS Amount': tdsAmt,
+            'Net Amount': net,
+            'Paid Amount': net,
+            'Bal Amount': getStatus(a.id).balance,
+            'Payment Date': new Date().toISOString().split('T')[0],
+            'Method': 'UPI',
+            'Reference': '',
+            'Notes': '',
+            'Payment Type': 'rent'
+          };
+        })
+      : [{ 'Tenant Name': 'Example Tenant', 'Email': 'example@email.com', 'Phone': '9876543210', 'Property': 'Example Property', 'Unit': '101', 'Rent': 25000, 'GST Rate (%)': 18, 'TDS Rate (%)': 10, 'GST Amount': 4500, 'TDS Amount': 2500, 'Net Amount': 27000, 'Paid Amount': 27000, 'Bal Amount': 0, 'Payment Date': new Date().toISOString().split('T')[0], 'Method': 'UPI', 'Reference': 'TXN12345', 'Notes': '', 'Payment Type': 'rent' }];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
@@ -340,12 +352,35 @@ export const LeasesView: React.FC = () => {
   const getPaymentsForAssignment = (assignId: string) => payments.filter(p => p.assignment_id === assignId);
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   
+  const filteredAssignments = assignments.filter(a => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !searchQuery || (
+      a.tenants?.full_name?.toLowerCase().includes(q) ||
+      a.properties?.name?.toLowerCase().includes(q) ||
+      a.unit_number?.toLowerCase().includes(q)
+    );
+    const matchesProperty = !filterPropertyId || a.properties?.id === filterPropertyId;
+    return matchesSearch && matchesProperty;
+  });
+
+  const uniqueProperties = Array.from(new Map(assignments.map(a => [a.properties?.id, a.properties])).values()).filter(Boolean) as {id: string, name: string}[];
+
   // Calculate expected rent using the effective rent as of today, or the specific filter month. 
   // We'll use the 1st of the filter month to evaluate rent for that period.
   const filterPeriodDate = new Date(filterYear, filterMonth - 1, 1);
-  const totalExpected = assignments.reduce((s, a) => s + Number(getEffectiveRentAsOf(a, filterPeriodDate)), 0);
+  const totalExpected = filteredAssignments.reduce((s, a) => {
+    const rent = Number(getEffectiveRentAsOf(a, filterPeriodDate));
+    const gR = Number(a.gst_rate ?? 18);
+    const tR = Number(a.tds_rate ?? 10);
+    return s + rent + Math.round(rent * gR / 100) - Math.round(rent * tR / 100);
+  }, 0);
   
-  const totalCollected = payments.reduce((s, p) => s + Number(p.amount), 0);
+  const totalCollected = payments.filter(p => {
+    // Only count payments for assignments that match the filter
+    const assign = assignments.find(a => a.id === p.assignment_id);
+    return !filterPropertyId || assign?.properties?.id === filterPropertyId;
+  }).reduce((s, p) => s + Number(p.amount), 0);
+  
   const collectionRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
 
   // Get status from edge function (server-computed overdue/balance)
@@ -353,16 +388,6 @@ export const LeasesView: React.FC = () => {
     paidAmount: 0, balance: Number(assignments.find(a => a.id === assignId)?.current_rent || 0),
     isOverdue: false, fullyPaid: false, status: 'pending'
   };
-
-  const filteredAssignments = assignments.filter(a => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      a.tenants?.full_name?.toLowerCase().includes(q) ||
-      a.properties?.name?.toLowerCase().includes(q) ||
-      a.unit_number?.toLowerCase().includes(q)
-    );
-  });
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -405,14 +430,27 @@ export const LeasesView: React.FC = () => {
 
       {/* Toolbar (Search + Filters + Actions) */}
       <div className="search-filter-row">
-        <div className="search-input-container">
-          <Search size={18} color="var(--text-secondary)" />
-          <input 
-            type="text" 
-            placeholder="Search tenant or unit..." 
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
+        <div style={{ display: 'flex', gap: '16px', flex: 1, alignItems: 'center' }}>
+          <div className="search-input-container" style={{ flex: 1 }}>
+            <Search size={18} color="var(--text-secondary)" />
+            <input 
+              type="text" 
+              placeholder="Search tenant or unit..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div style={{ width: '250px' }}>
+            <CustomSelect
+              value={filterPropertyId}
+              onChange={setFilterPropertyId}
+              options={[
+                { value: '', label: 'All Properties' },
+                ...uniqueProperties.map(p => ({ value: p.id, label: p.name }))
+              ]}
+              placeholder="All Properties"
+            />
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -476,7 +514,28 @@ export const LeasesView: React.FC = () => {
                     onMouseLeave={e => (e.currentTarget.style.background = overdue ? 'rgba(239,68,68,0.03)' : 'transparent')}>
                     <td style={{ padding: '12px 16px', fontWeight: 500 }}>{a.tenants?.full_name || '—'}</td>
                     <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '0.88rem' }}>{a.properties?.name} — {a.unit_number}</td>
-                    <td style={{ padding: '12px 16px' }}>₹{expected.toLocaleString('en-IN')}</td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <div>
+                        <div>₹{expected.toLocaleString('en-IN')}</div>
+                        {(() => {
+                          const gstRate = Number(a.gst_rate ?? 18);
+                          const tdsRate = Number(a.tds_rate ?? 10);
+                          if (gstRate === 0 && tdsRate === 0) return null;
+                          const gstAmt = Math.round(expected * gstRate / 100);
+                          const tdsAmt = Math.round(expected * tdsRate / 100);
+                          const net = expected + gstAmt - tdsAmt;
+                          return (
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              <span style={{ color: '#f59e0b' }}>+GST ₹{gstAmt.toLocaleString('en-IN')}</span>
+                              {' '}
+                              <span style={{ color: '#ef4444' }}>−TDS ₹{tdsAmt.toLocaleString('en-IN')}</span>
+                              {' = '}
+                              <span style={{ fontWeight: 600, color: '#10b981' }}>Net ₹{net.toLocaleString('en-IN')}</span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div>
                         <div style={{ fontWeight: 600, color: paidAmount > 0 ? '#10b981' : 'var(--text-secondary)' }}>
@@ -563,167 +622,155 @@ export const LeasesView: React.FC = () => {
           unitNumber={historyTarget.unit_number}
           currentRent={getEffectiveRentAsOf(historyTarget)}
           backendBalance={getStatus(historyTarget.id).balance}
+          gstRate={Number(historyTarget.gst_rate ?? 18)}
+          tdsRate={Number(historyTarget.tds_rate ?? 10)}
           onClose={() => setHistoryTarget(null)}
         />
       )}
 
       {/* ══ Record Payment Modal ══════════════════════════════════════════ */}
-      {payModal && (
-        <LiquidGlassOverlay onClose={() => !isSubmitting && setPayModal(false)}>
-          <LiquidGlassWindow>
-            <div className="lg-modal-header">
-              <h2 className="modal-title">Record Payment</h2>
-              <button className="lg-close-btn" onClick={() => setPayModal(false)}><X size={20} /></button>
+      <Modal isOpen={payModal} onClose={() => !isSubmitting && setPayModal(false)} title="Record Payment">
+        <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tenant *</label>
+            <div style={{ position: 'relative' }}>
+              <CustomSelect
+                value={payForm.assignment_id}
+                onChange={(val) => setPayForm({ ...payForm, assignment_id: val })}
+                placeholder="Select tenant..."
+                searchable={true}
+                options={assignments.map(a => ({
+                  value: a.id,
+                  label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')})`
+                }))}
+              />
             </div>
-            <LiquidGlassContent>
-              <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div className="lg-input-group">
-                  <label className="lg-input-label">Tenant *</label>
-                  <div className="lg-input-wrapper">
-                    <CustomSelect
-                      value={payForm.assignment_id}
-                      onChange={(val) => setPayForm({ ...payForm, assignment_id: val })}
-                      placeholder="Select tenant..."
-                      searchable={true}
-                      options={assignments.map(a => ({
-                        value: a.id,
-                        label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')})`
-                      }))}
-                    />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ flex: 1 }}>
-                    <LiquidGlassInput 
-                      type="number" 
-                      label="Amount (₹) *" 
-                      value={payForm.amount} 
-                      onChange={e => setPayForm({ ...payForm, amount: e.target.value })} 
-                      required 
-                      min="0" 
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <LiquidGlassDatePicker 
-                      label="Payment Date *" 
-                      value={payForm.payment_date} 
-                      onChange={val => setPayForm({ ...payForm, payment_date: val })} 
-                      required 
-                    />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div className="lg-input-group">
-                    <label className="lg-input-label">Method</label>
-                    <div className="lg-input-wrapper">
-                      <CustomSelect
-                        value={payForm.payment_method}
-                        onChange={(val) => setPayForm({ ...payForm, payment_method: val })}
-                        options={[
-                          { value: 'UPI', label: 'UPI' },
-                          { value: 'Cash', label: 'Cash' },
-                          { value: 'Bank Transfer', label: 'Bank Transfer' },
-                          { value: 'Cheque', label: 'Cheque' }
-                        ]}
-                      />
-                    </div>
-                  </div>
-                  <LiquidGlassInput 
-                    label="Reference No" 
-                    value={payForm.reference_number} 
-                    onChange={e => setPayForm({ ...payForm, reference_number: e.target.value })} 
-                    placeholder="TXN12345" 
-                  />
-                </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              <ModalInput 
+                type="number" 
+                label="Amount (₹) *" 
+                value={payForm.amount} 
+                onChange={e => setPayForm({ ...payForm, amount: e.target.value })} 
+                required 
+                min="0" 
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput 
+                type="date"
+                label="Payment Date *" 
+                value={payForm.payment_date} 
+                onChange={e => setPayForm({ ...payForm, payment_date: e.target.value })} 
+                required 
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Method</label>
+              <div style={{ position: 'relative' }}>
+                <CustomSelect
+                  value={payForm.payment_method}
+                  onChange={(val) => setPayForm({ ...payForm, payment_method: val })}
+                  options={[
+                    { value: 'UPI', label: 'UPI' },
+                    { value: 'Cash', label: 'Cash' },
+                    { value: 'Bank Transfer', label: 'Bank Transfer' },
+                    { value: 'Cheque', label: 'Cheque' }
+                  ]}
+                />
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput 
+                label="Reference No" 
+                value={payForm.reference_number} 
+                onChange={e => setPayForm({ ...payForm, reference_number: e.target.value })} 
+                placeholder="TXN12345" 
+              />
+            </div>
+          </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div className="lg-input-group">
-                    <label className="lg-input-label">Payment Type</label>
-                    <div className="lg-input-wrapper">
-                      <CustomSelect
-                        value={payForm.payment_type}
-                        onChange={(val) => setPayForm({ ...payForm, payment_type: val })}
-                        options={[
-                          { value: 'rent', label: 'Rent' },
-                          { value: 'security_deposit', label: 'Security Deposit' },
-                          { value: 'advance', label: 'Advance' },
-                          { value: 'penalty', label: 'Penalty' },
-                          { value: 'adjustment', label: 'Adjustment' }
-                        ]}
-                        menuPlacement="top"
-                      />
-                    </div>
-                  </div>
-                  <LiquidGlassInput 
-                    type="text" 
-                    label="Notes (Optional)" 
-                    value={payForm.notes} 
-                    onChange={e => setPayForm({ ...payForm, notes: e.target.value })} 
-                    placeholder="Enter notes..." 
-                  />
-                </div>
-                <div className="lg-actions" style={{ marginTop: '16px' }}>
-                  <button type="button" className="lg-btn lg-btn-secondary" onClick={() => setPayModal(false)}>Cancel</button>
-                  <button type="submit" className="lg-btn lg-btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Recording...' : 'Record Payment'}</button>
-                </div>
-              </form>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Type</label>
+              <div style={{ position: 'relative' }}>
+                <CustomSelect
+                  value={payForm.payment_type}
+                  onChange={(val) => setPayForm({ ...payForm, payment_type: val })}
+                  options={[
+                    { value: 'rent', label: 'Rent' },
+                    { value: 'security_deposit', label: 'Security Deposit' },
+                    { value: 'advance', label: 'Advance' },
+                    { value: 'penalty', label: 'Penalty' },
+                    { value: 'adjustment', label: 'Adjustment' }
+                  ]}
+                  menuPlacement="top"
+                />
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput 
+                type="text" 
+                label="Notes (Optional)" 
+                value={payForm.notes} 
+                onChange={e => setPayForm({ ...payForm, notes: e.target.value })} 
+                placeholder="Enter notes..." 
+              />
+            </div>
+          </div>
+          <ModalActionButtons 
+            onCancel={() => setPayModal(false)} 
+            submitText="Record Payment"
+            isSubmitting={isSubmitting} 
+          />
+        </form>
+      </Modal>
 
       {/* ══ Excel Preview Modal ═══════════════════════════════════════════ */}
-      {excelModal && (
-        <LiquidGlassOverlay onClose={() => !uploading && setExcelModal(false)}>
-          <LiquidGlassWindow style={{ maxWidth: '720px' }}>
-            <div className="lg-modal-header">
-              <h2 className="modal-title"><FileSpreadsheet size={20} style={{ marginRight: '8px', verticalAlign: 'text-bottom' }} />Excel Upload Preview</h2>
-              <button className="lg-close-btn" onClick={() => setExcelModal(false)} disabled={uploading}><X size={20} /></button>
-            </div>
-            <LiquidGlassContent>
-              <div style={{ marginBottom: '12px', display: 'flex', gap: '16px', fontSize: '0.88rem' }}>
-                <span>Total: <strong>{excelRows.length}</strong></span>
-                <span style={{ color: '#10b981' }}>Valid: <strong>{excelRows.filter(r => !r.error).length}</strong></span>
-                <span style={{ color: '#ef4444' }}>Errors: <strong>{excelRows.filter(r => r.error).length}</strong></span>
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Tenant</th>
-                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Amount</th>
-                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Date</th>
-                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Month/Year</th>
-                    <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {excelRows.map((r, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', backgroundColor: r.error ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.03)' }}>
-                      <td style={{ padding: '8px 10px' }}>{r.tenant_name}</td>
-                      <td style={{ padding: '8px 10px' }}>₹{r.amount?.toLocaleString('en-IN')}</td>
-                      <td style={{ padding: '8px 10px' }}>{r.payment_date}</td>
-                      <td style={{ padding: '8px 10px' }}>{monthNames[(r.month || 1) - 1]} {r.year}</td>
-                      <td style={{ padding: '8px 10px' }}>
-                        {r.error ? (
-                          <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={12} /> {r.error}</span>
-                        ) : (
-                          <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={12} /> Matched</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="lg-actions" style={{ marginTop: '16px' }}>
-                <button className="lg-btn lg-btn-secondary" onClick={() => setExcelModal(false)} disabled={uploading}>Cancel</button>
-                <button className="lg-btn lg-btn-primary" onClick={handleBulkUpload} disabled={uploading || excelRows.filter(r => !r.error).length === 0}>
-                  {uploading ? 'Uploading...' : `Upload ${excelRows.filter(r => !r.error).length} Payments`}
-                </button>
-              </div>
-            </LiquidGlassContent>
-          </LiquidGlassWindow>
-        </LiquidGlassOverlay>
-      )}
+      <Modal isOpen={excelModal} onClose={() => !uploading && setExcelModal(false)} title="Excel Upload Preview" maxWidth="720px">
+        <div style={{ marginBottom: '12px', display: 'flex', gap: '16px', fontSize: '0.88rem' }}>
+          <span>Total: <strong>{excelRows.length}</strong></span>
+          <span style={{ color: '#10b981' }}>Valid: <strong>{excelRows.filter(r => !r.error).length}</strong></span>
+          <span style={{ color: '#ef4444' }}>Errors: <strong>{excelRows.filter(r => r.error).length}</strong></span>
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
+              <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Tenant</th>
+              <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Amount</th>
+              <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Date</th>
+              <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Month/Year</th>
+              <th style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {excelRows.map((r, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: r.error ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.03)' }}>
+                <td style={{ padding: '8px 10px' }}>{r.tenant_name}</td>
+                <td style={{ padding: '8px 10px' }}>₹{r.amount?.toLocaleString('en-IN')}</td>
+                <td style={{ padding: '8px 10px' }}>{r.payment_date}</td>
+                <td style={{ padding: '8px 10px' }}>{monthNames[(r.month || 1) - 1]} {r.year}</td>
+                <td style={{ padding: '8px 10px' }}>
+                  {r.error ? (
+                    <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={12} /> {r.error}</span>
+                  ) : (
+                    <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={12} /> Matched</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <ModalActionButtons 
+          onCancel={() => setExcelModal(false)} 
+          submitText={`Upload ${excelRows.filter(r => !r.error).length} Payments`}
+          isSubmitting={uploading} 
+          customSubmitAction={excelRows.filter(r => !r.error).length === 0 ? undefined : handleBulkUpload}
+        />
+      </Modal>
     </>
   );
 };

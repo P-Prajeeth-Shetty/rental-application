@@ -39,7 +39,7 @@ export const HelpCenterView: React.FC = () => {
             <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Full Documentation</h3>
           </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '16px' }}>
-            Detailed articles covering every feature in the application, including financial reports and maintenance tracking.
+            Detailed articles covering every feature in the application, including financial reports and maintenance billing.
           </p>
           <button className="btn-secondary" style={{ width: '100%' }}>Browse Docs</button>
         </div>
@@ -80,9 +80,9 @@ export const HelpCenterView: React.FC = () => {
             </div>
             
             <div style={{ padding: '16px', background: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>How are maintenance requests tracked?</h4>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                The "Maintenance" tab uses a Kanban board format. You can drag and drop requests between "Reported", "In Progress", and "Resolved". Once a ticket is resolved, you can log the repair cost to automatically track it as an expense.
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>How does maintenance billing work?</h4>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                The "Maintenance" tab allows you to bill tenants for property maintenance costs. You can record a total expense for a property and either divide it equally among all units or assign custom amounts per unit. Tenants will then receive an invoice which you can mark as Paid once they pay it.
               </p>
             </div>
           </div>
