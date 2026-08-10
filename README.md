@@ -21,7 +21,8 @@
 - 💰 **Financial Dashboard**: Powerful payment tracking system. Upload CSV payments, monitor on-time vs. late payments, and view beautiful revenue analytics.
 - 🛠️ **Maintenance Requests**: Kanban-style maintenance ticketing system to track repair statuses across all your properties.
 - 🔐 **Role-based Authentication**: Secure user management with Admin, Manager, and Viewer roles utilizing Supabase Row Level Security (RLS).
-- 🎨 **Premium UI/UX**: State-of-the-art glassmorphism design system, smooth animations, and a responsive layout that looks incredible on any screen.
+- 🎨 **Premium UI/UX**: State-of-the-art liquid glassmorphism design system, redesigned login experience, advanced charting components, and a highly responsive layout.
+- 🆘 **Help Center**: Integrated support hub for user guidance and smooth onboarding.
 
 ## 💻 Tech Stack
 
