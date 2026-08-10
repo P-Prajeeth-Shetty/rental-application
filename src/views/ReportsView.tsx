@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
 import { RevenueChart } from '../components/dashboard/RevenueChart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+
 import { Download, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
