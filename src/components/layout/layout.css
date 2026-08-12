@@ -20,7 +20,7 @@
 .sidebar {
   width: 260px;
   background: var(--bg-surface);
-  border-radius: 12px;
+  border-radius: 1px;
   display: flex;
   flex-direction: column;
   padding: 24px;
@@ -48,7 +48,7 @@
 
 .header-section {
   background: var(--bg-surface);
-  border-radius: 12px;
+  border-radius: 1px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -61,7 +61,7 @@
   width: 28px;
   height: 28px;
   background: var(--primary-accent);
-  border-radius: 8px;
+  border-radius: 2px;
   position: relative;
   flex-shrink: 0;
   display: flex;
@@ -184,7 +184,7 @@
 
 .support-card {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border-radius: 16px;
+  border-radius: 1px;
   padding: 20px;
   color: white;
   position: relative;
@@ -211,7 +211,7 @@
   background: var(--primary-accent);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 2px;
   padding: 8px 16px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -341,7 +341,7 @@
   right: 0;
   width: 240px;
   background: var(--bg-surface);
-  border-radius: 20px;
+  border-radius: 1px;
   border: 1px solid var(--border-color);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
   padding: 8px;
@@ -393,7 +393,7 @@
   color: var(--text-primary);
   font-size: 0.9rem;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 1px;
   transition: all var(--transition-fast);
 }
 
@@ -501,7 +501,7 @@
   box-shadow: 
     0 24px 64px rgba(0, 0, 0, 0.15),
     inset 0 1px 2px rgba(255, 255, 255, 0.5);
-  border-radius: 28px;
+  border-radius: 1px;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;

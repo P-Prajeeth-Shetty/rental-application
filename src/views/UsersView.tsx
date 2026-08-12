@@ -278,7 +278,7 @@ export const UsersView: React.FC = () => {
         {toasts.map(t => (
           <div key={t.id} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '12px 18px', borderRadius: '10px', minWidth: '280px',
+            padding: '12px 18px', borderRadius: '2px', minWidth: '280px',
             background: t.type === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)',
             color: 'white', fontWeight: 500, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
             animation: 'slideIn 0.3s ease'
@@ -292,17 +292,17 @@ export const UsersView: React.FC = () => {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', width: '100%', marginBottom: '8px' }}>
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Total Users</span>
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{users.length}</h2>
         </div>
 
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
-          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Administrators</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{users.filter(u => u.role === 'admin').length}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Administrators</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{users.filter(u => u.role === 'admin').length}</h2>
         </div>
 
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Regular Users</span>
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{users.filter(u => u.role === 'user').length}</h2>
         </div>
@@ -333,7 +333,7 @@ export const UsersView: React.FC = () => {
               height="48px"
             />
           </div>
-          <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '8px', background: '#0f766e', color: '#ffffff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+          <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '2px', background: '#0f766e', color: '#ffffff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>
             <UserPlus size={18} /> Create User
           </button>
         </div>
@@ -392,7 +392,7 @@ export const UsersView: React.FC = () => {
                     <td style={{ padding: '14px 16px' }}>
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        width: '90px', padding: '4px 12px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 500,
+                        width: '90px', padding: '4px 12px', borderRadius: '1px', fontSize: '0.82rem', fontWeight: 500,
                         backgroundColor: u.role === 'admin' ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)',
                         color: u.role === 'admin' ? '#10b981' : '#3b82f6'
                       }}>
@@ -410,13 +410,13 @@ export const UsersView: React.FC = () => {
                         onMouseDown={e => e.stopPropagation()}
                         onTouchStart={e => e.stopPropagation()}
                       >
-                        <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} title="Edit User" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} title="Edit User" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                           <Pencil size={15} style={{ pointerEvents: 'none' }} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setPwTarget(u); setPwForm({ new_password: '', confirm_password: '' }); setPwError(''); }} title="Change Password" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setPwTarget(u); setPwForm({ new_password: '', confirm_password: '' }); setPwError(''); }} title="Change Password" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                           <KeyRound size={15} style={{ pointerEvents: 'none' }} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }} title="Delete User" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }} title="Delete User" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
                           <Trash2 size={15} style={{ pointerEvents: 'none' }} />
                         </button>
                       </div>
@@ -448,7 +448,7 @@ export const UsersView: React.FC = () => {
             <div>
               <p style={{ marginBottom: '4px', fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Profile Picture <span style={{ textTransform: 'none', fontSize: '0.8rem' }}>(Optional)</span></p>
               <input type="file" ref={fileInputRef} onChange={e => e.target.files && setProfileImage(e.target.files[0])} accept="image/*" style={{ display: 'none' }} />
-              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ padding: '6px 14px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer', color: 'var(--text-primary)' }}>Upload</button>
+              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ padding: '6px 14px', fontSize: '0.85rem', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer', color: 'var(--text-primary)' }}>Upload</button>
             </div>
           </div>
 
@@ -470,7 +470,7 @@ export const UsersView: React.FC = () => {
             <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email Address *</label>
             <div style={{ position: 'relative' }}>
               <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', zIndex: 1 }} />
-              <input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="user@example.com" style={{ padding: '10px 14px', paddingLeft: '38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none', width: '100%', fontFamily: 'inherit' }} required />
+              <input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="user@example.com" style={{ padding: '10px 14px', paddingLeft: '38px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none', width: '100%', fontFamily: 'inherit' }} required />
             </div>
           </div>
           
@@ -553,7 +553,7 @@ export const UsersView: React.FC = () => {
       {/* ══════════════════════════════════════════════════════════════════════ */}
       <Modal isOpen={!!deleteTarget} onClose={() => !isSubmitting && setDeleteTarget(null)} title="Delete User" maxWidth="440px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px', backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px', backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: '2px', border: '1px solid rgba(239,68,68,0.2)' }}>
             <AlertTriangle size={22} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
               <p style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>This action is permanent!</p>
@@ -584,7 +584,7 @@ export const UsersView: React.FC = () => {
             Setting a new password for <strong style={{ color: 'var(--text-primary)' }}>{pwTarget?.profiles?.full_name || 'this user'}</strong>. Their current session will be invalidated after the change.
           </p>
           {pwError && (
-            <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '10px 14px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '-8px' }}>{pwError}</div>
+            <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '10px 14px', borderRadius: '2px', fontSize: '0.9rem', marginBottom: '-8px' }}>{pwError}</div>
           )}
           <ModalInput 
             type="password" 

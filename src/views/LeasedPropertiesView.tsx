@@ -175,23 +175,23 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
 
   return (
     <div style={{ padding: '0' }}>
-      {error && <div style={{ color: '#ef4444', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px' }}>{error}</div>}
+      {error && <div style={{ color: '#ef4444', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '2px' }}>{error}</div>}
 
       <div className="tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto' }}>
         <button className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`} onClick={() => setActiveTab('properties')}
-          style={{ background: activeTab === 'properties' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'properties' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'properties' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
+          style={{ background: activeTab === 'properties' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'properties' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '2px', padding: '6px 12px', color: activeTab === 'properties' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <Building2 size={16}/> Properties
         </button>
         <button className={`tab-btn ${activeTab === 'landlords' ? 'active' : ''}`} onClick={() => setActiveTab('landlords')}
-          style={{ background: activeTab === 'landlords' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'landlords' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'landlords' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
+          style={{ background: activeTab === 'landlords' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'landlords' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '2px', padding: '6px 12px', color: activeTab === 'landlords' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <User size={16}/> Landlords
         </button>
         <button className={`tab-btn ${activeTab === 'agreements' ? 'active' : ''}`} onClick={() => setActiveTab('agreements')}
-          style={{ background: activeTab === 'agreements' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'agreements' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'agreements' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
+          style={{ background: activeTab === 'agreements' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'agreements' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '2px', padding: '6px 12px', color: activeTab === 'agreements' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <FileText size={16}/> Agreements
         </button>
         <button className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`} onClick={() => setActiveTab('payments')}
-          style={{ background: activeTab === 'payments' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'payments' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'payments' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
+          style={{ background: activeTab === 'payments' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'payments' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '2px', padding: '6px 12px', color: activeTab === 'payments' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <IndianRupee size={16}/> Payments Out
         </button>
       </div>
@@ -212,7 +212,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                     <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={14} /> {selectedProperty.address}</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => handleOpenModal('properties', 'edit', selectedProperty)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                    <button onClick={() => handleOpenModal('properties', 'edit', selectedProperty)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '2px', padding: '8px 14px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
                       <Pencil size={14} /> Edit
                     </button>
                   </div>
@@ -260,7 +260,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                         </span>
                       </td>
                       <td>
-                        <button onClick={() => setAgreementSlipTarget(a)} title="Print Agreement Slip" style={{ background: 'rgba(124,58,237,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}><Printer size={14}/></button>
+                        <button onClick={() => setAgreementSlipTarget(a)} title="Print Agreement Slip" style={{ background: 'rgba(124,58,237,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}><Printer size={14}/></button>
                       </td>
                     </tr>
                   ))}
@@ -310,21 +310,21 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
 
-                    <button className="btn btn-primary" onClick={() => handleOpenModal('properties', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
+                    <button className="btn btn-primary" onClick={() => handleOpenModal('properties', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> Add Property
                     </button>
                   </div>
                 <div className="properties-grid">
                   {filteredProperties.map(p => (
-                    <div key={p.id} className="surface-card glass-card property-card" onClick={() => setSelectedProperty(p)} style={{ cursor: 'pointer', position: 'relative', display: 'flex', flexDirection: 'column', padding: '20px', minHeight: '180px', borderRadius: '8px' }}>
+                    <div key={p.id} className="surface-card glass-card property-card" onClick={() => setSelectedProperty(p)} style={{ cursor: 'pointer', position: 'relative', display: 'flex', flexDirection: 'column', padding: '20px', minHeight: '180px', borderRadius: '2px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                           <h3 className="property-title">{p.name}</h3>
                           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px' }}>{p.address}</p>
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }} onClick={e => e.stopPropagation()}>
-                          <button onClick={() => handleOpenModal('properties', 'edit', p)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#3b82f6' }}><Pencil size={14}/></button>
-                          <button onClick={() => setDeleteTarget({ type: 'properties', id: p.id, name: p.name })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#ef4444' }}><Trash2 size={14}/></button>
+                          <button onClick={() => handleOpenModal('properties', 'edit', p)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '2px', padding: '6px', cursor: 'pointer', color: '#3b82f6' }}><Pencil size={14}/></button>
+                          <button onClick={() => setDeleteTarget({ type: 'properties', id: p.id, name: p.name })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '2px', padding: '6px', cursor: 'pointer', color: '#ef4444' }}><Trash2 size={14}/></button>
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '16px', marginTop: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -332,7 +332,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><User size={14} /> {getLandlordName(p.landlord_id)}</span>
                       </div>
                       <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-                         <span style={{ padding: '4px 12px', borderRadius: '4px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>{p.property_type}</span>
+                         <span style={{ padding: '4px 12px', borderRadius: '1px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>{p.property_type}</span>
                       </div>
                     </div>
                   ))}
@@ -346,7 +346,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
 
-                    <button className="btn btn-primary" onClick={() => handleOpenModal('landlords', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
+                    <button className="btn btn-primary" onClick={() => handleOpenModal('landlords', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> Add Landlord
                     </button>
                   </div>
@@ -379,8 +379,8 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                              <button onClick={() => handleOpenModal('landlords', 'edit', l)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
-                              <button onClick={() => setDeleteTarget({ type: 'landlords', id: l.id, name: l.full_name })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
+                              <button onClick={() => handleOpenModal('landlords', 'edit', l)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
+                              <button onClick={() => setDeleteTarget({ type: 'landlords', id: l.id, name: l.full_name })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
                             </div>
                           </td>
                         </tr>
@@ -397,7 +397,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
 
-                    <button className="btn btn-primary" onClick={() => handleOpenModal('agreements', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
+                    <button className="btn btn-primary" onClick={() => handleOpenModal('agreements', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> New Agreement
                     </button>
                   </div>
@@ -429,9 +429,9 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                              <button onClick={() => setAgreementSlipTarget(a)} title="Print Agreement Slip" style={{ background: 'rgba(124,58,237,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}><Printer size={14}/></button>
-                              <button onClick={() => handleOpenModal('agreements', 'edit', a)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
-                              <button onClick={() => setDeleteTarget({ type: 'agreements', id: a.id, name: 'this agreement' })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
+                              <button onClick={() => setAgreementSlipTarget(a)} title="Print Agreement Slip" style={{ background: 'rgba(124,58,237,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}><Printer size={14}/></button>
+                              <button onClick={() => handleOpenModal('agreements', 'edit', a)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
+                              <button onClick={() => setDeleteTarget({ type: 'agreements', id: a.id, name: 'this agreement' })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
                             </div>
                           </td>
                         </tr>
@@ -448,7 +448,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
 
-                    <button className="btn btn-primary" onClick={() => handleOpenModal('payments', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
+                    <button className="btn btn-primary" onClick={() => handleOpenModal('payments', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> Record Payment
                     </button>
                   </div>
@@ -486,8 +486,8 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: '8px' }}>
-                                <button onClick={() => handleOpenModal('payments', 'edit', p)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
-                                <button onClick={() => setDeleteTarget({ type: 'payments', id: p.id, name: 'this payment' })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
+                                <button onClick={() => handleOpenModal('payments', 'edit', p)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
+                                <button onClick={() => setDeleteTarget({ type: 'payments', id: p.id, name: 'this payment' })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
                               </div>
                             </td>
                           </tr>
@@ -538,7 +538,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Landlord *</label>
                 <div style={{ position: 'relative' }}>
-                  <select value={formData.landlord_id} onChange={e => setFormData({...formData, landlord_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
+                  <select value={formData.landlord_id} onChange={e => setFormData({...formData, landlord_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
                     <option value="" style={{ color: 'var(--text-primary)' }}>Select Landlord...</option>
                     {filteredLandlords.map(l => (
                       <option key={l.id} value={l.id} style={{ color: 'var(--text-primary)' }}>{l.full_name}</option>
@@ -567,7 +567,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Leased Property *</label>
                 <div style={{ position: 'relative' }}>
-                  <select value={formData.property_id} onChange={e => setFormData({...formData, property_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
+                  <select value={formData.property_id} onChange={e => setFormData({...formData, property_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
                     <option value="" style={{ color: 'var(--text-primary)' }}>Select Property...</option>
                     {filteredProperties.map(p => (
                       <option key={p.id} value={p.id} style={{ color: 'var(--text-primary)' }}>{p.name}</option>
@@ -598,7 +598,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Agreement (Property) *</label>
                 <div style={{ position: 'relative' }}>
-                  <select value={formData.agreement_id} onChange={e => setFormData({...formData, agreement_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
+                  <select value={formData.agreement_id} onChange={e => setFormData({...formData, agreement_id: e.target.value})} required style={{ width: '100%', padding: '10px 14px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', fontSize: '0.95rem', outline: 'none' }}>
                     <option value="" style={{ color: 'var(--text-primary)' }}>Select Agreement...</option>
                     {filteredAgreements.map(a => (
                       <option key={a.id} value={a.id} style={{ color: 'var(--text-primary)' }}>{getPropertyName(a.property_id)} (₹{a.rent_amount})</option>

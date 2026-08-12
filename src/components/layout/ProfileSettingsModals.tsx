@@ -193,7 +193,7 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
                   { icon: <Phone size={16} />, label: 'Phone Number', value: profile?.phone_number || '—' },
                   { icon: <FileText size={16} />, label: 'Bio', value: profile?.bio || '—' },
                 ].map(({ icon, label, value }) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 14px', backgroundColor: 'var(--bg-main)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 14px', backgroundColor: 'var(--bg-main)', borderRadius: '2px', border: '1px solid var(--border-color)' }}>
                     <span style={{ color: 'var(--text-secondary)', marginTop: '1px', flexShrink: 0 }}>{icon}</span>
                     <div>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
@@ -205,7 +205,7 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
                   Contact your administrator to update your profile information.
                 </p>
                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button type="button" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer' }}>Close</button>
+                  <button type="button" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer' }}>Close</button>
                 </div>
               </div>
             )}
@@ -226,7 +226,7 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
                   key={tab}
                   onClick={() => setSettingsTab(tab as any)}
                   style={{
-                    flex: 1, padding: '10px 0', borderRadius: '10px',
+                    flex: 1, padding: '10px 0', borderRadius: '2px',
                     border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
                     textTransform: 'capitalize', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     background: settingsTab === tab ? 'var(--primary-accent)' : 'transparent',
@@ -245,10 +245,10 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
                   <div style={{ 
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     background: 'var(--bg-main)', border: '1px solid var(--border-color)',
-                    borderRadius: '16px', padding: '20px 24px', transition: 'all 0.2s'
+                    borderRadius: '1px', padding: '20px 24px', transition: 'all 0.2s'
                   }}>
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                      <div style={{ background: 'var(--border-color)', padding: '10px', borderRadius: '12px' }}>
+                      <div style={{ background: 'var(--border-color)', padding: '10px', borderRadius: '1px' }}>
                         <Bell size={20} color="var(--text-primary)" />
                       </div>
                       <div>
@@ -262,10 +262,10 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
                   <div style={{ 
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     background: 'var(--bg-main)', border: '1px solid var(--border-color)',
-                    borderRadius: '16px', padding: '20px 24px', transition: 'all 0.2s'
+                    borderRadius: '1px', padding: '20px 24px', transition: 'all 0.2s'
                   }}>
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                      <div style={{ background: 'var(--border-color)', padding: '10px', borderRadius: '12px' }}>
+                      <div style={{ background: 'var(--border-color)', padding: '10px', borderRadius: '1px' }}>
                         <Moon size={20} color="var(--text-primary)" />
                       </div>
                       <div>
@@ -282,10 +282,10 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
                 <div style={{ 
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   background: 'var(--bg-main)', border: '1px solid var(--border-color)',
-                  borderRadius: '16px', padding: '20px 24px', transition: 'all 0.2s'
+                  borderRadius: '1px', padding: '20px 24px', transition: 'all 0.2s'
                 }}>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <div style={{ background: 'var(--border-color)', padding: '10px', borderRadius: '12px' }}>
+                    <div style={{ background: 'var(--border-color)', padding: '10px', borderRadius: '1px' }}>
                       <Lock size={20} color="var(--text-primary)" />
                     </div>
                     <div>
@@ -299,7 +299,7 @@ export const ProfileSettingsModals: React.FC<ProfileSettingsModalsProps> = ({
             </div>
             
             <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--primary-accent)', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Done</button>
+              <button type="button" onClick={onClose} style={{ padding: '10px 20px', borderRadius: '2px', border: 'none', background: 'var(--primary-accent)', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Done</button>
             </div>
           </div>
         )}

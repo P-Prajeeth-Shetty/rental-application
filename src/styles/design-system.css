@@ -37,9 +37,9 @@
   --spacing-xxl: 48px;
 
   /* Utilities */
-  --border-radius-lg: 24px;
-  --border-radius: 16px;
-  --border-radius-sm: 8px;
+  --border-radius-lg: 4px;
+  --border-radius: 3px;
+  --border-radius-sm: 2px;
 
   /* Liquid Glass Spring Animations */
   --transition-fast: 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -189,7 +189,7 @@ h2 {
 
 *::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
-  border-radius: 10px;
+  border-radius: 2px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
@@ -371,7 +371,7 @@ h2 {
   display: inline-flex;
   align-items: center;
   padding: 4px 8px;
-  border-radius: 12px;
+  border-radius: 1px;
   font-size: 0.75rem;
   font-weight: 600;
   backdrop-filter: blur(10px);

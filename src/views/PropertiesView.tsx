@@ -230,7 +230,6 @@ export const PropertiesView: React.FC = () => {
         </button>
 
         <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-          <img src={selectedProperty.image} alt={selectedProperty.name} style={{ width: '200px', height: '160px', objectFit: 'cover', borderRadius: '12px', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: '250px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
@@ -238,7 +237,7 @@ export const PropertiesView: React.FC = () => {
                 <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={14} /> {selectedProperty.address}</p>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => openEditModal(selectedProperty)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                <button onClick={() => openEditModal(selectedProperty)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '2px', padding: '8px 14px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
                   <Pencil size={14} /> Edit
                 </button>
               </div>
@@ -366,7 +365,7 @@ export const PropertiesView: React.FC = () => {
                     textAlign: 'center' as const,
                     fontSize: '0.75rem',
                     padding: '4px 8px',
-                    borderRadius: '12px',
+                    borderRadius: '1px',
                     fontWeight: 500,
                     whiteSpace: 'nowrap' as const
                   };
@@ -519,27 +518,32 @@ export const PropertiesView: React.FC = () => {
                     color: isActive ? '#0f766e' : 'var(--text-secondary)', 
                     border: '1px solid',
                     borderColor: isActive ? 'rgba(15,118,110,0.3)' : 'var(--border-color)',
-                    padding: '6px 12px', 
-                    borderRadius: '6px', 
-                    fontSize: '0.85rem', 
+                    padding: '0 16px', 
+                    height: '48px',
+                    borderRadius: '2px', 
+                    fontSize: '0.9rem', 
                     cursor: 'pointer', 
-                    fontWeight: 500 
+                    fontWeight: 500,
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}>
                   {type}
                 </button>
               );
             })}
           </div>
-        <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '2px', overflow: 'hidden', flexShrink: 0, marginLeft: 'auto', height: '48px', boxSizing: 'border-box' }}>
           <button 
             onClick={() => setViewMode('lend')}
-            style={{ padding: '6px 20px', border: 'none', cursor: 'pointer', background: viewMode === 'lend' ? '#115e59' : 'transparent', color: viewMode === 'lend' ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s', borderRadius: 0 }}
+            style={{ padding: '0 20px', height: '100%', border: 'none', cursor: 'pointer', background: viewMode === 'lend' ? '#115e59' : 'transparent', color: viewMode === 'lend' ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s', borderRadius: 0 }}
           >
             Lend
           </button>
           <button 
             onClick={() => setViewMode('rent')}
-            style={{ padding: '6px 20px', border: 'none', cursor: 'pointer', background: viewMode === 'rent' ? '#115e59' : 'transparent', color: viewMode === 'rent' ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s', borderRadius: 0 }}
+            style={{ padding: '0 20px', height: '100%', border: 'none', cursor: 'pointer', background: viewMode === 'rent' ? '#115e59' : 'transparent', color: viewMode === 'rent' ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s', borderRadius: 0 }}
           >
             Rent
           </button>
@@ -556,7 +560,7 @@ export const PropertiesView: React.FC = () => {
             <div className="properties-grid">
           {/* Add Property Card */}
           <div className="surface-card property-card" onClick={openCreateModal}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px dashed var(--border-color)', background: 'var(--bg-surface)', gap: '16px', transition: 'all 0.3s ease', minHeight: '220px', borderRadius: '8px' }}>
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px dashed var(--border-color)', background: 'var(--bg-surface)', gap: '16px', transition: 'all 0.3s ease', minHeight: '220px', borderRadius: '2px' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
               <Plus size={28} />
             </div>
@@ -570,7 +574,7 @@ export const PropertiesView: React.FC = () => {
             const occupied = occupancyMap[prop.id] || 0;
             const pct = prop.total_units > 0 ? Math.round((occupied / prop.total_units) * 100) : 0;
             return (
-              <div key={prop.id} className="surface-card glass-card property-card" style={{ cursor: 'pointer', position: 'relative', minHeight: '220px', borderRadius: '8px' }} onClick={() => openDetail(prop)}>
+              <div key={prop.id} className="surface-card glass-card property-card" style={{ cursor: 'pointer', position: 'relative', minHeight: '220px', borderRadius: '2px' }} onClick={() => openDetail(prop)}>
                 <div className="property-info">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
@@ -578,10 +582,10 @@ export const PropertiesView: React.FC = () => {
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px' }}>{prop.address}</p>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }} onClick={e => e.stopPropagation()}>
-                      <button onClick={() => openEditModal(prop)} title="Edit" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#3b82f6' }}>
+                      <button onClick={() => openEditModal(prop)} title="Edit" style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '2px', padding: '6px', cursor: 'pointer', color: '#3b82f6' }}>
                         <Pencil size={14} />
                       </button>
-                      <button onClick={() => setDeleteTarget(prop)} title="Delete" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#ef4444' }}>
+                      <button onClick={() => setDeleteTarget(prop)} title="Delete" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '2px', padding: '6px', cursor: 'pointer', color: '#ef4444' }}>
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -589,15 +593,15 @@ export const PropertiesView: React.FC = () => {
                   <div style={{ display: 'flex', gap: '16px', marginTop: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)', flexWrap: 'wrap', alignItems: 'center' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}><Home size={14} /> {prop.total_units} Units</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}><Users size={14} /> {occupied} Tenants</span>
-                    <span style={{ padding: '4px 12px', borderRadius: '16px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap', marginLeft: 'auto' }}>{prop.property_type}</span>
+                    <span style={{ padding: '4px 12px', borderRadius: '1px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap', marginLeft: 'auto' }}>{prop.property_type}</span>
                   </div>
                   <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '8px' }}>
                       <span>Occupancy</span>
                       <span style={{ fontWeight: 600 }}>{pct}%</span>
                     </div>
-                    <div className="progress-bar-container" style={{ height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div className="progress-bar-fill" style={{ width: `${pct}%`, height: '100%', borderRadius: '4px' }}></div>
+                    <div className="progress-bar-container" style={{ height: '8px', borderRadius: '1px', overflow: 'hidden' }}>
+                      <div className="progress-bar-fill" style={{ width: `${pct}%`, height: '100%', borderRadius: '1px' }}></div>
                     </div>
                   </div>
                 </div>

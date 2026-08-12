@@ -139,12 +139,12 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
                   position: 'relative'
                 }}>
                   {isReversed && (
-                    <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#ef4444', fontWeight: 600, background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
+                    <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#ef4444', fontWeight: 600, background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '2px' }}>
                       REVERSED
                     </span>
                   )}
                   {isAdvance && !isReversed && (
-                    <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#8b5cf6', fontWeight: 600, background: 'rgba(139,92,246,0.1)', padding: '2px 8px', borderRadius: '10px' }}>
+                    <span style={{ position: 'absolute', top: '8px', right: '10px', fontSize: '0.7rem', color: '#8b5cf6', fontWeight: 600, background: 'rgba(139,92,246,0.1)', padding: '2px 8px', borderRadius: '2px' }}>
                       ADVANCE
                     </span>
                   )}
@@ -171,13 +171,13 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                     {/* Timing badge */}
                     {!isReversed && p.payment_timing !== 'unknown' && (
-                      <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 500, background: badge.bg, color: badge.color }}>
+                      <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', fontWeight: 500, background: badge.bg, color: badge.color }}>
                         {badge.label}
                       </span>
                     )}
                     {/* Method */}
                     {p.payment_method && (
-                      <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
+                      <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
                         {p.payment_method}
                       </span>
                     )}
@@ -189,7 +189,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
                     )}
                     {/* Type */}
                     {p.payment_type !== 'rent' && (
-                      <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 500 }}>
+                      <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 500 }}>
                         {p.payment_type.replace('_', ' ')}
                       </span>
                     )}

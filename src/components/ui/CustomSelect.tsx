@@ -64,7 +64,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+          padding: '10px 12px', borderRadius: '2px', cursor: 'pointer',
           background: 'var(--bg-surface)', border: '2px solid var(--input-border)',
           fontSize: '0.95rem', color: selectedOption ? 'var(--text-primary)' : 'var(--text-secondary)',
           boxShadow: isOpen ? '0 0 0 3px rgba(222, 163, 137, 0.2)' : 'none',
@@ -85,13 +85,13 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           ...(menuPlacement === 'bottom' ? { top: '100%', marginTop: '8px' } : { bottom: '100%', marginBottom: '8px' }),
           left: 0, right: 0,
           background: '#ffffff', boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-          border: '1px solid var(--border-color)', borderRadius: '8px',
+          border: '1px solid var(--border-color)', borderRadius: '2px',
           zIndex: 1000, 
           display: 'flex', flexDirection: 'column'
         }}>
           {searchable && (
             <div style={{ padding: '8px', borderBottom: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.03)', borderRadius: '6px', padding: '6px 10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.03)', borderRadius: '2px', padding: '6px 10px' }}>
                 <Search size={14} style={{ color: 'var(--text-secondary)', marginRight: '6px' }} />
                 <input 
                   ref={searchInputRef}
@@ -116,7 +116,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                     padding: '10px 12px', cursor: 'pointer', fontSize: '0.9rem',
                     color: opt.value === value ? 'var(--primary-accent)' : 'var(--text-primary)',
                     background: opt.value === value ? 'rgba(222, 163, 137, 0.1)' : 'transparent',
-                    transition: 'background 0.1s', borderRadius: '6px',
+                    transition: 'background 0.1s', borderRadius: '2px',
                     fontWeight: opt.value === value ? 600 : 400,
                     marginBottom: '2px',
                   }}

@@ -396,7 +396,7 @@ export const LeasesView: React.FC = () => {
       {/* Toasts */}
       <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {toasts.map(t => (
-          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 18px', borderRadius: '10px', minWidth: '260px',
+          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 18px', borderRadius: '2px', minWidth: '260px',
             background: t.type === 'success' ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)',
             color: 'white', fontWeight: 500, boxShadow: '0 4px 20px rgba(0,0,0,0.3)', animation: 'slideIn 0.3s ease' }}>
             {t.type === 'success' ? <Check size={16} /> : <AlertTriangle size={16} />}{t.message}
@@ -407,24 +407,24 @@ export const LeasesView: React.FC = () => {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%' }}>
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Expected</span>
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>₹{totalExpected.toLocaleString('en-IN')}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
-          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Collected</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>₹{totalCollected.toLocaleString('en-IN')}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Collected</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>₹{totalCollected.toLocaleString('en-IN')}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Outstanding</span>
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>₹{Math.max(0, totalExpected - totalCollected).toLocaleString('en-IN')}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
-          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Collection Rate</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{collectionRate}%</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Collection Rate</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{collectionRate}%</h2>
         </div>
       </div>
 
@@ -461,16 +461,16 @@ export const LeasesView: React.FC = () => {
               width="120px"
               height="48px"
             />
-            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', color: '#111827', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box', fontWeight: 600 }} />
+            <input type="number" value={filterYear} onChange={e => setFilterYear(parseInt(e.target.value))} style={{ padding: '0 12px', height: '48px', borderRadius: '2px', background: '#ffffff', border: '1.5px solid #e2e8f0', color: '#111827', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box', fontWeight: 600 }} />
           </div>
-          <button onClick={handleDownloadTemplate} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1.5px solid #e2e8f0', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={handleDownloadTemplate} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 16px', border: '1.5px solid #e2e8f0', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
             <Download size={16} color="#0f766e" /> Template
           </button>
           <input type="file" ref={fileRef} onChange={handleFileSelect} accept=".xlsx,.xls,.csv" style={{ display: 'none' }} />
-          <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', border: '1.5px solid #e2e8f0', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 16px', border: '1.5px solid #e2e8f0', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
             <Upload size={16} color="#0f766e" /> Upload Excel
           </button>
-          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', height: '48px', fontWeight: 600, background: '#0f766e', color: '#ffffff', border: 'none', cursor: 'pointer' }}>
+          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 20px', height: '48px', fontWeight: 600, background: '#0f766e', color: '#ffffff', border: 'none', cursor: 'pointer' }}>
             <Plus size={16} /> Record Payment
           </button>
         </div>
@@ -555,11 +555,11 @@ export const LeasesView: React.FC = () => {
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       {overdue ? (
-                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.78rem', padding: '3px 9px', borderRadius: '20px', fontWeight: 600, background: 'rgba(239,68,68,0.12)', color: '#ef4444', whiteSpace: 'nowrap', animation: 'overdueBlink 2s ease-in-out infinite' }}>
+                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.78rem', padding: '3px 9px', borderRadius: '1px', fontWeight: 600, background: 'rgba(239,68,68,0.12)', color: '#ef4444', whiteSpace: 'nowrap', animation: 'overdueBlink 2s ease-in-out infinite' }}>
                           Overdue
                         </span>
                       ) : badge ? (
-                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.78rem', padding: '3px 9px', borderRadius: '20px', fontWeight: 500, background: badge.bg, color: badge.color, whiteSpace: 'nowrap' }}>
+                        <span style={{ display: 'inline-block', minWidth: '75px', textAlign: 'center', fontSize: '0.78rem', padding: '3px 9px', borderRadius: '1px', fontWeight: 500, background: badge.bg, color: badge.color, whiteSpace: 'nowrap' }}>
                           {badge.label}
                         </span>
                       ) : <span style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>—</span>}
@@ -575,7 +575,7 @@ export const LeasesView: React.FC = () => {
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         display: 'inline-block', minWidth: '75px', textAlign: 'center',
-                        padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 500,
+                        padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500,
                         backgroundColor: fullyPaid ? 'rgba(16,185,129,0.15)' : overdue ? 'rgba(239,68,68,0.15)' : paidAmount > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
                         color: fullyPaid ? '#10b981' : overdue ? '#ef4444' : paidAmount > 0 ? '#f59e0b' : '#ef4444'
                       }}>
@@ -587,7 +587,7 @@ export const LeasesView: React.FC = () => {
                         <button
                           onClick={() => setHistoryTarget(a)}
                           title="View payment history"
-                          style={{ padding: '6px', borderRadius: '6px', background: 'rgba(139,92,246,0.12)', color: '#8b5cf6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          style={{ padding: '6px', borderRadius: '2px', background: 'rgba(139,92,246,0.12)', color: '#8b5cf6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                         >
                           <History size={14} />
                         </button>
@@ -596,7 +596,7 @@ export const LeasesView: React.FC = () => {
                               setPayForm({ ...payForm, assignment_id: a.id, amount: String(Math.max(0, balance)), payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' });
                               setPayModal(true);
                             }}
-                            style={{ padding: '6px 10px', fontSize: '0.78rem', borderRadius: '6px', background: overdue ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', color: overdue ? '#ef4444' : '#3b82f6', border: 'none', cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}
+                            style={{ padding: '6px 10px', fontSize: '0.78rem', borderRadius: '2px', background: overdue ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', color: overdue ? '#ef4444' : '#3b82f6', border: 'none', cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}
                           >
                             + Record
                           </button>

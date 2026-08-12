@@ -64,7 +64,7 @@ export const ModalInput = (props: React.InputHTMLAttributes<HTMLInputElement> & 
         {...inputProps}
         style={{
           padding: '10px 14px',
-          borderRadius: '8px',
+          borderRadius: '2px',
           border: '1px solid var(--border-color)',
           background: 'var(--bg-main)',
           color: 'var(--text-primary)',
@@ -90,7 +90,7 @@ export const ModalTextarea = (props: React.TextareaHTMLAttributes<HTMLTextAreaEl
         {...textareaProps}
         style={{
           padding: '10px 14px',
-          borderRadius: '8px',
+          borderRadius: '2px',
           border: '1px solid var(--border-color)',
           background: 'var(--bg-main)',
           color: 'var(--text-primary)',
@@ -117,7 +117,7 @@ export const ModalSelect = (props: React.SelectHTMLAttributes<HTMLSelectElement>
         {...selectProps}
         style={{
           padding: '10px 14px',
-          borderRadius: '8px',
+          borderRadius: '2px',
           border: '1px solid var(--border-color)',
           background: 'var(--bg-main)',
           color: 'var(--text-primary)',
@@ -137,10 +137,10 @@ export const ModalSelect = (props: React.SelectHTMLAttributes<HTMLSelectElement>
 export const ModalActionButtons = ({ onCancel, submitText, isSubmitting, isDanger = false, customSubmitAction }: { onCancel: () => void, submitText: string, isSubmitting?: boolean, isDanger?: boolean, customSubmitAction?: () => void }) => {
   return (
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-      <button type="button" onClick={onCancel} disabled={isSubmitting} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'var(--bg-main)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+      <button type="button" onClick={onCancel} disabled={isSubmitting} style={{ padding: '10px 20px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'var(--bg-main)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
         Cancel
       </button>
-      <button type={customSubmitAction ? "button" : "submit"} onClick={customSubmitAction} disabled={isSubmitting} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: isDanger ? 'var(--danger, #ef4444)' : 'var(--primary-accent, #fb5d3e)', color: 'white', fontWeight: 600, cursor: 'pointer', opacity: isSubmitting ? 0.7 : 1 }}>
+      <button type={customSubmitAction ? "button" : "submit"} onClick={customSubmitAction} disabled={isSubmitting} style={{ padding: '10px 20px', borderRadius: '2px', border: 'none', background: isDanger ? 'var(--danger, #ef4444)' : 'var(--primary-accent, #fb5d3e)', color: 'white', fontWeight: 600, cursor: 'pointer', opacity: isSubmitting ? 0.7 : 1 }}>
         {isSubmitting ? (isDanger ? 'Deleting...' : 'Saving...') : submitText}
       </button>
     </div>

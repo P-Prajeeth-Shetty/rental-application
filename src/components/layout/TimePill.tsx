@@ -93,7 +93,7 @@ export const TimePill: React.FC = () => {
       <div 
         className="time-pill-icon-right" 
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        style={{ cursor: 'pointer', transition: 'background 0.2s', borderRadius: '4px' }}
+        style={{ cursor: 'pointer', transition: 'background 0.2s', borderRadius: '1px' }}
       >
         <MoreHorizontal size={16} color="var(--text-secondary)" strokeWidth={2.5} />
       </div>

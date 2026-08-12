@@ -72,7 +72,7 @@ export const DashboardLineChart: React.FC = () => {
   const fmtRupee = (v: number) => `₹${Number(v).toLocaleString('en-IN')}`;
 
   return (
-    <div className="surface-card" style={{ padding: '24px', borderRadius: '20px', minHeight: '368px', height: '368px', boxSizing: 'border-box' }}>
+    <div className="surface-card" style={{ padding: '24px', borderRadius: '1px', minHeight: '368px', height: '368px', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Revenue by Type</h3>
@@ -113,8 +113,8 @@ export const DashboardLineChart: React.FC = () => {
                 padding={{ left: 15, right: 15 }}
               />
               <Tooltip 
-                formatter={(value: any) => [fmtRupee(Number(value) || 0), '']}
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 600 }}
+                formatter={(value: any, name: any) => [fmtRupee(Number(value) || 0), name]}
+                contentStyle={{ borderRadius: '1px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 600 }}
               />
               <Line 
                 type="monotone" 

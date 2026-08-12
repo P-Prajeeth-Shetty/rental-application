@@ -89,7 +89,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
         <aside className="sidebar">
           {/* Logo Section */}
           <div className="logo-section">
-            <div className="logo-icon" style={{ background: 'var(--primary-accent)', borderRadius: '10px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="logo-icon" style={{ background: 'var(--primary-accent)', borderRadius: '2px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Home size={18} color="white" strokeWidth={2.5} />
             </div>
             <span className="logo-text" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px' }}>
@@ -167,12 +167,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                         <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', margin: 0 }}>No due reminders.</p>
                       ) : (
                         dueReminders.map(r => (
-                          <div key={r.id} style={{ background: 'rgba(0,0,0,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                          <div key={r.id} style={{ background: 'rgba(0,0,0,0.02)', padding: '12px', borderRadius: '2px', border: '1px solid rgba(0,0,0,0.05)' }}>
                             <h5 style={{ margin: '0 0 4px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{r.title}</h5>
                             <p style={{ margin: '0 0 8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(r.date).toLocaleString()}</p>
                             <button 
                               onClick={() => updateReminder(r.id, { status: 'completed' })}
-                              style={{ background: 'var(--primary-accent)', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                              style={{ background: 'var(--primary-accent)', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '2px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
                             >
                               Mark Completed
                             </button>

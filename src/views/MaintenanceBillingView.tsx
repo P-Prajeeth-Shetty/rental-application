@@ -269,9 +269,9 @@ export const MaintenanceBillingView: React.FC = () => {
           </h2>
         </div>
 
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
-          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Collected</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Collected</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>
             ₹{totalCollected.toLocaleString('en-IN')}
           </h2>
         </div>
@@ -283,9 +283,9 @@ export const MaintenanceBillingView: React.FC = () => {
           </h2>
         </div>
 
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
-          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Collection Rate</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Collection Rate</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>
             {collectionRate}%
           </h2>
         </div>
@@ -328,14 +328,14 @@ export const MaintenanceBillingView: React.FC = () => {
               type="number"
               value={filterYear}
               onChange={e => setFilterYear(parseInt(e.target.value))}
-              style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
+              style={{ padding: '0 12px', height: '48px', borderRadius: '2px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
 
           <button
             onClick={() => setGenerateModalOpen(true)}
             className="btn-primary"
-            style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 16px', height: '48px', fontWeight: 600 }}
+            style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 16px', height: '48px', fontWeight: 600 }}
           >
             <Plus size={16} /> Generate Bills
           </button>
@@ -379,11 +379,11 @@ export const MaintenanceBillingView: React.FC = () => {
                   </td>
                   <td style={{ padding: '16px' }}>
                     {charge.status === 'paid' ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '0.8rem', fontWeight: 500 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '1px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '0.8rem', fontWeight: 500 }}>
                         <CheckCircle size={14} /> Paid
                       </span>
                     ) : (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 500 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '1px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 500 }}>
                         <Clock size={14} /> Unpaid
                       </span>
                     )}
@@ -439,7 +439,7 @@ export const MaintenanceBillingView: React.FC = () => {
               value={totalAmount}
               onChange={e => setTotalAmount(e.target.value)}
               placeholder="e.g. 4000"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
             />
           </div>
 
@@ -459,7 +459,7 @@ export const MaintenanceBillingView: React.FC = () => {
               className="input-field"
               value={billingYear}
               onChange={e => setBillingYear(Number(e.target.value))}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
             />
           </div>
         </div>
@@ -470,12 +470,12 @@ export const MaintenanceBillingView: React.FC = () => {
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder="e.g. Lift repair, common area cleaning, etc."
-            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', minHeight: '80px', resize: 'vertical' }}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)', minHeight: '80px', resize: 'vertical' }}
           />
         </div>
 
         {selectedPropertyId && activeAssignmentsForProperty.length > 0 && (
-          <div style={{ marginBottom: '32px', background: 'var(--bg-main)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+          <div style={{ marginBottom: '32px', background: 'var(--bg-main)', padding: '20px', borderRadius: '1px', border: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', gap: '24px', marginBottom: '16px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input
@@ -500,7 +500,7 @@ export const MaintenanceBillingView: React.FC = () => {
             </div>
 
             {splitType === 'equal' ? (
-              <div style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ padding: '16px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '2px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <CheckCircle size={20} />
                 <span>Each of the {activeAssignmentsForProperty.length} tenants will be charged <strong>₹{equalAmount}</strong></span>
               </div>
@@ -525,7 +525,7 @@ export const MaintenanceBillingView: React.FC = () => {
                           value={customAmounts[a.id] || ''}
                           onChange={e => handleCustomAmountChange(a.id, e.target.value)}
                           placeholder="Amount (₹)"
-                          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
+                          style={{ width: '100%', padding: '8px 12px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
                         />
                       </div>
                     </div>
@@ -537,7 +537,7 @@ export const MaintenanceBillingView: React.FC = () => {
         )}
 
         {selectedPropertyId && activeAssignmentsForProperty.length === 0 && (
-          <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', color: '#ef4444' }}>
+          <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '2px', color: '#ef4444' }}>
             No active tenants found for this property. You cannot generate a bill.
           </div>
         )}
@@ -554,7 +554,7 @@ export const MaintenanceBillingView: React.FC = () => {
       <Modal isOpen={payModalOpen} onClose={() => !isSubmitting && setPayModalOpen(false)} title="Record Maintenance Payment">
         {selectedCharge && (
           <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ padding: '16px', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-main)', borderRadius: '2px', border: '1px solid var(--border-color)', marginBottom: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Tenant</span>
                 <span style={{ fontWeight: 500 }}>{selectedCharge.tenant_assignments?.tenants?.full_name}</span>

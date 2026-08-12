@@ -452,27 +452,27 @@ export const TenantsView: React.FC = () => {
 
   return (
     <>
-      {error && <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: '#ff4d4d', padding: '10px 14px', borderRadius: '8px' }}>{error}</div>}
+      {error && <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: '#ff4d4d', padding: '10px 14px', borderRadius: '2px' }}>{error}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%' }}>
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Total Tenants</span>
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{totalTenants}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
-          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Active Leases</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{activeLeases}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Active Leases</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{activeLeases}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Monthly Rent Roll</span>
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>₹{totalMonthlyRent.toLocaleString('en-IN')}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
-          <span style={{ color: '#0F172A', fontSize: '0.95rem', fontWeight: 600 }}>Unassigned / Vacated</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{vacatedOrNew}</h2>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '1px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+          <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Unassigned / Vacated</span>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{vacatedOrNew}</h2>
         </div>
       </div>
 
@@ -494,7 +494,7 @@ export const TenantsView: React.FC = () => {
             />
           </div>
         </div>
-        <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', fontWeight: 600, height: '48px', flexShrink: 0, background: '#0f766e', color: '#ffffff', border: 'none' }}>
+        <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 20px', fontWeight: 600, height: '48px', flexShrink: 0, background: '#0f766e', color: '#ffffff', border: 'none' }}>
           <Plus size={18} /> Add Tenant
         </button>
       </div>
@@ -538,11 +538,11 @@ export const TenantsView: React.FC = () => {
                       <td style={{ padding: '14px 16px', fontWeight: 500 }}>{activeAssign ? `₹${Number(getEffectiveRentAsOf(activeAssign)).toLocaleString('en-IN')}` : '—'}</td>
                       <td style={{ padding: '14px 16px' }}>
                         {activeAssign ? (
-                          <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(16,185,129,0.15)', color: '#10b981' }}>Active</span>
+                          <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(16,185,129,0.15)', color: '#10b981' }}>Active</span>
                         ) : assigns.length > 0 ? (
-                          <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Vacated</span>
+                          <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Vacated</span>
                         ) : (
-                          <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>New</span>
+                          <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>New</span>
                         )}
                       </td>
                       <td 
@@ -564,13 +564,13 @@ export const TenantsView: React.FC = () => {
                           onMouseDown={e => e.stopPropagation()}
                           onTouchStart={e => e.stopPropagation()}
                         >
-                          <button onClick={(e) => { e.stopPropagation(); openAssignModal(t); }} title="Assign to Property" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); openAssignModal(t); }} title="Assign to Property" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                             <Home size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); openEditTenant(t); }} title="Edit" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); openEditTenant(t); }} title="Edit" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                             <Pencil size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} title="Delete" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} title="Delete" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '2px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
                             <Trash2 size={14} style={{ pointerEvents: 'none' }} />
                           </button>
                         </div>
@@ -615,7 +615,7 @@ export const TenantsView: React.FC = () => {
                           </div>
                         </td>
                         <td style={{ padding: '10px 16px' }}>
-                          <span style={{ padding: '3px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 500,
+                          <span style={{ padding: '3px 8px', borderRadius: '1px', fontSize: '0.75rem', fontWeight: 500,
                             backgroundColor: a.status === 'active' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
                             color: a.status === 'active' ? '#10b981' : '#ef4444' }}>
                             {a.status}
@@ -642,7 +642,7 @@ export const TenantsView: React.FC = () => {
                           >
                             <button 
                               onClick={(e) => { e.stopPropagation(); setActionMenuOpen(actionMenuOpen === a.id ? null : a.id); }} 
-                              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: 'var(--text-primary)' }}
+                              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '2px', padding: '6px', cursor: 'pointer', color: 'var(--text-primary)' }}
                             >
                               <MoreVertical size={16} />
                             </button>
@@ -656,7 +656,7 @@ export const TenantsView: React.FC = () => {
                                 backdropFilter: 'blur(32px)',
                                 WebkitBackdropFilter: 'blur(32px)',
                                 border: '1px solid rgba(255,255,255,0.15)',
-                                borderRadius: '10px',
+                                borderRadius: '2px',
                                 padding: '6px',
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -665,10 +665,10 @@ export const TenantsView: React.FC = () => {
                                 minWidth: '160px',
                                 boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
                               }}>
-                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openEditAssignModal(a, t); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openEditAssignModal(a, t); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <Pencil size={14} color="#3b82f6" /> Edit
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRentModal(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRentModal(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <TrendingUp size={14} color="#f59e0b" /> Increase Rent
                                 </button>
                                 <button onClick={(e) => { 
@@ -683,22 +683,22 @@ export const TenantsView: React.FC = () => {
                                     gstRate: Number(a.gst_rate ?? 18),
                                     tdsRate: Number(a.tds_rate ?? 10)
                                   });
-                                }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <List size={14} color="#10b981" /> Payment Ledger
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRevisionHistory(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRevisionHistory(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <TrendingUp size={14} color="#3b82f6" /> Rent History
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); setAgreementSlipTarget({ assignment: a, tenant: t }); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); setAgreementSlipTarget({ assignment: a, tenant: t }); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <Printer size={14} color="#7c3aed" /> Print Agreement Slip
                                 </button>
                                 {a.status === 'active' && (
-                                  <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openTransferModal(a, t); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                  <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openTransferModal(a, t); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                     <ArrowRightLeft size={14} color="#0f766e" /> Transfer to Property
                                   </button>
                                 )}
                                 {a.status === 'active' && (
-                                  <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); setVacateTarget(a); setVacateDate(new Date().toISOString().split('T')[0]); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                  <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); setVacateTarget(a); setVacateDate(new Date().toISOString().split('T')[0]); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                     <X size={14} /> Vacate
                                   </button>
                                 )}
@@ -879,7 +879,7 @@ export const TenantsView: React.FC = () => {
             const net = total - tdsAmt;
             if (rent <= 0) return null;
             return (
-              <div style={{ padding: '14px', backgroundColor: 'var(--bg-main)', borderRadius: '10px', border: '1px solid var(--border-color)', marginTop: '-8px' }}>
+              <div style={{ padding: '14px', backgroundColor: 'var(--bg-main)', borderRadius: '2px', border: '1px solid var(--border-color)', marginTop: '-8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Rent</span>
                   <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>₹{rent.toLocaleString('en-IN')}</span>
@@ -996,7 +996,7 @@ export const TenantsView: React.FC = () => {
             const newTds = Math.round(computedNewRent * tdsRate / 100);
             const newNet = computedNewRent + newGst - newTds;
             return (
-              <div style={{ padding: '14px', backgroundColor: 'var(--bg-main)', borderRadius: '10px', border: '1px solid var(--border-color)', marginBottom: '-10px' }}>
+              <div style={{ padding: '14px', backgroundColor: 'var(--bg-main)', borderRadius: '2px', border: '1px solid var(--border-color)', marginBottom: '-10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Current Rent</span>
                   <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>₹{currentRent.toLocaleString('en-IN')}</span>
@@ -1105,7 +1105,7 @@ export const TenantsView: React.FC = () => {
       {/* Transfer Tenant Modal */}
       <Modal isOpen={!!transferTarget} onClose={() => !isSubmitting && setTransferTarget(null)} title={`Transfer ${transferTenant?.full_name} to Another Property`}>
         <form onSubmit={handleTransfer} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: 0, padding: '12px 14px', background: 'var(--bg-main)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: 0, padding: '12px 14px', background: 'var(--bg-main)', borderRadius: '2px', border: '1px solid var(--border-color)' }}>
             This ends the lease at <strong style={{ color: 'var(--text-primary)' }}>{transferTarget?.properties?.name}</strong> (Unit {transferTarget?.unit_number}) on the transfer date and starts a new one at the property below. Rent/deposit already paid at {transferTarget?.properties?.name} stays recorded there in the ledger — it does not move.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

@@ -165,7 +165,7 @@ export const RevenueChart: React.FC<{ filterPropertyId?: string, filterYear: num
               cursor={{ fill: 'rgba(0,0,0,0.04)' }}
               contentStyle={{
                 backgroundColor: 'var(--bg-surface)',
-                borderRadius: '12px',
+                borderRadius: '1px',
                 border: '1px solid var(--border-color)',
                 boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                 color: 'var(--text-primary)',

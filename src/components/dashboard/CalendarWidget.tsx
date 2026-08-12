@@ -165,15 +165,15 @@ export const CalendarWidget: React.FC = () => {
     }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', borderRadius: '12px', padding: '4px' }}>
+        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', borderRadius: '1px', padding: '4px' }}>
           <button 
             onClick={() => setViewMode('weekly')}
-            style={{ background: viewMode === 'weekly' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'weekly' ? 'var(--text-primary)' : 'var(--text-secondary)', borderRadius: '8px', padding: '6px 16px', fontSize: '0.85rem', fontWeight: viewMode === 'weekly' ? 600 : 500, border: 'none', cursor: 'pointer', boxShadow: viewMode === 'weekly' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
+            style={{ background: viewMode === 'weekly' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'weekly' ? 'var(--text-primary)' : 'var(--text-secondary)', borderRadius: '2px', padding: '6px 16px', fontSize: '0.85rem', fontWeight: viewMode === 'weekly' ? 600 : 500, border: 'none', cursor: 'pointer', boxShadow: viewMode === 'weekly' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
             Weekly
           </button>
           <button 
             onClick={() => setViewMode('monthly')}
-            style={{ background: viewMode === 'monthly' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'monthly' ? 'var(--text-primary)' : 'var(--text-secondary)', borderRadius: '8px', padding: '6px 16px', fontSize: '0.85rem', fontWeight: viewMode === 'monthly' ? 600 : 500, border: 'none', cursor: 'pointer', boxShadow: viewMode === 'monthly' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
+            style={{ background: viewMode === 'monthly' ? 'var(--bg-surface)' : 'transparent', color: viewMode === 'monthly' ? 'var(--text-primary)' : 'var(--text-secondary)', borderRadius: '2px', padding: '6px 16px', fontSize: '0.85rem', fontWeight: viewMode === 'monthly' ? 600 : 500, border: 'none', cursor: 'pointer', boxShadow: viewMode === 'monthly' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
             Monthly
           </button>
         </div>
@@ -198,7 +198,7 @@ export const CalendarWidget: React.FC = () => {
             return (
               <div key={i} style={{ 
                 width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                borderRadius: '8px', fontSize: '1rem',
+                borderRadius: '2px', fontSize: '1rem',
                 background: isToday ? '#dea389' : 'transparent',
                 color: isToday ? 'white' : 'var(--text-primary)',
                 fontWeight: isToday ? 600 : 500
@@ -215,7 +215,7 @@ export const CalendarWidget: React.FC = () => {
             return (
               <div key={i} style={{ 
                 width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                borderRadius: '8px', fontSize: '0.85rem',
+                borderRadius: '2px', fontSize: '0.85rem',
                 background: isToday ? '#dea389' : 'transparent',
                 color: isToday ? 'white' : (date ? 'var(--text-primary)' : 'transparent'),
                 fontWeight: isToday ? 600 : 500,
@@ -276,7 +276,7 @@ export const CalendarWidget: React.FC = () => {
                   <div className="search-input-wrapper">
                     <input 
                       type="text" placeholder="Search..." value={reminderSearch} onChange={e => setReminderSearch(e.target.value)}
-                      style={{ display: 'block', width: '100%', padding: '8px 12px', borderRadius: '8px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
+                      style={{ display: 'block', width: '100%', padding: '8px 12px', borderRadius: '2px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
                     />
                   </div>
                   <CustomSelect 
@@ -359,8 +359,8 @@ export const CalendarWidget: React.FC = () => {
                   <CustomDatePicker name="date" defaultValue={editingReminder?.date} required />
                 </div>
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px' }}>
-                  <button type="button" onClick={() => setReminderView('list')} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Cancel</button>
-                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#dea389', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Reminder</button>
+                  <button type="button" onClick={() => setReminderView('list')} style={{ padding: '8px 16px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Cancel</button>
+                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '2px', border: 'none', background: '#dea389', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Reminder</button>
                 </div>
               </form>
             )}
@@ -377,17 +377,17 @@ export const CalendarWidget: React.FC = () => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setReminderView('form')} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Edit"><Edit2 size={16} /></button>
-                    <button className="icon-btn danger" onClick={() => handleDeleteReminder(editingReminder.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
+                    <button onClick={() => setReminderView('form')} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px', borderRadius: '2px', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Edit"><Edit2 size={16} /></button>
+                    <button className="icon-btn danger" onClick={() => handleDeleteReminder(editingReminder.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '2px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(0,0,0,0.02)', padding: '16px', borderRadius: '12px', minHeight: '120px', fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>
+                <div style={{ background: 'rgba(0,0,0,0.02)', padding: '16px', borderRadius: '1px', minHeight: '120px', fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>
                   {editingReminder.description || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No description provided.</span>}
                 </div>
                 <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
                   <button 
                     onClick={() => toggleReminderStatus(editingReminder.id)}
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', background: editingReminder.status === 'completed' ? 'rgba(0,0,0,0.05)' : '#4CAF50', color: editingReminder.status === 'completed' ? 'var(--text-primary)' : 'white', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s' }}
+                    style={{ width: '100%', padding: '12px', borderRadius: '2px', border: 'none', background: editingReminder.status === 'completed' ? 'rgba(0,0,0,0.05)' : '#4CAF50', color: editingReminder.status === 'completed' ? 'var(--text-primary)' : 'white', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s' }}
                   >
                     {editingReminder.status === 'completed' ? 'Mark as Pending' : <><CheckCircle size={18} /> Mark as Completed</>}
                   </button>
@@ -435,7 +435,7 @@ export const CalendarWidget: React.FC = () => {
                   <div className="search-input-wrapper">
                     <input 
                       type="text" placeholder="Search notes..." value={notebookSearch} onChange={e => setNotebookSearch(e.target.value)}
-                      style={{ display: 'block', width: '100%', padding: '8px 12px', borderRadius: '8px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
+                      style={{ display: 'block', width: '100%', padding: '8px 12px', borderRadius: '2px', border: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
                     />
                   </div>
                   <CustomSelect 
@@ -504,8 +504,8 @@ export const CalendarWidget: React.FC = () => {
                   <textarea name="notes" className="form-input" style={{ padding: '8px 12px', fontSize: '0.85rem', flex: 1, minHeight: '150px', resize: 'none', width: '100%', boxSizing: 'border-box' }} defaultValue={editingNotebook?.notes} placeholder="Write your notes here..." required />
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px' }}>
-                  <button type="button" onClick={() => setNotebookView('list')} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Cancel</button>
-                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#dea389', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Note</button>
+                  <button type="button" onClick={() => setNotebookView('list')} style={{ padding: '8px 16px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Cancel</button>
+                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '2px', border: 'none', background: '#dea389', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Note</button>
                 </div>
               </form>
             )}
@@ -521,11 +521,11 @@ export const CalendarWidget: React.FC = () => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setNotebookView('form')} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Edit"><Edit2 size={16} /></button>
-                    <button className="icon-btn danger" onClick={() => handleDeleteNotebook(editingNotebook.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '8px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
+                    <button onClick={() => setNotebookView('form')} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '6px', borderRadius: '2px', cursor: 'pointer', color: 'var(--text-secondary)' }} title="Edit"><Edit2 size={16} /></button>
+                    <button className="icon-btn danger" onClick={() => handleDeleteNotebook(editingNotebook.id)} style={{ background: '#fff0f0', border: '1px solid rgba(255,0,0,0.1)', padding: '6px', borderRadius: '2px', cursor: 'pointer', color: '#e53935' }} title="Delete"><Trash2 size={16} /></button>
                   </div>
                 </div>
-                <div style={{ background: 'var(--bg-surface)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', overflowY: 'auto', lineHeight: '1.6' }}>
+                <div style={{ background: 'var(--bg-surface)', padding: '20px', borderRadius: '1px', border: '1px solid var(--border-color)', flex: 1, fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', overflowY: 'auto', lineHeight: '1.6' }}>
                   {editingNotebook.notes}
                 </div>
               </div>

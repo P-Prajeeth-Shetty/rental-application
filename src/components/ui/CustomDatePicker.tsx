@@ -150,7 +150,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ name, defaul
         onChange={handleInputChange}
         onClick={openPopup}
         style={{
-          width: '100%', padding: '10px 12px', paddingRight: '40px', borderRadius: '8px', 
+          width: '100%', padding: '10px 12px', paddingRight: '40px', borderRadius: '2px', 
           background: 'rgba(255, 255, 255, 0.7)', border: '1px solid rgba(0,0,0,0.1)',
           fontSize: '0.95rem', color: 'var(--text-primary)', transition: 'all 0.2s', boxSizing: 'border-box', outline: 'none'
         }}
@@ -167,7 +167,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ name, defaul
           backdropFilter: 'blur(24px) saturate(200%)',
           WebkitBackdropFilter: 'blur(24px) saturate(200%)',
           padding: '20px',
-          borderRadius: '16px',
+          borderRadius: '1px',
           boxShadow: '0 12px 40px rgba(0,0,0,0.12), inset 0 2px 4px rgba(255,255,255,0.8)',
           border: '1px solid rgba(255,255,255,0.7)',
           zIndex: 1000,
@@ -188,7 +188,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ name, defaul
             <SpinBox label="Min" value={minute} max={59} onChange={setMinute} />
           </div>
           <button type="button" onClick={handleApply} style={{
-            width: '100%', padding: '10px', borderRadius: '8px', border: 'none',
+            width: '100%', padding: '10px', borderRadius: '2px', border: 'none',
             background: '#dea389', color: 'white', fontWeight: 600, fontSize: '0.9rem',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
             boxShadow: '0 4px 12px rgba(222, 163, 137, 0.3)'

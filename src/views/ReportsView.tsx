@@ -287,7 +287,7 @@ export const ReportsView: React.FC = () => {
               type="number" 
               value={filterYear} 
               onChange={e => setFilterYear(parseInt(e.target.value))} 
-              style={{ padding: '0 12px', height: '48px', borderRadius: '8px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} 
+              style={{ padding: '0 12px', height: '48px', borderRadius: '2px', background: 'var(--bg-surface)', border: '1px solid var(--input-border)', color: 'var(--text-primary)', width: '80px', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} 
             />
           </div>
           <button
@@ -298,7 +298,7 @@ export const ReportsView: React.FC = () => {
               gap: '8px',
               alignItems: 'center',
               padding: '0 16px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               height: '48px',
               fontWeight: 600,
               fontSize: '0.95rem',
