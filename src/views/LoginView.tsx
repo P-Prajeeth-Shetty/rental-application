@@ -39,19 +39,19 @@ export const LoginView: React.FC = () => {
         
         {/* Low-poly triangle facets */}
         <polygon points="0,0 480,0 240,320" fill="#FFEDD5" opacity="0.6" />
-        <polygon points="480,0 960,0 720,360" fill="#FED7AA" opacity="0.55" />
+        <polygon points="480,0 960,0 720,360" fill="#e2e8f0" opacity="0.55" />
         <polygon points="960,0 1440,0 1200,300" fill="#FFEDD5" opacity="0.75" />
         <polygon points="1440,0 1440,480 1200,300" fill="#FDBA74" opacity="0.4" />
         
-        <polygon points="0,0 240,320 0,550" fill="#FF7700" opacity="0.1" />
+        <polygon points="0,0 240,320 0,550" fill="#0f766e" opacity="0.1" />
         <polygon points="240,320 720,360 460,660" fill="#FFEDD5" opacity="0.85" />
-        <polygon points="720,360 1200,300 960,620" fill="#FED7AA" opacity="0.45" />
+        <polygon points="720,360 1200,300 960,620" fill="#e2e8f0" opacity="0.45" />
         <polygon points="1200,300 1440,480 1440,900" fill="#FFD8A8" opacity="0.55" />
         
-        <polygon points="0,550 240,320 460,660" fill="#FED7AA" opacity="0.65" />
+        <polygon points="0,550 240,320 460,660" fill="#e2e8f0" opacity="0.65" />
         <polygon points="0,550 460,660 0,900" fill="#FFEDD5" opacity="0.75" />
-        <polygon points="460,660 960,620 720,900" fill="#FF7700" opacity="0.15" />
-        <polygon points="0,900 460,660 720,900" fill="#FED7AA" opacity="0.45" />
+        <polygon points="460,660 960,620 720,900" fill="#0f766e" opacity="0.15" />
+        <polygon points="0,900 460,660 720,900" fill="#e2e8f0" opacity="0.45" />
         
         <polygon points="960,620 1440,480 1440,900" fill="#FDBA74" opacity="0.35" />
         <polygon points="720,900 960,620 1440,900" fill="#FFEDD5" opacity="0.65" />
@@ -63,7 +63,7 @@ export const LoginView: React.FC = () => {
         <div className="login-poly-left">
           <div className="rentbook-logo-wrap">
             <div className="home-badge-light">
-              <Home size={38} strokeWidth={2.5} color="#FF7700" />
+              <Home size={38} strokeWidth={2.5} color="#0f766e" />
             </div>
             <h1 className="rentbook-brand-title-light">
               rent<span className="saffron-highlight">book</span>

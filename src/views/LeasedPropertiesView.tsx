@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, Pencil, Trash2, Building2, User, FileText, IndianRupee } from 'lucide-react';
+import { Plus, Pencil, Trash2, Building2, User, FileText, IndianRupee, ChevronLeft, MapPin, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
@@ -9,7 +9,8 @@ import type { Landlord, LeasedProperty, LeaseAgreement, OutgoingPayment } from '
 type Tab = 'properties' | 'landlords' | 'agreements' | 'payments';
 type ModalMode = 'create' | 'edit' | null;
 
-export const LeasedPropertiesView: React.FC = () => {
+export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: string }> = ({ searchQuery, filterType = 'All' }) => {
+  const [selectedProperty, setSelectedProperty] = useState<LeasedProperty | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('properties');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +20,7 @@ export const LeasedPropertiesView: React.FC = () => {
   const [properties, setProperties] = useState<LeasedProperty[]>([]);
   const [agreements, setAgreements] = useState<LeaseAgreement[]>([]);
   const [payments, setPayments] = useState<OutgoingPayment[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const searchTerm = searchQuery;
 
   // Modals
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -137,10 +138,11 @@ export const LeasedPropertiesView: React.FC = () => {
   // Helper to find property name
   const getPropertyName = (id: string) => properties.find(p => p.id === id)?.name || 'Unknown';
 
-  const filteredProperties = properties.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProperties = properties.filter(p => {
+    const typeMatch = filterType === 'All' || p.property_type === filterType;
+    const searchMatch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.address.toLowerCase().includes(searchTerm.toLowerCase());
+    return typeMatch && searchMatch;
+  });
   
   const filteredLandlords = landlords.filter(l => 
     l.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -161,31 +163,24 @@ export const LeasedPropertiesView: React.FC = () => {
   });
 
   return (
-    <div className="view-container">
-      <div className="view-header">
-        <div>
-          <h2 className="view-title">Leased Properties (Taken on Rent)</h2>
-          <p className="text-secondary">Manage properties taken on rent, landlords, lease agreements, and outgoing payments.</p>
-        </div>
-      </div>
-
+    <div style={{ padding: '0' }}>
       {error && <div style={{ color: '#ef4444', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px' }}>{error}</div>}
 
-      <div className="tabs" style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px', overflowX: 'auto' }}>
+      <div className="tabs" style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto' }}>
         <button className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`} onClick={() => setActiveTab('properties')}
-          style={{ background: 'none', border: 'none', color: activeTab === 'properties' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: activeTab === 'properties' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ background: activeTab === 'properties' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'properties' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'properties' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <Building2 size={16}/> Properties
         </button>
         <button className={`tab-btn ${activeTab === 'landlords' ? 'active' : ''}`} onClick={() => setActiveTab('landlords')}
-          style={{ background: 'none', border: 'none', color: activeTab === 'landlords' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: activeTab === 'landlords' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ background: activeTab === 'landlords' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'landlords' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'landlords' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <User size={16}/> Landlords
         </button>
         <button className={`tab-btn ${activeTab === 'agreements' ? 'active' : ''}`} onClick={() => setActiveTab('agreements')}
-          style={{ background: 'none', border: 'none', color: activeTab === 'agreements' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: activeTab === 'agreements' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ background: activeTab === 'agreements' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'agreements' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'agreements' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <FileText size={16}/> Agreements
         </button>
         <button className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`} onClick={() => setActiveTab('payments')}
-          style={{ background: 'none', border: 'none', color: activeTab === 'payments' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: activeTab === 'payments' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          style={{ background: activeTab === 'payments' ? 'rgba(15,118,110,0.1)' : 'transparent', border: '1px solid', borderColor: activeTab === 'payments' ? 'rgba(15,118,110,0.3)' : 'var(--border-color)', borderRadius: '6px', padding: '6px 12px', color: activeTab === 'payments' ? '#0f766e' : 'var(--text-secondary)', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s', fontSize: '0.85rem' }}>
           <IndianRupee size={16}/> Payments Out
         </button>
       </div>
@@ -193,52 +188,140 @@ export const LeasedPropertiesView: React.FC = () => {
       <div className="tab-content">
         {isLoading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading data...</div>
+        ) : selectedProperty ? (
+          <div style={{ padding: 0 }}>
+            <button onClick={() => setSelectedProperty(null)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: '16px', fontSize: '0.95rem' }}>
+              <ChevronLeft size={18} /> Back to Properties
+            </button>
+            <div className="surface-card glass-card" style={{ padding: '24px', display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '24px' }}>
+              <div style={{ flex: 1, minWidth: '250px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h2 style={{ margin: '0 0 4px' }}>{selectedProperty.name}</h2>
+                    <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={14} /> {selectedProperty.address}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => handleOpenModal('properties', 'edit', selectedProperty)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                      <Pencil size={14} /> Edit
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '24px', marginTop: '16px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Building2 size={16} color="var(--text-secondary)" />
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{selectedProperty.property_type}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Home size={16} color="var(--text-secondary)" />
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{selectedProperty.total_units} Units</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <User size={16} color="var(--text-secondary)" />
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Landlord: {getLandlordName(selectedProperty.landlord_id)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h3 style={{ marginBottom: '16px', fontSize: '1.2rem', color: 'var(--text-primary)' }}>Lease Agreements</h3>
+            <div className="surface-card static-card glass-card" style={{ padding: 0, overflow: 'auto', marginBottom: '24px' }}>
+              <table className="glass-table">
+                <thead>
+                  <tr>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Rent/Lease Amount</th>
+                    <th>Deposit</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agreements.filter(a => a.property_id === selectedProperty.id).map(a => (
+                    <tr key={a.id}>
+                      <td>{a.start_date}</td>
+                      <td>{a.end_date || 'Ongoing'}</td>
+                      <td style={{ color: '#10b981', fontWeight: 600 }}>₹{Number(a.rent_amount).toLocaleString('en-IN')}</td>
+                      <td>₹{Number(a.security_deposit).toLocaleString('en-IN')}</td>
+                      <td>
+                        <span className="status-badge" style={{ backgroundColor: a.status === 'active' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: a.status === 'active' ? '#10b981' : '#ef4444' }}>
+                          {a.status.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {agreements.filter(a => a.property_id === selectedProperty.id).length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>No agreements found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style={{ marginBottom: '16px', fontSize: '1.2rem', color: 'var(--text-primary)' }}>Payments Out</h3>
+            <div className="surface-card static-card glass-card" style={{ padding: 0, overflow: 'auto' }}>
+              <table className="glass-table">
+                <thead>
+                  <tr>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Method / Ref</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.filter(p => agreements.some(a => a.id === p.agreement_id && a.property_id === selectedProperty.id)).map(p => (
+                    <tr key={p.id}>
+                      <td style={{ color: '#ef4444', fontWeight: 600 }}>-₹{Number(p.amount).toLocaleString('en-IN')}</td>
+                      <td style={{ textTransform: 'capitalize' }}>{p.payment_type}</td>
+                      <td>{p.payment_date}</td>
+                      <td>
+                        <div style={{ fontSize: '0.85rem' }}>{p.payment_method || '—'}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{p.reference_number || '—'}</div>
+                      </td>
+                      <td>
+                        <span className="status-badge" style={{ backgroundColor: p.status === 'paid' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)', color: p.status === 'paid' ? '#10b981' : '#f59e0b' }}>
+                          {p.status.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {payments.filter(p => agreements.some(a => a.id === p.agreement_id && a.property_id === selectedProperty.id)).length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>No payments found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
           <>
             {/* PROPERTIES TAB */}
             {activeTab === 'properties' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-                    <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <Search size={16} color="var(--text-secondary)" />
-                      <input type="text" placeholder="Search properties..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                        style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', width: '160px' }} />
-                    </div>
+
                     <button className="btn btn-primary" onClick={() => handleOpenModal('properties', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
                       <Plus size={16}/> Add Property
                     </button>
                   </div>
-                <div className="surface-card static-card glass-card" style={{ padding: 0, overflow: 'auto' }}>
-                  <table className="glass-table">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Address</th>
-                        <th>Landlord</th>
-                        <th>Type</th>
-                        <th>Units</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredProperties.map(p => (
-                        <tr key={p.id}>
-                          <td><strong>{p.name}</strong></td>
-                          <td>{p.address}</td>
-                          <td>{getLandlordName(p.landlord_id)}</td>
-                          <td>{p.property_type}</td>
-                          <td>{p.total_units}</td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <button onClick={() => handleOpenModal('properties', 'edit', p)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
-                              <button onClick={() => setDeleteTarget({ type: 'properties', id: p.id, name: p.name })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {filteredProperties.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>{searchTerm ? 'No properties found matching your search.' : 'No leased properties found.'}</td></tr>}
-                    </tbody>
-                  </table>
+                <div className="properties-grid">
+                  {filteredProperties.map(p => (
+                    <div key={p.id} className="surface-card glass-card property-card" onClick={() => setSelectedProperty(p)} style={{ cursor: 'pointer', position: 'relative', display: 'flex', flexDirection: 'column', padding: '20px', minHeight: '180px', borderRadius: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h3 className="property-title">{p.name}</h3>
+                          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px' }}>{p.address}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }} onClick={e => e.stopPropagation()}>
+                          <button onClick={() => handleOpenModal('properties', 'edit', p)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#3b82f6' }}><Pencil size={14}/></button>
+                          <button onClick={() => setDeleteTarget({ type: 'properties', id: p.id, name: p.name })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', color: '#ef4444' }}><Trash2 size={14}/></button>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '16px', marginTop: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Building2 size={14} /> {p.total_units} Units</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><User size={14} /> {getLandlordName(p.landlord_id)}</span>
+                      </div>
+                      <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                         <span style={{ padding: '4px 12px', borderRadius: '4px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>{p.property_type}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredProperties.length === 0 && <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>{searchTerm ? 'No properties found matching your search.' : 'No leased properties found.'}</div>}
                 </div>
               </div>
             )}
@@ -247,11 +330,7 @@ export const LeasedPropertiesView: React.FC = () => {
             {activeTab === 'landlords' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-                    <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <Search size={16} color="var(--text-secondary)" />
-                      <input type="text" placeholder="Search landlords..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                        style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', width: '160px' }} />
-                    </div>
+
                     <button className="btn btn-primary" onClick={() => handleOpenModal('landlords', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
                       <Plus size={16}/> Add Landlord
                     </button>
@@ -302,11 +381,7 @@ export const LeasedPropertiesView: React.FC = () => {
             {activeTab === 'agreements' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-                    <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <Search size={16} color="var(--text-secondary)" />
-                      <input type="text" placeholder="Search agreements..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                        style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', width: '160px' }} />
-                    </div>
+
                     <button className="btn btn-primary" onClick={() => handleOpenModal('agreements', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
                       <Plus size={16}/> New Agreement
                     </button>
@@ -356,11 +431,7 @@ export const LeasedPropertiesView: React.FC = () => {
             {activeTab === 'payments' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-                    <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <Search size={16} color="var(--text-secondary)" />
-                      <input type="text" placeholder="Search payments..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                        style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', width: '160px' }} />
-                    </div>
+
                     <button className="btn btn-primary" onClick={() => handleOpenModal('payments', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '20px' }}>
                       <Plus size={16}/> Record Payment
                     </button>

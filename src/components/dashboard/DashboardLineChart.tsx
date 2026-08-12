@@ -78,11 +78,11 @@ export const DashboardLineChart: React.FC = () => {
           <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Revenue by Type</h3>
           <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-              <span style={{ width: '12px', height: '12px', background: '#FF7700', borderRadius: '2px' }}></span>
+              <span style={{ width: '12px', height: '12px', background: '#0f766e', borderRadius: '2px' }}></span>
               Residential
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-              <span style={{ width: '12px', height: '12px', background: '#111827', borderRadius: '2px' }}></span>
+              <span style={{ width: '12px', height: '12px', background: '#7c3aed', borderRadius: '2px' }}></span>
               Commercial
             </span>
           </div>
@@ -119,7 +119,7 @@ export const DashboardLineChart: React.FC = () => {
               <Line 
                 type="monotone" 
                 dataKey="Residential" 
-                stroke="#FF7700" 
+                stroke="#0f766e" 
                 strokeWidth={3} 
                 dot={{ r: 4, strokeWidth: 2, fill: 'white' }} 
                 activeDot={{ r: 6 }} 
@@ -127,7 +127,7 @@ export const DashboardLineChart: React.FC = () => {
               <Line 
                 type="monotone" 
                 dataKey="Commercial" 
-                stroke="#111827" 
+                stroke="#7c3aed" 
                 strokeWidth={3} 
                 dot={{ r: 4, strokeWidth: 2, fill: 'white' }} 
                 activeDot={{ r: 6 }} 

@@ -9,7 +9,6 @@ import { LeasesView } from './views/LeasesView';
 import { MaintenanceBillingView } from './views/MaintenanceBillingView';
 import { ReportsView } from './views/ReportsView';
 import { UsersView } from './views/UsersView';
-import { LeasedPropertiesView } from './views/LeasedPropertiesView';
 import { HelpCenterView } from './views/HelpCenterView';
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
@@ -82,8 +81,6 @@ function App() {
         return <DashboardView />;
       case 'properties':
         return <PropertiesView />;
-      case 'leased-properties':
-        return <LeasedPropertiesView />;
       case 'tenants':
         return <TenantsView />;
       case 'leases':

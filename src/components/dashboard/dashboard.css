@@ -120,38 +120,38 @@
 /* Card 1: Top-Left (White) */
 .pastel-purple { 
   background-color: #ffffff !important; 
-  border: 1.5px solid #fed7aa !important; 
+  border: 1px solid var(--border-color) !important; 
   box-shadow: 0 4px 14px rgba(0,0,0,0.02) !important; 
 }
 .pastel-purple .kpi-subtitle-new { color: #4b5563 !important; font-weight: 500 !important; }
-.pastel-purple .kpi-value-new { color: #FF7700 !important; font-weight: 800 !important; }
+.pastel-purple .kpi-value-new { color: var(--primary-accent) !important; font-weight: 800 !important; }
 
-/* Card 2: Top-Right (Fading Saffron Gradient - matching reference image) */
+/* Card 2: Top-Right (White) */
 .pastel-blue { 
-  background: linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%) !important; 
-  border: 1.5px solid #FF8500 !important; 
-  box-shadow: 0 10px 28px rgba(255, 102, 0, 0.25) !important; 
+  background-color: #ffffff !important; 
+  border: 1px solid var(--border-color) !important; 
+  box-shadow: 0 4px 14px rgba(0,0,0,0.02) !important; 
 }
-.pastel-blue .kpi-subtitle-new { color: #0F172A !important; font-weight: 600 !important; }
-.pastel-blue .kpi-value-new { color: #0F172A !important; font-weight: 800 !important; }
+.pastel-blue .kpi-subtitle-new { color: #4b5563 !important; font-weight: 500 !important; }
+.pastel-blue .kpi-value-new { color: #111827 !important; font-weight: 800 !important; }
 
-/* Card 3: Bottom-Left (Fading Saffron Gradient - matching reference image) */
+/* Card 3: Bottom-Left (White) */
 .pastel-pink { 
-  background: linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%) !important; 
-  border: 1.5px solid #FF8500 !important; 
-  box-shadow: 0 10px 28px rgba(255, 102, 0, 0.25) !important; 
+  background-color: #ffffff !important; 
+  border: 1px solid var(--border-color) !important; 
+  box-shadow: 0 4px 14px rgba(0,0,0,0.02) !important; 
 }
-.pastel-pink .kpi-subtitle-new { color: #0F172A !important; font-weight: 600 !important; }
-.pastel-pink .kpi-value-new { color: #0F172A !important; font-weight: 800 !important; }
+.pastel-pink .kpi-subtitle-new { color: #4b5563 !important; font-weight: 500 !important; }
+.pastel-pink .kpi-value-new { color: #111827 !important; font-weight: 800 !important; }
 
 /* Card 4: Bottom-Right (White) */
 .pastel-green { 
   background-color: #ffffff !important; 
-  border: 1.5px solid #fed7aa !important; 
+  border: 1px solid var(--border-color) !important; 
   box-shadow: 0 4px 14px rgba(0,0,0,0.02) !important; 
 }
 .pastel-green .kpi-subtitle-new { color: #4b5563 !important; font-weight: 500 !important; }
-.pastel-green .kpi-value-new { color: #FF7700 !important; font-weight: 800 !important; }
+.pastel-green .kpi-value-new { color: var(--primary-accent) !important; font-weight: 800 !important; }
 
 .kpi-header-new {
   display: flex;

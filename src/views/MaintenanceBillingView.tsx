@@ -264,7 +264,7 @@ export const MaintenanceBillingView: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%', marginBottom: '24px' }}>
         <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
           <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: 500 }}>Expected</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>
             ₹{totalExpected.toLocaleString('en-IN')}
           </h2>
         </div>
@@ -278,7 +278,7 @@ export const MaintenanceBillingView: React.FC = () => {
 
         <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
           <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: 500 }}>Outstanding</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>
             ₹{outstanding.toLocaleString('en-IN')}
           </h2>
         </div>
@@ -569,7 +569,7 @@ export const MaintenanceBillingView: React.FC = () => {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--border-color)' }}>
                 <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Amount Due</span>
-                <span style={{ fontWeight: 700, color: '#FF7700', fontSize: '1.2rem' }}>₹{selectedCharge.amount.toLocaleString('en-IN')}</span>
+                <span style={{ fontWeight: 700, color: '#0f766e', fontSize: '1.2rem' }}>₹{selectedCharge.amount.toLocaleString('en-IN')}</span>
               </div>
             </div>
 

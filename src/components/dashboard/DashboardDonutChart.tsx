@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { ChartDropdown } from './ChartDropdown';
 import './dashboard.css';
 
-const COLORS = ['#FF7700', '#111827', '#9ca3af', '#e2e8f0'];
+const COLORS = ['#0f766e', '#7c3aed', '#9ca3af', '#e2e8f0'];
 
 export const DashboardDonutChart: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
@@ -110,7 +110,7 @@ export const DashboardDonutChart: React.FC = () => {
             </ResponsiveContainer>
             <div style={{ position: 'absolute', top: '50%', left: '40%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Total</span>
-              <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#FF7700' }}>100%</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f766e' }}>100%</span>
             </div>
           </div>
         </div>

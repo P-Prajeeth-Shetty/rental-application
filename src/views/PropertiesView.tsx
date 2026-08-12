@@ -4,6 +4,7 @@ import { Home, Users, Plus, Pencil, Trash2, ChevronLeft, Building2, MapPin, Tren
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
+import { LeasedPropertiesView } from './LeasedPropertiesView';
 interface Property {
   id: string;
   name: string;
@@ -44,6 +45,7 @@ interface PropertyPayment {
 type ModalMode = 'create' | 'edit' | null;
 
 export const PropertiesView: React.FC = () => {
+  const [viewMode, setViewMode] = useState<'lend' | 'rent'>('lend');
   const [properties, setProperties] = useState<Property[]>([]);
   const [occupancyMap, setOccupancyMap] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -493,8 +495,8 @@ export const PropertiesView: React.FC = () => {
   return (
     <div className="view-container">
       {error && <div style={{ color: '#ff4d4d', fontSize: '0.9rem', marginBottom: '16px' }}>{error}</div>}
-      <div className="search-filter-row">
-        <div className="search-input-container">
+      <div className="search-filter-row" style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="search-input-container" style={{ flex: 1, minWidth: '250px' }}>
           <Search size={18} color="var(--text-secondary)" />
           <input 
             type="text" 
@@ -503,29 +505,60 @@ export const PropertiesView: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div style={{ width: '200px', flexShrink: 0 }}>
-          <CustomSelect 
-            value={filterType}
-            onChange={setFilterType}
-            options={[
-              { value: 'All', label: 'All Types' },
-              { value: 'Residential', label: 'Residential' },
-              { value: 'Commercial', label: 'Commercial' },
-              { value: 'Mixed', label: 'Mixed' }
-            ]}
-          />
+        
+        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            {['All Types', 'Residential', 'Commercial', 'Mixed'].map(type => {
+              const val = type === 'All Types' ? 'All' : type;
+              const isActive = filterType === val;
+              return (
+                <button 
+                  key={type} 
+                  onClick={() => setFilterType(val)} 
+                  style={{ 
+                    background: isActive ? 'rgba(15,118,110,0.1)' : 'transparent', 
+                    color: isActive ? '#0f766e' : 'var(--text-secondary)', 
+                    border: '1px solid',
+                    borderColor: isActive ? 'rgba(15,118,110,0.3)' : 'var(--border-color)',
+                    padding: '6px 12px', 
+                    borderRadius: '6px', 
+                    fontSize: '0.85rem', 
+                    cursor: 'pointer', 
+                    fontWeight: 500 
+                  }}>
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+        <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, marginLeft: 'auto' }}>
+          <button 
+            onClick={() => setViewMode('lend')}
+            style={{ padding: '6px 20px', border: 'none', cursor: 'pointer', background: viewMode === 'lend' ? '#115e59' : 'transparent', color: viewMode === 'lend' ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s', borderRadius: 0 }}
+          >
+            Lend
+          </button>
+          <button 
+            onClick={() => setViewMode('rent')}
+            style={{ padding: '6px 20px', border: 'none', cursor: 'pointer', background: viewMode === 'rent' ? '#115e59' : 'transparent', color: viewMode === 'rent' ? 'white' : 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', transition: 'all 0.2s', borderRadius: 0 }}
+          >
+            Rent
+          </button>
         </div>
       </div>
 
-      {isLoading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading properties...</div>
+      {viewMode === 'rent' ? (
+        <LeasedPropertiesView searchQuery={searchQuery} filterType={filterType} />
       ) : (
-        <div className="properties-grid">
+        <>
+          {isLoading ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading properties...</div>
+          ) : (
+            <div className="properties-grid">
           {/* Add Property Card */}
           <div className="surface-card property-card" onClick={openCreateModal}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px dashed var(--border-color)', background: 'var(--bg-surface)', gap: '16px', transition: 'all 0.3s ease', minHeight: '340px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
-              <Plus size={32} />
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px dashed var(--border-color)', background: 'var(--bg-surface)', gap: '16px', transition: 'all 0.3s ease', minHeight: '220px', borderRadius: '8px' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
+              <Plus size={28} />
             </div>
             <span style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Add Property</span>
           </div>
@@ -537,8 +570,7 @@ export const PropertiesView: React.FC = () => {
             const occupied = occupancyMap[prop.id] || 0;
             const pct = prop.total_units > 0 ? Math.round((occupied / prop.total_units) * 100) : 0;
             return (
-              <div key={prop.id} className="surface-card glass-card property-card" style={{ cursor: 'pointer', position: 'relative' }} onClick={() => openDetail(prop)}>
-                <img src={prop.image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=400'} alt={prop.name} className="property-image" />
+              <div key={prop.id} className="surface-card glass-card property-card" style={{ cursor: 'pointer', position: 'relative', minHeight: '220px', borderRadius: '8px' }} onClick={() => openDetail(prop)}>
                 <div className="property-info">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
@@ -554,12 +586,12 @@ export const PropertiesView: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', marginTop: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Home size={14} /> {prop.total_units} Units</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={14} /> {occupied} Tenants</span>
-                    <span style={{ padding: '4px 16px', borderRadius: '16px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.15)' }}>{prop.property_type}</span>
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}><Home size={14} /> {prop.total_units} Units</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}><Users size={14} /> {occupied} Tenants</span>
+                    <span style={{ padding: '4px 12px', borderRadius: '16px', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap', marginLeft: 'auto' }}>{prop.property_type}</span>
                   </div>
-                  <div style={{ marginTop: 'auto' }}>
+                  <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '8px' }}>
                       <span>Occupancy</span>
                       <span style={{ fontWeight: 600 }}>{pct}%</span>
@@ -573,6 +605,8 @@ export const PropertiesView: React.FC = () => {
             );
           })}
         </div>
+          )}
+        </>
       )}
 
       {renderFormModal()}

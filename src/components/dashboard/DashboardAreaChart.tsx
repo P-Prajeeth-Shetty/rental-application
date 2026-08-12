@@ -89,8 +89,8 @@ export const DashboardAreaChart: React.FC = () => {
             <AreaChart data={data} margin={{ top: 15, right: 25, left: 25, bottom: 10 }}>
               <defs>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#FF7700" stopOpacity={0.35}/>
-                  <stop offset="95%" stopColor="#FF7700" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#0f766e" stopOpacity={0.35}/>
+                  <stop offset="95%" stopColor="#0f766e" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <XAxis 
@@ -108,11 +108,11 @@ export const DashboardAreaChart: React.FC = () => {
               <Area 
                 type="monotone" 
                 dataKey="Total" 
-                stroke="#FF7700" 
+                stroke="#0f766e" 
                 strokeWidth={3}
                 fillOpacity={1} 
                 fill="url(#colorTotal)" 
-                activeDot={{ r: 6, fill: 'white', stroke: '#FF7700', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: 'white', stroke: '#0f766e', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

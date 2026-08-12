@@ -390,9 +390,9 @@ export const TenantsView: React.FC = () => {
       {error && <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: '#ff4d4d', padding: '10px 14px', borderRadius: '8px' }}>{error}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', width: '100%' }}>
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Total Tenants</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>{totalTenants}</h2>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{totalTenants}</h2>
         </div>
         
         <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
@@ -400,9 +400,9 @@ export const TenantsView: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{activeLeases}</h2>
         </div>
         
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Monthly Rent Roll</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>₹{totalMonthlyRent.toLocaleString('en-IN')}</h2>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>₹{totalMonthlyRent.toLocaleString('en-IN')}</h2>
         </div>
         
         <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
@@ -429,7 +429,7 @@ export const TenantsView: React.FC = () => {
             />
           </div>
         </div>
-        <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', fontWeight: 600, height: '48px', flexShrink: 0, background: '#FF7700', color: '#ffffff', border: 'none' }}>
+        <button className="btn btn-primary" onClick={openCreateTenant} style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '8px', padding: '0 20px', fontWeight: 600, height: '48px', flexShrink: 0, background: '#0f766e', color: '#ffffff', border: 'none' }}>
           <Plus size={18} /> Add Tenant
         </button>
       </div>
@@ -499,13 +499,13 @@ export const TenantsView: React.FC = () => {
                           onMouseDown={e => e.stopPropagation()}
                           onTouchStart={e => e.stopPropagation()}
                         >
-                          <button onClick={(e) => { e.stopPropagation(); openAssignModal(t); }} title="Assign to Property" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); openAssignModal(t); }} title="Assign to Property" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                             <Home size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); openEditTenant(t); }} title="Edit" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); openEditTenant(t); }} title="Edit" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                             <Pencil size={14} style={{ pointerEvents: 'none' }} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} title="Delete" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} title="Delete" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
                             <Trash2 size={14} style={{ pointerEvents: 'none' }} />
                           </button>
                         </div>

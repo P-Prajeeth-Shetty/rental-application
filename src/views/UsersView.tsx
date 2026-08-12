@@ -19,6 +19,7 @@ interface UserRecord {
     phone_number: string | null;
     bio: string | null;
     avatar_url: string | null;
+    email?: string | null;
   } | null;
 }
 
@@ -30,13 +31,6 @@ interface Toast {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-const INITIAL_EMAIL_MAP: Record<string, string> = {
-  'bde1e113-cb6c-4331-9495-1e1359f0d103': 'johnwick@gmail.com',
-  '3cf631f4-2416-41d0-8764-00955801eb34': 'bharath@gmail.com',
-  '8f22786f-7f87-4d13-b962-2e58595b6ed1': 'userone@gmail.com',
-  '25f696e6-0831-40b9-a67a-b9c56103c20a': 'admin@rentbook.com',
-};
-
 export const UsersView: React.FC = () => {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,9 +40,9 @@ export const UsersView: React.FC = () => {
   const [emailMap, setEmailMap] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem('rentbook_user_emails');
-      return saved ? { ...INITIAL_EMAIL_MAP, ...JSON.parse(saved) } : INITIAL_EMAIL_MAP;
+      return saved ? JSON.parse(saved) : {};
     } catch {
-      return INITIAL_EMAIL_MAP;
+      return {};
     }
   });
 
@@ -114,7 +108,7 @@ export const UsersView: React.FC = () => {
       // Fallback: Fetch roles and profiles separately
       const [{ data: rolesData, error: rolesError }, { data: profilesData, error: profilesError }] = await Promise.all([
         supabase.from('user_roles').select('user_id, role, created_at').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('id, full_name, phone_number, bio, avatar_url'),
+        supabase.from('profiles').select('id, full_name, phone_number, bio, avatar_url, email'),
       ]);
 
       if (rolesError) throw rolesError;
@@ -123,6 +117,7 @@ export const UsersView: React.FC = () => {
       const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
       const merged = (rolesData || []).map(r => ({
         ...r,
+        email: profilesMap.get(r.user_id)?.email || undefined,
         profiles: profilesMap.get(r.user_id) || null,
       }));
 
@@ -269,15 +264,9 @@ export const UsersView: React.FC = () => {
 
   const getUserEmail = (u: UserRecord) => {
     if (u.email) return u.email;
+    if (u.profiles?.email) return u.profiles.email;
     if (emailMap[u.user_id]) return emailMap[u.user_id];
-
-    const name = u.profiles?.full_name?.trim();
-    if (name && emailMap[name.toLowerCase()]) return emailMap[name.toLowerCase()];
-
-    if (name) {
-      return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '.')}@gmail.com`;
-    }
-    return `user.${u.user_id.slice(0, 6)}@gmail.com`;
+    return '—';
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -303,9 +292,9 @@ export const UsersView: React.FC = () => {
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', width: '100%', marginBottom: '8px' }}>
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Total Users</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>{users.length}</h2>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{users.length}</h2>
         </div>
 
         <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #FF6600 0%, #FF8500 35%, #FFA333 70%, #FFC277 100%)', border: '1.5px solid #FF8500', borderRadius: '16px', boxShadow: '0 10px 28px rgba(255, 102, 0, 0.25)' }}>
@@ -313,9 +302,9 @@ export const UsersView: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0F172A' }}>{users.filter(u => u.role === 'admin').length}</h2>
         </div>
 
-        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
+        <div className="surface-card glass-card" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px', background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 4px 14px rgba(0,0,0,0.02)' }}>
           <span style={{ color: '#4b5563', fontSize: '0.95rem', fontWeight: 500 }}>Regular Users</span>
-          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#FF7700' }}>{users.filter(u => u.role === 'user').length}</h2>
+          <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#0f766e' }}>{users.filter(u => u.role === 'user').length}</h2>
         </div>
       </div>
 
@@ -344,7 +333,7 @@ export const UsersView: React.FC = () => {
               height="48px"
             />
           </div>
-          <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '8px', background: '#FF7700', color: '#ffffff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+          <button className="btn-primary" onClick={() => setIsCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 20px', borderRadius: '8px', background: '#0f766e', color: '#ffffff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>
             <UserPlus size={18} /> Create User
           </button>
         </div>
@@ -421,13 +410,13 @@ export const UsersView: React.FC = () => {
                         onMouseDown={e => e.stopPropagation()}
                         onTouchStart={e => e.stopPropagation()}
                       >
-                        <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} title="Edit User" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); openEditModal(u); }} title="Edit User" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                           <Pencil size={15} style={{ pointerEvents: 'none' }} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setPwTarget(u); setPwForm({ new_password: '', confirm_password: '' }); setPwError(''); }} title="Change Password" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#FF7700', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setPwTarget(u); setPwForm({ new_password: '', confirm_password: '' }); setPwError(''); }} title="Change Password" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#0f766e', display: 'flex', alignItems: 'center' }}>
                           <KeyRound size={15} style={{ pointerEvents: 'none' }} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }} title="Delete User" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }} title="Delete User" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '8px', padding: '6px 8px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}>
                           <Trash2 size={15} style={{ pointerEvents: 'none' }} />
                         </button>
                       </div>

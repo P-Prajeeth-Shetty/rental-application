@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, LogOut, ChevronDown, User, LayoutDashboard, Building2, KeySquare, Users, CreditCard, Wrench, BarChart3, ShieldCheck, UserCircle, HelpCircle, Home } from 'lucide-react';
+import { Bell, Settings, LogOut, ChevronDown, User, LayoutDashboard, Building2, Users, CreditCard, Wrench, BarChart3, ShieldCheck, UserCircle, HelpCircle, Home } from 'lucide-react';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { ProfileSettingsModals } from './ProfileSettingsModals';
 import { supabase } from '../../lib/supabase';
@@ -69,7 +69,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
     switch (view) {
       case 'dashboard': return { title: 'Dashboard', subtitle: 'Use cases to plan, prioritize, and complete your tasks' };
       case 'properties': return { title: 'Properties', subtitle: 'Manage your real estate portfolio' };
-      case 'leased-properties': return { title: 'Leased Properties', subtitle: 'View properties currently rented out' };
       case 'tenants': return { title: 'Tenants & Rent', subtitle: 'Manage tenant information and details' };
       case 'leases': return { title: 'Payments', subtitle: 'Track rent payments and invoices' };
       case 'maintenance': return { title: 'Maintenance Billing', subtitle: 'Generate and track maintenance invoices for your properties' };
@@ -90,11 +89,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
         <aside className="sidebar">
           {/* Logo Section */}
           <div className="logo-section">
-            <div className="logo-icon" style={{ background: '#FF7700', borderRadius: '10px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="logo-icon" style={{ background: 'var(--primary-accent)', borderRadius: '10px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Home size={18} color="white" strokeWidth={2.5} />
             </div>
             <span className="logo-text" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.5px' }}>
-              rent<span style={{ color: '#FF7700' }}>book</span>
+              rent<span style={{ color: 'var(--primary-accent)' }}>book</span>
             </span>
           </div>
 
@@ -107,7 +106,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, setActiveV
                   {activeNotifications > 0 && <span className="notification-badge">{activeNotifications}</span>}
                 </button>
                 <button className={`nav-item ${activeView === 'properties' ? 'active' : ''}`} onClick={() => setActiveView('properties')}><Building2 size={18} /> Properties</button>
-                <button className={`nav-item ${activeView === 'leased-properties' ? 'active' : ''}`} onClick={() => setActiveView('leased-properties')}><KeySquare size={18} /> Leased Properties</button>
                 <button className={`nav-item ${activeView === 'tenants' ? 'active' : ''}`} onClick={() => setActiveView('tenants')}><Users size={18} /> Tenants</button>
                 <button className={`nav-item ${activeView === 'leases' ? 'active' : ''}`} onClick={() => setActiveView('leases')}><CreditCard size={18} /> Payments</button>
                 <button className={`nav-item ${activeView === 'maintenance' ? 'active' : ''}`} onClick={() => setActiveView('maintenance')}><Wrench size={18} /> Maintenance</button>

@@ -10,8 +10,9 @@
   --bg-panel: #ffffff;
   --overlay-bg: rgba(0, 0, 0, 0.4);
 
-  --primary-accent: #fb5d3e; /* Vibrant orange/red from the shot */
-  --primary-gradient: linear-gradient(135deg, #fb5d3e 0%, #ff7d63 100%);
+  --primary-accent: #0f766e; /* Teal */
+  --primary-gradient: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --secondary-accent: #7c3aed; /* Purple */
 
   --success: #10b981;
   --success-light: #d1fae5;
