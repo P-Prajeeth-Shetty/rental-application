@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Plus, Pencil, Trash2, Building2, User, FileText, IndianRupee, ChevronLeft, MapPin, Home } from 'lucide-react';
+import { Plus, Pencil, Trash2, Building2, User, FileText, IndianRupee, ChevronLeft, MapPin, Home, Printer } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
+import { AgreementSlipModal } from '../components/agreement/AgreementSlipModal';
+import { useCurrentProfile } from '../hooks/useCurrentProfile';
 import type { Landlord, LeasedProperty, LeaseAgreement, OutgoingPayment } from '../types/leased';
 
 type Tab = 'properties' | 'landlords' | 'agreements' | 'payments';
@@ -30,6 +32,10 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
   
   // Generic form data state
   const [formData, setFormData] = useState<any>({});
+
+  // Print agreement slip
+  const [agreementSlipTarget, setAgreementSlipTarget] = useState<LeaseAgreement | null>(null);
+  const currentProfile = useCurrentProfile();
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -137,6 +143,11 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
   const getLandlordName = (id: string) => landlords.find(l => l.id === id)?.full_name || 'Unknown';
   // Helper to find property name
   const getPropertyName = (id: string) => properties.find(p => p.id === id)?.name || 'Unknown';
+  // Helper to find the landlord who owns the property behind an agreement
+  const getLandlordForAgreement = (agreement: LeaseAgreement) => {
+    const property = properties.find(p => p.id === agreement.property_id);
+    return property ? landlords.find(l => l.id === property.landlord_id) : undefined;
+  };
 
   const filteredProperties = properties.filter(p => {
     const typeMatch = filterType === 'All' || p.property_type === filterType;
@@ -233,6 +244,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                     <th>Rent/Lease Amount</th>
                     <th>Deposit</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -247,9 +259,12 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                           {a.status.toUpperCase()}
                         </span>
                       </td>
+                      <td>
+                        <button onClick={() => setAgreementSlipTarget(a)} title="Print Agreement Slip" style={{ background: 'rgba(124,58,237,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}><Printer size={14}/></button>
+                      </td>
                     </tr>
                   ))}
-                  {agreements.filter(a => a.property_id === selectedProperty.id).length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>No agreements found.</td></tr>}
+                  {agreements.filter(a => a.property_id === selectedProperty.id).length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>No agreements found.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -414,6 +429,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={() => setAgreementSlipTarget(a)} title="Print Agreement Slip" style={{ background: 'rgba(124,58,237,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#7c3aed' }}><Printer size={14}/></button>
                               <button onClick={() => handleOpenModal('agreements', 'edit', a)} style={{ background: 'rgba(59,130,246,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#3b82f6' }}><Pencil size={14}/></button>
                               <button onClick={() => setDeleteTarget({ type: 'agreements', id: a.id, name: 'this agreement' })} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#ef4444' }}><Trash2 size={14}/></button>
                             </div>
@@ -624,15 +640,32 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>{deleteTarget?.name}</strong>? This action cannot be undone.
           </p>
-          <ModalActionButtons 
-            onCancel={() => setDeleteTarget(null)} 
+          <ModalActionButtons
+            onCancel={() => setDeleteTarget(null)}
             submitText="Delete"
-            isSubmitting={isLoading} 
+            isSubmitting={isLoading}
             isDanger={true}
             customSubmitAction={handleDelete}
           />
         </div>
       </Modal>
+
+      {/* Print Agreement Slip */}
+      {agreementSlipTarget && (
+        <AgreementSlipModal
+          isOpen={true}
+          onClose={() => setAgreementSlipTarget(null)}
+          lessorName={getLandlordForAgreement(agreementSlipTarget)?.full_name || 'Unknown Landlord'}
+          lessorPhone={getLandlordForAgreement(agreementSlipTarget)?.phone}
+          lesseeName={currentProfile?.full_name || 'RentBook Admin'}
+          lesseePhone={currentProfile?.phone_number}
+          propertyLabel={getPropertyName(agreementSlipTarget.property_id)}
+          effectiveDate={agreementSlipTarget.start_date}
+          leaseEndDate={agreementSlipTarget.end_date}
+          monthlyRent={agreementSlipTarget.rent_amount}
+          securityDeposit={agreementSlipTarget.security_deposit}
+        />
+      )}
     </div>
   );
 };

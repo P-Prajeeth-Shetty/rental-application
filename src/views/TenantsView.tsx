@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, ArrowRightLeft, Printer } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
+import { AgreementSlipModal } from '../components/agreement/AgreementSlipModal';
+import { useCurrentProfile } from '../hooks/useCurrentProfile';
 
 import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
 interface Tenant {
@@ -32,6 +34,8 @@ interface Assignment {
   grace_days?: number;
   gst_rate?: number;
   tds_rate?: number;
+  previous_assignment_id?: string | null;
+  transfer_reason?: string | null;
   properties: { id: string; name: string } | null;
   payments?: { amount: number; is_reversed: boolean }[];
   rent_revisions?: { previous_rent: number; new_rent: number; effective_from: string }[];
@@ -110,6 +114,15 @@ export const TenantsView: React.FC = () => {
   // Vacate property
   const [vacateTarget, setVacateTarget] = useState<Assignment | null>(null);
   const [vacateDate, setVacateDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Transfer to another property
+  const [transferTarget, setTransferTarget] = useState<Assignment | null>(null);
+  const [transferTenant, setTransferTenant] = useState<Tenant | null>(null);
+  const [transferForm, setTransferForm] = useState({ property_id: '', unit_number: '', current_rent: '', security_deposit: '', lease_end: '', payment_mode: 'prepaid', due_day: '1', grace_days: '5', gst_rate: '18', tds_rate: '10', transfer_date: new Date().toISOString().split('T')[0], reason: '' });
+
+  // Print agreement slip
+  const [agreementSlipTarget, setAgreementSlipTarget] = useState<{ assignment: Assignment, tenant: Tenant } | null>(null);
+  const currentProfile = useCurrentProfile();
 
   // Action Menu
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
@@ -346,6 +359,58 @@ export const TenantsView: React.FC = () => {
     }
   };
 
+  // ── Transfer to Another Property ──────────────────────────────────────────
+
+  const openTransferModal = (a: Assignment, t: Tenant) => {
+    setTransferTenant(t);
+    setTransferTarget(a);
+    setTransferForm({
+      property_id: properties.find(p => p.id !== a.property_id)?.id || '',
+      unit_number: '',
+      current_rent: getEffectiveRentAsOf(a).toString(),
+      security_deposit: a.security_deposit.toString(),
+      lease_end: '',
+      payment_mode: a.payment_mode || 'prepaid',
+      due_day: a.due_day?.toString() || '1',
+      grace_days: a.grace_days?.toString() || '5',
+      gst_rate: a.gst_rate?.toString() ?? '18',
+      tds_rate: a.tds_rate?.toString() ?? '10',
+      transfer_date: new Date().toISOString().split('T')[0],
+      reason: '',
+    });
+  };
+
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transferTarget || !transferForm.property_id || !transferForm.transfer_date) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.rpc('transfer_tenant_assignment', {
+        p_old_assignment_id: transferTarget.id,
+        p_transfer_date: transferForm.transfer_date,
+        p_new_property_id: transferForm.property_id,
+        p_new_unit_number: transferForm.unit_number,
+        p_new_rent: parseFloat(transferForm.current_rent) || 0,
+        p_new_deposit: parseFloat(transferForm.security_deposit) || 0,
+        p_new_lease_end: transferForm.lease_end || null,
+        p_payment_mode: transferForm.payment_mode,
+        p_due_day: parseInt(transferForm.due_day) || 1,
+        p_grace_days: parseInt(transferForm.grace_days) || 5,
+        p_gst_rate: parseFloat(transferForm.gst_rate) || 0,
+        p_tds_rate: parseFloat(transferForm.tds_rate) || 0,
+        p_reason: transferForm.reason || null,
+      });
+      if (error) throw error;
+      setTransferTarget(null);
+      setTransferTenant(null);
+      fetchAll();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // ── Rent Revision History ─────────────────────────────────────────────────
 
   const openRevisionHistory = async (a: Assignment) => {
@@ -523,6 +588,22 @@ export const TenantsView: React.FC = () => {
                         </td>
                         <td style={{ padding: '10px 16px', fontSize: '0.85rem' }}>
                           {new Date(a.lease_start).toLocaleDateString()} — {a.lease_end ? new Date(a.lease_end).toLocaleDateString() : 'Ongoing'}
+                          {a.previous_assignment_id && (() => {
+                            const prev = assigns.find(x => x.id === a.previous_assignment_id);
+                            return prev ? (
+                              <div style={{ fontSize: '0.72rem', color: '#3b82f6', marginTop: '3px' }}>
+                                ← Continued from {prev.properties?.name || 'previous property'}
+                              </div>
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const next = assigns.find(x => x.previous_assignment_id === a.id);
+                            return next ? (
+                              <div style={{ fontSize: '0.72rem', color: '#f59e0b', marginTop: '3px' }}>
+                                → Transferred to {next.properties?.name || 'new property'} on {new Date(next.lease_start).toLocaleDateString()}
+                              </div>
+                            ) : null;
+                          })()}
                         </td>
                         <td style={{ padding: '10px 16px', fontSize: '0.85rem' }}>
                           Deposit: ₹{Number(a.security_deposit).toLocaleString('en-IN')}
@@ -608,6 +689,14 @@ export const TenantsView: React.FC = () => {
                                 <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRevisionHistory(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <TrendingUp size={14} color="#3b82f6" /> Rent History
                                 </button>
+                                <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); setAgreementSlipTarget({ assignment: a, tenant: t }); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                  <Printer size={14} color="#7c3aed" /> Print Agreement Slip
+                                </button>
+                                {a.status === 'active' && (
+                                  <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openTransferModal(a, t); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                    <ArrowRightLeft size={14} color="#0f766e" /> Transfer to Property
+                                  </button>
+                                )}
                                 {a.status === 'active' && (
                                   <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); setVacateTarget(a); setVacateDate(new Date().toISOString().split('T')[0]); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '6px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                     <X size={14} /> Vacate
@@ -1013,6 +1102,151 @@ export const TenantsView: React.FC = () => {
         </form>
       </Modal>
 
+      {/* Transfer Tenant Modal */}
+      <Modal isOpen={!!transferTarget} onClose={() => !isSubmitting && setTransferTarget(null)} title={`Transfer ${transferTenant?.full_name} to Another Property`}>
+        <form onSubmit={handleTransfer} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, margin: 0, padding: '12px 14px', background: 'var(--bg-main)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+            This ends the lease at <strong style={{ color: 'var(--text-primary)' }}>{transferTarget?.properties?.name}</strong> (Unit {transferTarget?.unit_number}) on the transfer date and starts a new one at the property below. Rent/deposit already paid at {transferTarget?.properties?.name} stays recorded there in the ledger — it does not move.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>New Property *</label>
+            <div style={{ position: 'relative' }}>
+              <CustomSelect
+                value={transferForm.property_id}
+                onChange={(val) => setTransferForm({ ...transferForm, property_id: val })}
+                placeholder="Select property..."
+                searchable={true}
+                options={properties.filter(p => p.id !== transferTarget?.property_id).map(p => ({
+                  value: p.id,
+                  label: `${p.name} (${p.total_units} units)`
+                }))}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                label="New Unit Number *"
+                value={transferForm.unit_number}
+                onChange={e => setTransferForm({ ...transferForm, unit_number: e.target.value })}
+                placeholder="e.g. 4B"
+                required
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                type="date"
+                label="Transfer Date *"
+                value={transferForm.transfer_date}
+                onChange={e => setTransferForm({ ...transferForm, transfer_date: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                type="number"
+                label="Monthly Rent (₹) *"
+                value={transferForm.current_rent}
+                onChange={e => setTransferForm({ ...transferForm, current_rent: e.target.value })}
+                required
+                min="0"
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                type="number"
+                label="Security Deposit (₹)"
+                value={transferForm.security_deposit}
+                onChange={e => setTransferForm({ ...transferForm, security_deposit: e.target.value })}
+                min="0"
+              />
+            </div>
+          </div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', margin: '-12px 0 0' }}>
+            Deposit already paid at the old property stays recorded there — enter the deposit that applies at the new property (leave as-is if it simply carries over).
+          </p>
+          <ModalInput
+            type="date"
+            label="New Lease End"
+            value={transferForm.lease_end}
+            onChange={e => setTransferForm({ ...transferForm, lease_end: e.target.value })}
+          />
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                type="number"
+                step="0.01"
+                label="GST Rate (%)"
+                value={transferForm.gst_rate}
+                onChange={e => setTransferForm({ ...transferForm, gst_rate: e.target.value })}
+                min="0"
+                max="100"
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                type="number"
+                step="0.01"
+                label="TDS Rate (%)"
+                value={transferForm.tds_rate}
+                onChange={e => setTransferForm({ ...transferForm, tds_rate: e.target.value })}
+                min="0"
+                max="100"
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Mode</label>
+            <div style={{ position: 'relative' }}>
+              <CustomSelect
+                value={transferForm.payment_mode}
+                onChange={(val) => setTransferForm({ ...transferForm, payment_mode: val })}
+                options={[
+                  { value: 'prepaid', label: 'Prepaid — Pay at start of month' },
+                  { value: 'postpaid', label: 'Postpaid — Pay at end of month' },
+                ]}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                type="number"
+                label="Due Day of Month"
+                value={transferForm.due_day}
+                min="1"
+                max="28"
+                onChange={e => setTransferForm({ ...transferForm, due_day: e.target.value })}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput
+                type="number"
+                label="Grace Period (days)"
+                value={transferForm.grace_days}
+                min="0"
+                max="30"
+                onChange={e => setTransferForm({ ...transferForm, grace_days: e.target.value })}
+              />
+            </div>
+          </div>
+          <ModalTextarea
+            label="Reason for Transfer"
+            rows={2}
+            value={transferForm.reason}
+            onChange={e => setTransferForm({ ...transferForm, reason: e.target.value })}
+            placeholder="e.g. Tenant requested a larger unit"
+          />
+          <ModalActionButtons
+            onCancel={() => setTransferTarget(null)}
+            submitText="Confirm Transfer"
+            isSubmitting={isSubmitting}
+          />
+        </form>
+      </Modal>
+
       {/* Delete Tenant Confirmation */}
       <Modal isOpen={!!deleteTarget} onClose={() => !isSubmitting && setDeleteTarget(null)} title="Delete Tenant" maxWidth="440px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1041,6 +1275,23 @@ export const TenantsView: React.FC = () => {
           gstRate={paymentLedgerTarget.gstRate}
           tdsRate={paymentLedgerTarget.tdsRate}
           onClose={() => setPaymentLedgerTarget(null)}
+        />
+      )}
+
+      {/* Print Agreement Slip */}
+      {agreementSlipTarget && (
+        <AgreementSlipModal
+          isOpen={true}
+          onClose={() => setAgreementSlipTarget(null)}
+          lessorName={currentProfile?.full_name || 'RentBook Admin'}
+          lessorPhone={currentProfile?.phone_number}
+          lesseeName={agreementSlipTarget.tenant.full_name}
+          lesseePhone={agreementSlipTarget.tenant.phone}
+          propertyLabel={`${agreementSlipTarget.assignment.properties?.name || 'Property'}, Unit ${agreementSlipTarget.assignment.unit_number}`}
+          effectiveDate={agreementSlipTarget.assignment.lease_start}
+          leaseEndDate={agreementSlipTarget.assignment.lease_end}
+          monthlyRent={getEffectiveRentAsOf(agreementSlipTarget.assignment)}
+          securityDeposit={agreementSlipTarget.assignment.security_deposit}
         />
       )}
     </>
