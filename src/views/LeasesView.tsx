@@ -14,6 +14,7 @@ interface AssignmentWithTenant {
   id: string;
   unit_number: string;
   current_rent: number;
+  security_deposit: number;
   tenant_id: string;
   status: string;
   payment_mode: 'prepaid' | 'postpaid' | 'advance_on_entry';
@@ -127,7 +128,7 @@ export const LeasesView: React.FC = () => {
     setIsLoading(true);
     try {
       const [{ data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
-        supabase.from('tenant_assignments').select('id, unit_number, current_rent, tenant_id, status, payment_mode, due_day, grace_days, lease_start, gst_rate, tds_rate, tenants(id, full_name, phone, email), properties(id, name), rent_revisions(previous_rent, new_rent, effective_from)').eq('status', 'active'),
+        supabase.from('tenant_assignments').select('id, unit_number, current_rent, security_deposit, tenant_id, status, payment_mode, due_day, grace_days, lease_start, gst_rate, tds_rate, tenants(id, full_name, phone, email), properties(id, name), rent_revisions(previous_rent, new_rent, effective_from)').eq('status', 'active'),
         supabase.from('payments').select('*').eq('period_month', filterMonth).eq('period_year', filterYear).order('payment_date', { ascending: false }),
       ]);
       if (aErr) throw aErr;
@@ -470,7 +471,12 @@ export const LeasesView: React.FC = () => {
           <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 16px', border: '1.5px solid #e2e8f0', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
             <Upload size={16} color="#0f766e" /> Upload Excel
           </button>
-          <button onClick={() => { setPayForm({ ...payForm, assignment_id: assignments[0]?.id || '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); setPayModal(true); }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 20px', height: '48px', fontWeight: 600, background: '#0f766e', color: '#ffffff', border: 'none', cursor: 'pointer' }}>
+          <button onClick={() => { 
+            const defaultAssign = assignments[0];
+            const defaultAmount = defaultAssign ? getEffectiveRentAsOf(defaultAssign).toString() : '';
+            setPayForm({ ...payForm, assignment_id: defaultAssign?.id || '', amount: defaultAmount, payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); 
+            setPayModal(true); 
+          }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 20px', height: '48px', fontWeight: 600, background: '#0f766e', color: '#ffffff', border: 'none', cursor: 'pointer' }}>
             <Plus size={16} /> Record Payment
           </button>
         </div>
@@ -636,7 +642,18 @@ export const LeasesView: React.FC = () => {
             <div style={{ position: 'relative' }}>
               <CustomSelect
                 value={payForm.assignment_id}
-                onChange={(val) => setPayForm({ ...payForm, assignment_id: val })}
+                onChange={(val) => {
+                  const assignment = assignments.find(a => a.id === val);
+                  let defaultAmount = payForm.amount;
+                  if (assignment) {
+                    if (payForm.payment_type === 'rent') {
+                      defaultAmount = getEffectiveRentAsOf(assignment).toString();
+                    } else if (payForm.payment_type === 'security_deposit') {
+                      defaultAmount = assignment.security_deposit.toString();
+                    }
+                  }
+                  setPayForm({ ...payForm, assignment_id: val, amount: defaultAmount });
+                }}
                 placeholder="Select tenant..."
                 searchable={true}
                 options={assignments.map(a => ({
@@ -699,12 +716,23 @@ export const LeasesView: React.FC = () => {
               <div style={{ position: 'relative' }}>
                 <CustomSelect
                   value={payForm.payment_type}
-                  onChange={(val) => setPayForm({ ...payForm, payment_type: val })}
+                  onChange={(val) => {
+                    const assignment = assignments.find(a => a.id === payForm.assignment_id);
+                    let defaultAmount = payForm.amount;
+                    if (assignment) {
+                      if (val === 'rent') {
+                        defaultAmount = getEffectiveRentAsOf(assignment).toString();
+                      } else if (val === 'security_deposit') {
+                        defaultAmount = assignment.security_deposit.toString();
+                      } else if (val === 'adjustment') {
+                        defaultAmount = '';
+                      }
+                    }
+                    setPayForm({ ...payForm, payment_type: val, amount: defaultAmount });
+                  }}
                   options={[
                     { value: 'rent', label: 'Rent' },
                     { value: 'security_deposit', label: 'Security Deposit' },
-                    { value: 'advance', label: 'Advance' },
-                    { value: 'penalty', label: 'Penalty' },
                     { value: 'adjustment', label: 'Adjustment' }
                   ]}
                   menuPlacement="top"
