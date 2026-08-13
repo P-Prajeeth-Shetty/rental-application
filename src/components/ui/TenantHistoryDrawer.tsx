@@ -44,19 +44,27 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
   assignmentId, tenantName, propertyName, unitNumber, currentRent, backendBalance, gstRate = 18, tdsRate = 10, onClose
 }) => {
   const [payments, setPayments] = useState<HistoryPayment[]>([]);
+  const [revisions, setRevisions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchHistory = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('assignment_id', assignmentId)
-        .order('period_year', { ascending: false })
-        .order('period_month', { ascending: false });
+      const [{ data, error }, { data: revData }] = await Promise.all([
+        supabase
+          .from('payments')
+          .select('*')
+          .eq('assignment_id', assignmentId)
+          .order('period_year', { ascending: false })
+          .order('period_month', { ascending: false }),
+        supabase
+          .from('rent_revisions')
+          .select('*')
+          .eq('assignment_id', assignmentId)
+      ]);
       
       if (!error) setPayments((data as HistoryPayment[]) || []);
+      if (revData) setRevisions(revData);
       setIsLoading(false);
     };
     fetchHistory();
@@ -130,6 +138,11 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
               const isReversed = p.is_reversed;
               const isAdvance = p.payment_type === 'advance';
 
+              const matchedRevision = revisions.find(r => {
+                const revDate = new Date(r.effective_from);
+                return revDate.getFullYear() === p.period_year && (revDate.getMonth() + 1) === p.period_month;
+              });
+
               return (
                 <div key={p.id} className="surface-card" style={{
                   padding: '16px 20px', borderRadius: '14px',
@@ -191,6 +204,12 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
                     {p.payment_type !== 'rent' && (
                       <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontWeight: 500 }}>
                         {p.payment_type.replace('_', ' ')}
+                      </span>
+                    )}
+                    {/* Revision Badge */}
+                    {matchedRevision && (
+                      <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(14,165,233,0.1)', color: '#0ea5e9', fontWeight: 600 }}>
+                        Rent revised to ₹{matchedRevision.new_rent.toLocaleString('en-IN')}
                       </span>
                     )}
                   </div>
