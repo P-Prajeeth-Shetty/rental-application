@@ -66,7 +66,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
   const activePays = payments.filter(p => !p.is_reversed);
   const totalPaid = activePays.reduce((s, p) => s + Number(p.amount), 0);
   const onTimeCount = activePays.filter(p => p.payment_timing === 'on_time' || p.payment_timing === 'early').length;
-  const lateCount = activePays.filter(p => p.payment_timing === 'late').length;
+  const depositPaid = activePays.filter(p => p.payment_type === 'security_deposit').reduce((s, p) => s + Number(p.amount), 0);
 
   const runningBalance = backendBalance; // positive = owes money, negative = credit
 
@@ -93,8 +93,8 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
         {[
           { label: 'Total Paid', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: '#10b981', icon: <IndianRupee size={14} /> },
           { label: 'Payments Made', value: String(activePays.length), color: 'var(--text-primary)', icon: <Calendar size={14} /> },
+          { label: 'Deposit Paid', value: `₹${depositPaid.toLocaleString('en-IN')}`, color: '#8b5cf6', icon: <IndianRupee size={14} /> },
           { label: 'On Time / Early', value: String(onTimeCount), color: '#3b82f6', icon: <Clock size={14} /> },
-          { label: 'Late', value: String(lateCount), color: lateCount > 0 ? '#ef4444' : 'var(--text-secondary)', icon: <Clock size={14} /> },
           { label: 'Balance', value: creditLabel.text, color: creditLabel.color, icon: runningBalance <= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} /> },
         ].map(s => (
           <div key={s.label} className="surface-card" style={{ 
