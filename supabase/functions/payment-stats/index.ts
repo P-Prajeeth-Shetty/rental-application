@@ -93,10 +93,14 @@ function getExpectedRentForMonth(
     let applicableRent = assignment.current_rent;
 
     if (revisions && revisions.length > 0) {
+      const currentStr = [
+        currentDate.getFullYear(),
+        String(currentDate.getMonth() + 1).padStart(2, '0'),
+        String(currentDate.getDate()).padStart(2, '0')
+      ].join('-');
+
       const rev = revisions.find(r => {
-        const revDate = new Date(r.effective_from);
-        revDate.setHours(0,0,0,0);
-        return revDate <= currentDate;
+        return r.effective_from.split('T')[0] <= currentStr;
       });
       if (rev) {
         applicableRent = rev.new_rent;

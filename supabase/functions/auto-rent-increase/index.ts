@@ -68,28 +68,29 @@ serve(async (req) => {
       const revs = revisionsMap.get(a.id) || [];
       
       let baseDateStr = a.lease_start;
+      let currentRentSim = a.current_rent;
+      
       if (revs.length > 0) {
         baseDateStr = revs[0].effective_from;
-      }
-
-      let currentRentSim = a.current_rent;
-      if (revs.length > 0) {
         currentRentSim = revs[0].new_rent;
       }
 
       let baseDate = new Date(baseDateStr);
       baseDate.setHours(0, 0, 0, 0);
 
-      // Project up to 5 years (or 5 increments) into the future
-      for (let i = 0; i < 5; i++) {
+      // Project into the future, up to 2 years from today
+      const maxFutureDate = new Date(now);
+      maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 2);
+
+      while (baseDate < maxFutureDate) {
         const nextIncreaseDate = new Date(baseDate);
         nextIncreaseDate.setMonth(nextIncreaseDate.getMonth() + 10);
+        
+        const nextStr = nextIncreaseDate.toISOString().split('T')[0];
 
         // Prevent duplicate increase for this exact date
         const alreadyIncreased = revs.some(r => {
-          const revDate = new Date(r.effective_from);
-          revDate.setHours(0, 0, 0, 0);
-          return revDate.getTime() === nextIncreaseDate.getTime();
+          return r.effective_from.split('T')[0] === nextStr;
         });
 
         if (!alreadyIncreased) {
@@ -100,7 +101,7 @@ serve(async (req) => {
             previous_rent: currentRentSim,
             new_rent: newRent,
             increase_pct: 5,
-            effective_from: nextIncreaseDate.toISOString().split('T')[0]
+            effective_from: nextStr
           });
 
           // If the increase is today or in the past, update the current_rent on assignment
@@ -113,6 +114,9 @@ serve(async (req) => {
 
           currentRentSim = newRent; // Cascade for next iteration
           revs.push({ effective_from: nextIncreaseDate.toISOString(), new_rent: newRent });
+        } else {
+          // Cascade even if already exists so subsequent iterations are correct
+          currentRentSim = Math.round((currentRentSim * 1.05) * 100) / 100;
         }
         
         baseDate = new Date(nextIncreaseDate); // Next increase starts from this new date
