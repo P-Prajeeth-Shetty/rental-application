@@ -84,7 +84,7 @@ serve(async (req) => {
 
       while (baseDate < maxFutureDate) {
         const nextIncreaseDate = new Date(baseDate);
-        nextIncreaseDate.setMonth(nextIncreaseDate.getMonth() + 10);
+        nextIncreaseDate.setMonth(nextIncreaseDate.getMonth() + 11);
         
         const nextStr = nextIncreaseDate.toISOString().split('T')[0];
 

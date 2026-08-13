@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Clock, Calendar, IndianRupee } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, IndianRupee } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { timingBadge } from '../../lib/paymentUtils';
 import type { PaymentTiming } from '../../lib/paymentUtils';
@@ -73,10 +73,11 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
   // ── Stats ─────────────────────────────────────────────────────────────────
   const activePays = payments.filter(p => !p.is_reversed);
   const totalPaid = activePays.reduce((s, p) => s + Number(p.amount), 0);
-  const onTimeCount = activePays.filter(p => p.payment_timing === 'on_time' || p.payment_timing === 'early').length;
   const depositPaid = activePays.filter(p => p.payment_type === 'security_deposit').reduce((s, p) => s + Number(p.amount), 0);
 
   const runningBalance = backendBalance; // positive = owes money, negative = credit
+  // Excess paid beyond what's currently due — money sitting in the tenant's favor
+  const advanceAmountPaid = runningBalance < 0 ? Math.abs(runningBalance) : 0;
 
   const creditLabel = runningBalance < 0
     ? { text: `+₹${Math.abs(runningBalance).toLocaleString('en-IN')} credit`, color: '#10b981' }
@@ -102,7 +103,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
           { label: 'Total Paid', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: '#10b981', icon: <IndianRupee size={14} /> },
           { label: 'Payments Made', value: String(activePays.length), color: 'var(--text-primary)', icon: <Calendar size={14} /> },
           { label: 'Deposit Paid', value: `₹${depositPaid.toLocaleString('en-IN')}`, color: '#8b5cf6', icon: <IndianRupee size={14} /> },
-          { label: 'On Time / Early', value: String(onTimeCount), color: '#3b82f6', icon: <Clock size={14} /> },
+          { label: 'Advance Amount Paid', value: `₹${advanceAmountPaid.toLocaleString('en-IN')}`, color: '#3b82f6', icon: <IndianRupee size={14} /> },
           { label: 'Balance', value: creditLabel.text, color: creditLabel.color, icon: runningBalance <= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} /> },
         ].map(s => (
           <div key={s.label} className="surface-card" style={{ 

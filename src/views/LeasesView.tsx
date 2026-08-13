@@ -7,7 +7,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { Modal, ModalInput, ModalActionButtons } from '../components/ui/Modal';
 
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
-import { timingBadge } from '../lib/paymentUtils';
+import { timingBadge, rentBadge } from '../lib/paymentUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
 
 interface AssignmentWithTenant {
@@ -25,7 +25,7 @@ interface AssignmentWithTenant {
   tds_rate: number;
   tenants: { id: string; full_name: string; phone: string | null; email: string | null } | null;
   properties: { id: string; name: string } | null;
-  rent_revisions?: { previous_rent: number; new_rent: number; effective_from: string }[];
+  rent_revisions?: { previous_rent: number; new_rent: number; increase_pct: number | null; effective_from: string }[];
 }
 
 function getEffectiveRentAsOf(assignment: AssignmentWithTenant, date: Date = new Date()) {
@@ -128,7 +128,7 @@ export const LeasesView: React.FC = () => {
     setIsLoading(true);
     try {
       const [{ data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
-        supabase.from('tenant_assignments').select('id, unit_number, current_rent, security_deposit, tenant_id, status, payment_mode, due_day, grace_days, lease_start, gst_rate, tds_rate, tenants(id, full_name, phone, email), properties(id, name), rent_revisions(previous_rent, new_rent, effective_from)').eq('status', 'active'),
+        supabase.from('tenant_assignments').select('id, unit_number, current_rent, security_deposit, tenant_id, status, payment_mode, due_day, grace_days, lease_start, gst_rate, tds_rate, tenants(id, full_name, phone, email), properties(id, name), rent_revisions(previous_rent, new_rent, increase_pct, effective_from)').eq('status', 'active'),
         supabase.from('payments').select('*').eq('period_month', filterMonth).eq('period_year', filterYear).order('payment_date', { ascending: false }),
       ]);
       if (aErr) throw aErr;
@@ -377,7 +377,8 @@ export const LeasesView: React.FC = () => {
   }, 0);
   
   const totalCollected = payments.filter(p => {
-    // Only count payments for assignments that match the filter
+    // Only count rent-ledger payments (not deposits/adjustments/etc.) for assignments matching the filter
+    if (p.payment_type && p.payment_type !== 'rent' && p.payment_type !== 'historical_settlement') return false;
     const assign = assignments.find(a => a.id === p.assignment_id);
     return !filterPropertyId || assign?.properties?.id === filterPropertyId;
   }).reduce((s, p) => s + Number(p.amount), 0);
@@ -522,7 +523,17 @@ export const LeasesView: React.FC = () => {
                     <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '0.88rem' }}>{a.properties?.name} — {a.unit_number}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <div>
-                        <div>₹{expected.toLocaleString('en-IN')}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          ₹{expected.toLocaleString('en-IN')}
+                          {(() => {
+                            const badge = rentBadge(a.rent_revisions, filterPeriodDate);
+                            return (
+                              <span style={{ fontSize: '0.68rem', padding: '2px 6px', borderRadius: '2px', fontWeight: 600, background: badge.bg, color: badge.color, whiteSpace: 'nowrap' }}>
+                                {badge.label}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         {(() => {
                           const gstRate = Number(a.gst_rate ?? 18);
                           const tdsRate = Number(a.tds_rate ?? 10);
@@ -652,6 +663,8 @@ export const LeasesView: React.FC = () => {
                       const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
                       const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
                       defaultAmount = depositLeft.toString();
+                    } else if (payForm.payment_type === 'historical_settlement') {
+                      defaultAmount = Math.max(0, paymentStatusMap[assignment.id]?.balance || 0).toString();
                     }
                   }
                   setPayForm({ ...payForm, assignment_id: val, amount: defaultAmount });
@@ -729,6 +742,8 @@ export const LeasesView: React.FC = () => {
                         const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
                         const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
                         defaultAmount = depositLeft.toString();
+                      } else if (val === 'historical_settlement') {
+                        defaultAmount = Math.max(0, paymentStatusMap[assignment.id]?.balance || 0).toString();
                       } else if (val === 'adjustment') {
                         defaultAmount = '';
                       }
@@ -738,16 +753,22 @@ export const LeasesView: React.FC = () => {
                   options={[
                     { value: 'rent', label: 'Rent' },
                     { value: 'security_deposit', label: 'Security Deposit' },
+                    { value: 'historical_settlement', label: 'Historical Offline Payment' },
                     { value: 'adjustment', label: 'Adjustment' }
                   ]}
                   menuPlacement="top"
                 />
               </div>
+              {payForm.payment_type === 'historical_settlement' && (
+                <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                  Clears pre-app rent owed for this tenant in one bulk entry, bringing their outstanding balance to ₹0 so tracking starts clean from today.
+                </p>
+              )}
             </div>
             <div style={{ flex: 1 }}>
-              <ModalInput 
-                type="text" 
-                label="Notes (Optional)" 
+              <ModalInput
+                type="text"
+                label="Notes (Optional)"
                 value={payForm.notes} 
                 onChange={e => setPayForm({ ...payForm, notes: e.target.value })} 
                 placeholder="Enter notes..." 

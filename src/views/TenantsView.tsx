@@ -6,6 +6,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { AgreementSlipModal } from '../components/agreement/AgreementSlipModal';
 import { useCurrentProfile } from '../hooks/useCurrentProfile';
+import { rentBadge } from '../lib/paymentUtils';
 
 import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
 interface Tenant {
@@ -38,7 +39,7 @@ interface Assignment {
   transfer_reason?: string | null;
   properties: { id: string; name: string } | null;
   payments?: { amount: number; is_reversed: boolean }[];
-  rent_revisions?: { previous_rent: number; new_rent: number; effective_from: string }[];
+  rent_revisions?: { previous_rent: number; new_rent: number; increase_pct: number | null; effective_from: string }[];
 }
 
 function getEffectiveRentAsOf(assignment: Assignment, date: Date = new Date()) {
@@ -142,7 +143,7 @@ export const TenantsView: React.FC = () => {
     try {
       const [{ data: tData, error: tErr }, { data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
         supabase.from('tenants').select('*').order('created_at', { ascending: false }),
-        supabase.from('tenant_assignments').select('*, properties(id, name), payments(amount, is_reversed), rent_revisions(previous_rent, new_rent, effective_from)').order('created_at', { ascending: false }),
+        supabase.from('tenant_assignments').select('*, properties(id, name), payments(amount, is_reversed), rent_revisions(previous_rent, new_rent, increase_pct, effective_from)').order('created_at', { ascending: false }),
         supabase.from('properties').select('id, name, total_units'),
       ]);
       if (tErr) throw tErr;
@@ -700,7 +701,17 @@ export const TenantsView: React.FC = () => {
                           Deposit: ₹{Number(a.security_deposit).toLocaleString('en-IN')}
                         </td>
                         <td style={{ padding: '10px 16px', fontWeight: 500, fontSize: '0.85rem' }}>
-                          <div>₹{Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            ₹{Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')}
+                            {(() => {
+                              const badge = rentBadge(a.rent_revisions);
+                              return (
+                                <span style={{ fontSize: '0.68rem', padding: '2px 6px', borderRadius: '2px', fontWeight: 600, background: badge.bg, color: badge.color, whiteSpace: 'nowrap' }}>
+                                  {badge.label}
+                                </span>
+                              );
+                            })()}
+                          </div>
                           <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '2px' }}>
                             Paid: ₹{a.payments ? a.payments.filter(p => !p.is_reversed).reduce((s, p) => s + Number(p.amount), 0).toLocaleString('en-IN') : 0}
                           </div>

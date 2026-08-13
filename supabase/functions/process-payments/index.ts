@@ -183,8 +183,9 @@ serve(async (req) => {
       if (isNaN(remainingAmount) || remainingAmount <= 0) continue;
 
       const existingPays = existingPayments.filter(ep => ep.assignment_id === assignment.id);
-      
-      if (p.payment_type && p.payment_type !== 'rent') {
+      const isHistoricalSettlement = p.payment_type === 'historical_settlement';
+
+      if (p.payment_type && p.payment_type !== 'rent' && !isHistoricalSettlement) {
         const pDate = new Date(p.payment_date);
         allPayloads.push({
           assignment_id: p.assignment_id,
@@ -255,7 +256,11 @@ serve(async (req) => {
           currentMonth, currentYear, isFirstPayment
         );
 
-        const { timing, daysLate } = classifyTiming(p.payment_date, dueDate, assignment.grace_days || 5);
+        // Historical settlement entries are a one-time catch-up for pre-app rent —
+        // they shouldn't be flagged "late" against a due date that predates the app.
+        const { timing, daysLate } = isHistoricalSettlement
+          ? { timing: 'on_time' as const, daysLate: 0 }
+          : classifyTiming(p.payment_date, dueDate, assignment.grace_days || 5);
 
         const newTotalPaidForMonth = totalPaidSoFarForMonth + roundedAmountToApply;
         const creditAmount = computeCredit(newTotalPaidForMonth, expectedAmountForMonth);
@@ -271,7 +276,7 @@ serve(async (req) => {
           reference_number: p.reference_number || null,
           notes: p.notes || null,
           status: status,
-          payment_type: isFirstPayment ? (p.payment_type || 'rent') : 'rent', // or advance if future? Keep simple
+          payment_type: isHistoricalSettlement ? 'historical_settlement' : (isFirstPayment ? (p.payment_type || 'rent') : 'rent'),
           payment_timing: timing,
           days_late: daysLate,
           credit_amount: creditAmount,

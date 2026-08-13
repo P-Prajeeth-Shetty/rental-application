@@ -33,3 +33,26 @@ export function timingBadge(timing: PaymentTiming, daysLate: number) {
       return { label: '—', color: 'var(--text-secondary)', bg: 'transparent' };
   }
 }
+
+export interface RentRevisionLike {
+  new_rent: number;
+  increase_pct: number | null;
+  effective_from: string;
+}
+
+/**
+ * Explains why the current rent is what it is: an escalation that has
+ * kicked in, or still the original base rent.
+ */
+export function rentBadge(revisions: RentRevisionLike[] | undefined, asOf: Date = new Date()) {
+  const asOfStr = asOf.toISOString().split('T')[0];
+  const applicable = (revisions || [])
+    .filter(r => r.effective_from.split('T')[0] <= asOfStr)
+    .sort((a, b) => b.effective_from.localeCompare(a.effective_from));
+
+  if (applicable.length === 0) {
+    return { label: 'Base Rent', color: 'var(--text-secondary)', bg: 'rgba(148,163,184,0.12)' };
+  }
+  const pct = applicable[0].increase_pct ?? 5;
+  return { label: `Escalated +${pct}%`, color: '#0ea5e9', bg: 'rgba(14,165,233,0.12)' };
+}

@@ -172,8 +172,8 @@ async function handleDashboard(supabase: any) {
     revisionsMap.get(r.assignment_id).push(r);
   });
 
-  // Valid (non-reversed) rent payments
-  const validPayments = (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent'));
+  // Valid (non-reversed) rent-ledger payments (includes historical catch-up settlements)
+  const validPayments = (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent' || p.payment_type === 'historical_settlement'));
 
   // Per-assignment totals
   const paidPerAssignment: Record<string, number> = {};
@@ -313,14 +313,14 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
 
   // Sum payments per assignment for THIS period
   const paidPerAssignment: Record<string, number> = {};
-  (payments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent')).forEach((p: any) => {
+  (payments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent' || p.payment_type === 'historical_settlement')).forEach((p: any) => {
     paidPerAssignment[p.assignment_id] = (paidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
   });
 
   // Sum ALL payments per assignment for CUMULATIVE balance
   const totalPaidPerAssignment: Record<string, number> = {};
   const paymentCountPerAssignment: Record<string, number> = {};
-  (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent')).forEach((p: any) => {
+  (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent' || p.payment_type === 'historical_settlement')).forEach((p: any) => {
     totalPaidPerAssignment[p.assignment_id] = (totalPaidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
     paymentCountPerAssignment[p.assignment_id] = (paymentCountPerAssignment[p.assignment_id] || 0) + 1;
   });
