@@ -13,20 +13,47 @@ export const SideWidgets: React.FC<SideWidgetsProps> = ({ onNavigate }) => {
   const [collectionRate, setCollectionRate] = useState(0);
   const [collected, setCollected] = useState(0);
   const [pending, setPending] = useState(0);
+  const [occupancyByType, setOccupancyByType] = useState<Record<string, { total: number, occupied: number }>>({});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('payment-stats', {
-          body: { action: 'dashboard' },
-        });
-        if (error) throw error;
-        if (data) {
-          setOccupancyPct(data.occupancyPct || 0);
-          setCollectionRate(data.collectionRate || 0);
-          setCollected(data.collected || 0);
-          setPending(data.pending || 0);
+        const [{ data: paymentData, error: paymentError }, { data: properties }, { data: assignments }] = await Promise.all([
+          supabase.functions.invoke('payment-stats', {
+            body: { action: 'dashboard' },
+          }),
+          supabase.from('properties').select('id, total_units, property_type'),
+          supabase.from('tenant_assignments').select('id, status, property_id, properties(property_type)').eq('status', 'active')
+        ]);
+        
+        if (paymentError) throw paymentError;
+        if (paymentData) {
+          setOccupancyPct(paymentData.occupancyPct || 0);
+          setCollectionRate(paymentData.collectionRate || 0);
+          setCollected(paymentData.collected || 0);
+          setPending(paymentData.pending || 0);
         }
+
+        const statsByType: Record<string, { total: number, occupied: number }> = {
+          Residential: { total: 0, occupied: 0 },
+          Commercial: { total: 0, occupied: 0 },
+          Mixed: { total: 0, occupied: 0 }
+        };
+
+        (properties || []).forEach(p => {
+          const type = p.property_type || 'Residential';
+          if (!statsByType[type]) statsByType[type] = { total: 0, occupied: 0 };
+          statsByType[type].total += (p.total_units || 0);
+        });
+
+        (assignments || []).forEach(a => {
+          const type = a.properties?.property_type || 'Residential';
+          if (statsByType[type]) {
+            statsByType[type].occupied += 1;
+          }
+        });
+
+        setOccupancyByType(statsByType);
       } catch (err) {
         console.error('SideWidgets error:', err);
       }
@@ -39,7 +66,7 @@ export const SideWidgets: React.FC<SideWidgetsProps> = ({ onNavigate }) => {
   const gaugeData = Array.from({ length: segCount }).map((_, i) => ({
     name: `segment-${i}`,
     value: 1,
-    fill: i < filledSegs ? '#dea389' : 'rgba(255, 255, 255, 0.8)'
+    fill: i < filledSegs ? '#0f766e' : 'rgba(255, 255, 255, 0.8)'
   }));
 
   return (
@@ -89,14 +116,29 @@ export const SideWidgets: React.FC<SideWidgetsProps> = ({ onNavigate }) => {
             <ArrowUpRight size={18} />
           </button>
         </div>
-        <p className="widget-subtitle">Current Month</p>
+        <p className="widget-subtitle">Real-time property breakdown</p>
         
-        <div className="progress-bar-container">
-          <div className="progress-bar-fill" style={{ width: `${occupancyPct}%` }}></div>
+        <div className="occupancy-breakdown" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {['Residential', 'Commercial', 'Mixed'].map(type => {
+            const stats = occupancyByType[type] || { total: 0, occupied: 0 };
+            const pct = stats.total > 0 ? Math.round((stats.occupied / stats.total) * 100) : 0;
+            const barColor = type === 'Commercial' ? '#3b82f6' : type === 'Mixed' ? '#8b5cf6' : '#0f766e';
+            return (
+              <div key={type}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{type}</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>{pct}% ({stats.occupied}/{stats.total})</span>
+                </div>
+                <div className="progress-bar-container" style={{ height: '6px', background: 'rgba(0,0,0,0.05)' }}>
+                  <div className="progress-bar-fill" style={{ width: `${pct}%`, background: barColor, height: '100%', borderRadius: '4px' }}></div>
+                </div>
+              </div>
+            );
+          })}
         </div>
         
-        <div className="widget-details">
-          <h4>{occupancyPct}% Occupied</h4>
+        <div className="widget-details" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+          <h4 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{occupancyPct}% Overall</h4>
           <p>Based on active tenant assignments</p>
         </div>
       </div>

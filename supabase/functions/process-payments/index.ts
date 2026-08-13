@@ -17,17 +17,8 @@ function computeDueDate(
   periodYear: number,
   isFirstPayment: boolean
 ): Date {
-  if (paymentMode === 'advance_on_entry' && isFirstPayment) {
-    return new Date(leaseStart);
-  }
-  if (paymentMode === 'postpaid') {
-    let m = periodMonth + 1;
-    let y = periodYear;
-    if (m > 12) { m = 1; y += 1; }
-    return new Date(y, m - 1, dueDay);
-  }
-  // prepaid or advance_on_entry (month 2+)
-  return new Date(periodYear, periodMonth - 1, dueDay);
+  // All rent is always due on the 1st of the month
+  return new Date(periodYear, periodMonth - 1, 1);
 }
 
 function classifyTiming(
@@ -60,28 +51,57 @@ function getExpectedRentForMonth(
   year: number,
   revisions: any[]
 ): number {
-  let baseRent: number;
-  if (!revisions || revisions.length === 0) {
-    baseRent = assignment.current_rent;
-  } else {
-    const periodDate = new Date(year, month - 1, assignment.due_day || 1);
-    baseRent = assignment.current_rent; // fallback
-    for (const rev of revisions) {
-      const effectiveDate = new Date(rev.effective_from);
-      if (periodDate >= effectiveDate) {
-        baseRent = rev.new_rent;
-        break;
-      }
-    }
-    if (baseRent === assignment.current_rent && revisions.length > 0) {
-      const earliestRev = revisions[revisions.length - 1];
-      const periodDate2 = new Date(year, month - 1, assignment.due_day || 1);
-      if (periodDate2 < new Date(earliestRev.effective_from)) {
-        baseRent = earliestRev.previous_rent;
-      }
+  let periodStart = new Date(year, month - 1, 1);
+  let periodEnd = new Date(year, month, 0); // last day of month
+
+  const leaseStart = new Date(assignment.lease_start);
+  
+  periodStart.setHours(0,0,0,0);
+  periodEnd.setHours(0,0,0,0);
+  leaseStart.setHours(0,0,0,0);
+
+  // If lease hasn't started yet in this month
+  if (periodStart < leaseStart) {
+    if (periodEnd < leaseStart) return 0;
+    periodStart = leaseStart;
+  }
+
+  // If lease has ended in this month
+  if (assignment.lease_end) {
+    const leaseEnd = new Date(assignment.lease_end);
+    leaseEnd.setHours(0,0,0,0);
+    if (periodEnd > leaseEnd) {
+      if (periodStart > leaseEnd) return 0;
+      periodEnd = leaseEnd;
     }
   }
-  return baseRent;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  let totalRent = 0;
+
+  for (let d = periodStart.getDate(); d <= periodEnd.getDate(); d++) {
+    const currentDate = new Date(year, month - 1, d);
+    currentDate.setHours(0,0,0,0);
+
+    let applicableRent = assignment.current_rent;
+
+    if (revisions && revisions.length > 0) {
+      const rev = revisions.find(r => {
+        const revDate = new Date(r.effective_from);
+        revDate.setHours(0,0,0,0);
+        return revDate <= currentDate;
+      });
+      if (rev) {
+        applicableRent = rev.new_rent;
+      } else {
+        applicableRent = revisions[revisions.length - 1].previous_rent;
+      }
+    }
+
+    totalRent += (applicableRent / daysInMonth);
+  }
+
+  return Math.round(totalRent * 100) / 100;
 }
 
 function computeNetPayable(

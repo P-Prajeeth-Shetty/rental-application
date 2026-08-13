@@ -199,7 +199,7 @@ export const CalendarWidget: React.FC = () => {
               <div key={i} style={{ 
                 width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
                 borderRadius: '2px', fontSize: '1rem',
-                background: isToday ? '#dea389' : 'transparent',
+                background: isToday ? '#0f766e' : 'transparent',
                 color: isToday ? 'white' : 'var(--text-primary)',
                 fontWeight: isToday ? 600 : 500
               }}>
@@ -216,7 +216,7 @@ export const CalendarWidget: React.FC = () => {
               <div key={i} style={{ 
                 width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
                 borderRadius: '2px', fontSize: '0.85rem',
-                background: isToday ? '#dea389' : 'transparent',
+                background: isToday ? '#0f766e' : 'transparent',
                 color: isToday ? 'white' : (date ? 'var(--text-primary)' : 'transparent'),
                 fontWeight: isToday ? 600 : 500,
                 cursor: date ? 'pointer' : 'default'
@@ -260,7 +260,7 @@ export const CalendarWidget: React.FC = () => {
                 {reminderView === 'list' && (
                   <button 
                     onClick={() => { setEditingReminder(null); setReminderView('form'); }} 
-                    style={{ background: '#dea389', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(222, 163, 137, 0.4)' }}
+                    style={{ background: '#0f766e', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15, 118, 110, 0.4)' }}
                   >
                     <Plus size={18} />
                   </button>
@@ -360,7 +360,7 @@ export const CalendarWidget: React.FC = () => {
                 </div>
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px' }}>
                   <button type="button" onClick={() => setReminderView('list')} style={{ padding: '8px 16px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Cancel</button>
-                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '2px', border: 'none', background: '#dea389', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Reminder</button>
+                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '2px', border: 'none', background: '#0f766e', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Reminder</button>
                 </div>
               </form>
             )}
@@ -419,7 +419,7 @@ export const CalendarWidget: React.FC = () => {
                 {notebookView === 'list' && (
                   <button 
                     onClick={() => { setEditingNotebook(null); setNotebookView('form'); }} 
-                    style={{ background: '#dea389', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(222, 163, 137, 0.4)' }}
+                    style={{ background: '#0f766e', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(15, 118, 110, 0.4)' }}
                   >
                     <Plus size={18} />
                   </button>
@@ -505,7 +505,7 @@ export const CalendarWidget: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px' }}>
                   <button type="button" onClick={() => setNotebookView('list')} style={{ padding: '8px 16px', borderRadius: '2px', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Cancel</button>
-                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '2px', border: 'none', background: '#dea389', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Note</button>
+                  <button type="submit" style={{ padding: '8px 20px', borderRadius: '2px', border: 'none', background: '#0f766e', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Save Note</button>
                 </div>
               </form>
             )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, ArrowRightLeft, Printer } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, ArrowRightLeft, Printer, CornerDownRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
@@ -524,7 +524,7 @@ export const TenantsView: React.FC = () => {
                 const isExpanded = expandedTenant === t.id;
                 return (
                   <React.Fragment key={t.id}>
-                    <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: assigns.length > 0 ? 'pointer' : undefined }} onClick={() => assigns.length > 0 && setExpandedTenant(isExpanded ? null : t.id)}>
+                    <tr style={{ borderBottom: isExpanded ? 'none' : '1px solid rgba(0,0,0,0.05)', backgroundColor: isExpanded ? 'rgba(15,118,110,0.03)' : 'transparent', cursor: assigns.length > 0 ? 'pointer' : undefined }} onClick={() => assigns.length > 0 && setExpandedTenant(isExpanded ? null : t.id)}>
                       <td style={{ padding: '14px 8px 14px 16px' }}>
                         {assigns.length > 0 && (isExpanded ? <ChevronUp size={14} color="var(--text-secondary)" /> : <ChevronDown size={14} color="var(--text-secondary)" />)}
                       </td>
@@ -577,9 +577,11 @@ export const TenantsView: React.FC = () => {
                       </td>
                     </tr>
                     {/* Expanded: all assignments + rent actions */}
-                    {isExpanded && assigns.map(a => (
-                      <tr key={a.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td></td>
+                    {isExpanded && assigns.map((a, idx) => (
+                      <tr key={a.id} style={{ backgroundColor: 'rgba(15,118,110,0.03)', borderBottom: idx === assigns.length - 1 ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(15,118,110,0.05)' }}>
+                        <td style={{ padding: '10px 8px 10px 24px', textAlign: 'center', verticalAlign: 'middle' }}>
+                          <CornerDownRight size={14} color="var(--text-secondary)" style={{ opacity: 0.5 }} />
+                        </td>
                         <td style={{ padding: '10px 16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                           {a.properties?.name} — Unit {a.unit_number}
                         </td>

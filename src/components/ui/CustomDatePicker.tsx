@@ -189,9 +189,9 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ name, defaul
           </div>
           <button type="button" onClick={handleApply} style={{
             width: '100%', padding: '10px', borderRadius: '2px', border: 'none',
-            background: '#dea389', color: 'white', fontWeight: 600, fontSize: '0.9rem',
+            background: '#0f766e', color: 'white', fontWeight: 600, fontSize: '0.9rem',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-            boxShadow: '0 4px 12px rgba(222, 163, 137, 0.3)'
+            boxShadow: '0 4px 12px rgba(15, 118, 110, 0.3)'
           }}>
             <Check size={18} /> Apply Date & Time
           </button>

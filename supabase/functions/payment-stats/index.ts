@@ -18,17 +18,8 @@ function computeDueDate(
   periodYear: number,
   isFirstPayment: boolean
 ): Date {
-  if (paymentMode === 'advance_on_entry' && isFirstPayment) {
-    return new Date(leaseStart);
-  }
-  if (paymentMode === 'postpaid') {
-    let m = periodMonth + 1;
-    let y = periodYear;
-    if (m > 12) { m = 1; y += 1; }
-    return new Date(y, m - 1, dueDay);
-  }
-  // prepaid or advance_on_entry (month 2+)
-  return new Date(periodYear, periodMonth - 1, dueDay);
+  // All rent is always due on the 1st of the month
+  return new Date(periodYear, periodMonth - 1, 1);
 }
 
 // ── Get expected months from lease_start to refMonth/refYear ────────────
@@ -67,18 +58,57 @@ function getExpectedRentForMonth(
   year: number,
   revisions: any[]
 ): number {
-  if (!revisions || revisions.length === 0) {
-    return assignment.current_rent;
+  let periodStart = new Date(year, month - 1, 1);
+  let periodEnd = new Date(year, month, 0); // last day of month
+
+  const leaseStart = new Date(assignment.lease_start);
+  
+  periodStart.setHours(0,0,0,0);
+  periodEnd.setHours(0,0,0,0);
+  leaseStart.setHours(0,0,0,0);
+
+  // If lease hasn't started yet in this month
+  if (periodStart < leaseStart) {
+    if (periodEnd < leaseStart) return 0;
+    periodStart = leaseStart;
   }
-  const periodDate = new Date(year, month - 1, assignment.due_day || 1);
-  for (const rev of revisions) {
-    const effectiveDate = new Date(rev.effective_from);
-    if (periodDate >= effectiveDate) {
-      return rev.new_rent;
+
+  // If lease has ended in this month
+  if (assignment.lease_end) {
+    const leaseEnd = new Date(assignment.lease_end);
+    leaseEnd.setHours(0,0,0,0);
+    if (periodEnd > leaseEnd) {
+      if (periodStart > leaseEnd) return 0;
+      periodEnd = leaseEnd;
     }
   }
-  const earliestRev = revisions[revisions.length - 1];
-  return earliestRev.previous_rent;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  let totalRent = 0;
+
+  for (let d = periodStart.getDate(); d <= periodEnd.getDate(); d++) {
+    const currentDate = new Date(year, month - 1, d);
+    currentDate.setHours(0,0,0,0);
+
+    let applicableRent = assignment.current_rent;
+
+    if (revisions && revisions.length > 0) {
+      const rev = revisions.find(r => {
+        const revDate = new Date(r.effective_from);
+        revDate.setHours(0,0,0,0);
+        return revDate <= currentDate;
+      });
+      if (rev) {
+        applicableRent = rev.new_rent;
+      } else {
+        applicableRent = revisions[revisions.length - 1].previous_rent;
+      }
+    }
+
+    totalRent += (applicableRent / daysInMonth);
+  }
+
+  return Math.round(totalRent * 100) / 100;
 }
 
 function computeNetPayable(
@@ -105,9 +135,9 @@ async function handleDashboard(supabase: any) {
     { data: allPayments },
     { data: revisionsData }
   ] = await Promise.all([
-    supabase.from('properties').select('total_units'),
+    supabase.from('properties').select('total_units, property_type'),
     supabase.from('tenant_assignments')
-      .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, gst_rate, tds_rate, tenant_id, unit_number, tenants(full_name), properties(name), status')
+      .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, gst_rate, tds_rate, tenant_id, unit_number, tenants(full_name), properties(name, property_type), status')
       .in('status', ['active', 'vacated']),
     supabase.from('payments').select('assignment_id, amount, period_month, period_year, is_reversed'),
     supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
@@ -115,6 +145,20 @@ async function handleDashboard(supabase: any) {
 
   const totalUnits = (properties || []).reduce((s: number, p: any) => s + (p.total_units || 0), 0);
   const occupiedUnits = (assignments || []).filter((a: any) => a.status === 'active').length;
+
+  const occupancyByType: Record<string, { total: number, occupied: number }> = {};
+  (properties || []).forEach((p: any) => {
+    const type = p.property_type || 'Residential';
+    if (!occupancyByType[type]) occupancyByType[type] = { total: 0, occupied: 0 };
+    occupancyByType[type].total += (p.total_units || 0);
+  });
+
+  (assignments || []).filter((a: any) => a.status === 'active').forEach((a: any) => {
+    const type = a.properties?.property_type || 'Residential';
+    if (occupancyByType[type]) {
+      occupancyByType[type].occupied += 1;
+    }
+  });
 
   const revisionsMap = new Map();
   (revisionsData || []).forEach((r: any) => {
@@ -227,6 +271,7 @@ async function handleDashboard(supabase: any) {
     totalTenants: occupiedUnits,
     // Side widgets data
     occupancyPct,
+    occupancyByType,
     collectionRate,
     collected: currentMonthPaid, // Show current month collected on the widget
     pending: pendingRent, // Keep pending as cumulative total
