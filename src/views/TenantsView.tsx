@@ -291,6 +291,9 @@ export const TenantsView: React.FC = () => {
         if (error) throw error;
       }
       
+      // Trigger automated projections for the new assignment
+      await supabase.functions.invoke('auto-rent-increase');
+      
       setAssignModal(null);
       fetchAll();
     } catch (err: any) {
@@ -403,6 +406,10 @@ export const TenantsView: React.FC = () => {
         p_reason: transferForm.reason || null,
       });
       if (error) throw error;
+      
+      // Trigger automated projections for the transferred assignment
+      await supabase.functions.invoke('auto-rent-increase');
+      
       setTransferTarget(null);
       setTransferTenant(null);
       fetchAll();
