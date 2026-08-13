@@ -105,7 +105,7 @@ export const TenantsView: React.FC = () => {
 
   // Rent increase modal
   const [rentModal, setRentModal] = useState<Assignment | null>(null);
-  const [rentForm, setRentForm] = useState({ increase_pct: '', effective_from: '', reason: '' });
+  const [rentForm, setRentForm] = useState({ increase_pct: '', new_rent: '', effective_from: '', reason: '' });
 
   // Rent revision history
   const [revisionTarget, setRevisionTarget] = useState<Assignment | null>(null);
@@ -307,7 +307,7 @@ export const TenantsView: React.FC = () => {
 
   const openRentModal = (a: Assignment) => {
     setRentModal(a);
-    setRentForm({ increase_pct: '', effective_from: '', reason: '' });
+    setRentForm({ increase_pct: '', new_rent: '', effective_from: '', reason: '' });
   };
 
   const handleRentIncrease = async (e: React.FormEvent) => {
@@ -316,23 +316,43 @@ export const TenantsView: React.FC = () => {
     setIsSubmitting(true);
     try {
       const pct = parseFloat(rentForm.increase_pct);
-      const newRent = Math.round(rentModal.current_rent * (1 + pct / 100) * 100) / 100;
+      const newRent = parseFloat(rentForm.new_rent);
+      
+      const actualPct = isNaN(pct) ? null : pct;
+      const actualNewRent = isNaN(newRent) ? rentModal.current_rent : newRent;
 
       // Insert revision
       const { error: revErr } = await supabase.from('rent_revisions').insert([{
         assignment_id: rentModal.id,
         previous_rent: rentModal.current_rent,
-        new_rent: newRent,
-        increase_pct: pct,
+        new_rent: actualNewRent,
+        increase_pct: actualPct,
         effective_from: rentForm.effective_from,
         reason: rentForm.reason || null,
         created_by: (await supabase.auth.getUser()).data.user?.id || null,
       }]);
       if (revErr) throw revErr;
 
-      // Update current rent on the assignment
-      const { error: updErr } = await supabase.from('tenant_assignments').update({ current_rent: newRent }).eq('id', rentModal.id);
-      if (updErr) throw updErr;
+      // Only update current rent immediately if effective date is today or in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const effectiveDate = new Date(rentForm.effective_from);
+      effectiveDate.setHours(0, 0, 0, 0);
+      
+      if (effectiveDate <= today) {
+        const { error: updErr } = await supabase.from('tenant_assignments').update({ current_rent: actualNewRent }).eq('id', rentModal.id);
+        if (updErr) throw updErr;
+      }
+      
+      // Delete subsequent automated revisions so they can be re-projected from the new baseline
+      await supabase.from('rent_revisions')
+        .delete()
+        .eq('assignment_id', rentModal.id)
+        .gt('effective_from', rentForm.effective_from)
+        .is('reason', null);
+        
+      // Instantly trigger re-calculation
+      await supabase.functions.invoke('auto-rent-increase');
 
       setRentModal(null);
       fetchAll();
@@ -516,7 +536,6 @@ export const TenantsView: React.FC = () => {
 
   const vacatedOrNew = totalTenants - activeLeases;
 
-  const computedNewRent = rentModal ? Math.round(rentModal.current_rent * (1 + (parseFloat(rentForm.increase_pct) || 0) / 100) * 100) / 100 : 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -1064,9 +1083,6 @@ export const TenantsView: React.FC = () => {
             const currentGst = Math.round(currentRent * gstRate / 100);
             const currentTds = Math.round(currentRent * tdsRate / 100);
             const currentNet = currentRent + currentGst - currentTds;
-            const newGst = Math.round(computedNewRent * gstRate / 100);
-            const newTds = Math.round(computedNewRent * tdsRate / 100);
-            const newNet = computedNewRent + newGst - newTds;
             return (
               <div style={{ padding: '14px', backgroundColor: 'var(--bg-main)', borderRadius: '2px', border: '1px solid var(--border-color)', marginBottom: '-10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1078,27 +1094,45 @@ export const TenantsView: React.FC = () => {
                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>₹{currentNet.toLocaleString('en-IN')}</span>
                 </div>
                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px' }}></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>New Rent</span>
-                  <span style={{ fontWeight: 600, color: '#10b981' }}>₹{computedNewRent.toLocaleString('en-IN')}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>New Net (+ GST ₹{newGst.toLocaleString('en-IN')} − TDS ₹{newTds.toLocaleString('en-IN')})</span>
-                  <span style={{ fontWeight: 700, color: '#10b981' }}>₹{newNet.toLocaleString('en-IN')}</span>
-                </div>
               </div>
             );
           })()}
-          <ModalInput 
-            type="number" 
-            step="0.01" 
-            label="Increase Percentage (%) *" 
-            value={rentForm.increase_pct} 
-            onChange={e => setRentForm({ ...rentForm, increase_pct: e.target.value })} 
-            placeholder="e.g. 10" 
-            required 
-            min="0" 
-          />
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1 }}>
+              <ModalInput 
+                type="number" 
+                step="0.01" 
+                label="New Rent *" 
+                value={rentForm.new_rent} 
+                onChange={e => {
+                  const nr = parseFloat(e.target.value);
+                  const currentRent = rentModal?.current_rent || 1;
+                  const pct = (!isNaN(nr) && currentRent > 0) ? ((nr - currentRent) / currentRent * 100).toFixed(2) : rentForm.increase_pct;
+                  setRentForm({ ...rentForm, new_rent: e.target.value, increase_pct: pct.toString() });
+                }} 
+                placeholder="e.g. 15000" 
+                required 
+                min="0" 
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <ModalInput 
+                type="number" 
+                step="0.01" 
+                label="Increase (%) *" 
+                value={rentForm.increase_pct} 
+                onChange={e => {
+                  const pct = parseFloat(e.target.value);
+                  const currentRent = rentModal?.current_rent || 0;
+                  const nr = !isNaN(pct) ? (currentRent * (1 + pct / 100)).toFixed(2) : rentForm.new_rent;
+                  setRentForm({ ...rentForm, increase_pct: e.target.value, new_rent: nr.toString() });
+                }} 
+                placeholder="e.g. 10" 
+                required 
+                min="0" 
+              />
+            </div>
+          </div>
           <ModalInput 
             type="date"
             label="Effective From *" 
