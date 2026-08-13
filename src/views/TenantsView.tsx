@@ -433,6 +433,19 @@ export const TenantsView: React.FC = () => {
         effective_from: editRevisionForm.effective_from
       }).eq('id', revId);
       if (error) throw error;
+      
+      // Delete subsequent automated revisions so they can be re-projected from the new baseline
+      if (revisionTarget) {
+        await supabase.from('rent_revisions')
+          .delete()
+          .eq('assignment_id', revisionTarget.id)
+          .gt('effective_from', editRevisionForm.effective_from)
+          .is('reason', null);
+          
+        // Instantly trigger re-calculation
+        await supabase.functions.invoke('auto-rent-increase');
+      }
+
       setEditingRevisionId(null);
       if (revisionTarget) openRevisionHistory(revisionTarget);
     } catch (err: any) {
@@ -442,12 +455,25 @@ export const TenantsView: React.FC = () => {
     }
   };
 
-  const handleDeleteRevision = async (revId: string) => {
+  const handleDeleteRevision = async (revId: string, effectiveFrom: string) => {
     if (!confirm('Are you sure you want to delete this rent revision?')) return;
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('rent_revisions').delete().eq('id', revId);
       if (error) throw error;
+      
+      // Delete subsequent automated revisions so they can be re-projected from the new baseline
+      if (revisionTarget) {
+        await supabase.from('rent_revisions')
+          .delete()
+          .eq('assignment_id', revisionTarget.id)
+          .gt('effective_from', effectiveFrom)
+          .is('reason', null);
+          
+        // Instantly trigger re-calculation
+        await supabase.functions.invoke('auto-rent-increase');
+      }
+
       if (revisionTarget) openRevisionHistory(revisionTarget);
     } catch (err: any) {
       setError(err.message);
@@ -1113,10 +1139,30 @@ export const TenantsView: React.FC = () => {
                         </td>
                         <td style={{ padding: '6px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>₹{Number(r.previous_rent).toLocaleString('en-IN')}</td>
                         <td style={{ padding: '6px 12px' }}>
-                          <input type="number" step="0.01" value={editRevisionForm.new_rent} onChange={e => setEditRevisionForm({...editRevisionForm, new_rent: e.target.value})} style={{ width: '100px', padding: '4px', border: '1px solid var(--border-color)' }} />
+                          <input 
+                            type="number" 
+                            step="0.01" 
+                            value={editRevisionForm.new_rent} 
+                            onChange={e => {
+                              const nr = parseFloat(e.target.value);
+                              const pct = (!isNaN(nr) && r.previous_rent > 0) ? ((nr - r.previous_rent) / r.previous_rent * 100).toFixed(2) : editRevisionForm.increase_pct;
+                              setEditRevisionForm({...editRevisionForm, new_rent: e.target.value, increase_pct: pct.toString()});
+                            }} 
+                            style={{ width: '100px', padding: '4px', border: '1px solid var(--border-color)' }} 
+                          />
                         </td>
                         <td style={{ padding: '6px 12px' }}>
-                          <input type="number" step="0.01" value={editRevisionForm.increase_pct} onChange={e => setEditRevisionForm({...editRevisionForm, increase_pct: e.target.value})} style={{ width: '60px', padding: '4px', border: '1px solid var(--border-color)' }} />
+                          <input 
+                            type="number" 
+                            step="0.01" 
+                            value={editRevisionForm.increase_pct} 
+                            onChange={e => {
+                              const pct = parseFloat(e.target.value);
+                              const nr = !isNaN(pct) ? (r.previous_rent * (1 + pct / 100)).toFixed(2) : editRevisionForm.new_rent;
+                              setEditRevisionForm({...editRevisionForm, increase_pct: e.target.value, new_rent: nr.toString()});
+                            }} 
+                            style={{ width: '60px', padding: '4px', border: '1px solid var(--border-color)' }} 
+                          />
                         </td>
                         <td style={{ padding: '6px 12px', textAlign: 'right' }}>
                           <button onClick={() => handleSaveRevision(r.id, r.previous_rent)} style={{ color: '#10b981', background: 'none', border: 'none', cursor: 'pointer', marginRight: '8px', fontSize: '0.8rem', fontWeight: 600 }} disabled={isSubmitting}>Save</button>
@@ -1138,7 +1184,7 @@ export const TenantsView: React.FC = () => {
                               effective_from: r.effective_from
                             });
                           }} style={{ color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', marginRight: '8px' }} title="Edit"><Pencil size={14} /></button>
-                          <button onClick={() => handleDeleteRevision(r.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }} title="Delete"><Trash2 size={14} /></button>
+                          <button onClick={() => handleDeleteRevision(r.id, r.effective_from)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }} title="Delete"><Trash2 size={14} /></button>
                         </td>
                       </>
                     )}
