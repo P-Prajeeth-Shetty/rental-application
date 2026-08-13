@@ -673,7 +673,8 @@ export const LeasesView: React.FC = () => {
                 value={payForm.amount} 
                 onChange={e => setPayForm({ ...payForm, amount: e.target.value })} 
                 required 
-                min="0" 
+                min="0"
+                step="0.01"
               />
             </div>
             <div style={{ flex: 1 }}>
