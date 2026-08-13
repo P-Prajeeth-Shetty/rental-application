@@ -1088,7 +1088,7 @@ export const TenantsView: React.FC = () => {
       </Modal>
 
       {/* Rent Revision History Modal */}
-      <Modal isOpen={!!revisionTarget} onClose={() => setRevisionTarget(null)} title={`Rent History — Unit ${revisionTarget?.unit_number}`} maxWidth="540px">
+      <Modal isOpen={!!revisionTarget} onClose={() => setRevisionTarget(null)} title={`Rent History — Unit ${revisionTarget?.unit_number}`} maxWidth="650px">
         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
           {revisions.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '24px' }}>No revision history yet.</p>
