@@ -139,7 +139,7 @@ async function handleDashboard(supabase: any) {
     supabase.from('tenant_assignments')
       .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, gst_rate, tds_rate, tenant_id, unit_number, tenants(full_name), properties(name, property_type), status')
       .in('status', ['active', 'vacated']),
-    supabase.from('payments').select('assignment_id, amount, period_month, period_year, is_reversed'),
+    supabase.from('payments').select('assignment_id, amount, period_month, period_year, is_reversed, payment_type'),
     supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
   ]);
 
@@ -168,8 +168,8 @@ async function handleDashboard(supabase: any) {
     revisionsMap.get(r.assignment_id).push(r);
   });
 
-  // Valid (non-reversed) payments
-  const validPayments = (allPayments || []).filter((p: any) => !p.is_reversed);
+  // Valid (non-reversed) rent payments
+  const validPayments = (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent'));
 
   // Per-assignment totals
   const paidPerAssignment: Record<string, number> = {};
@@ -291,11 +291,11 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
       .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end, gst_rate, tds_rate')
       .in('status', ['active', 'vacated']),
     supabase.from('payments')
-      .select('assignment_id, amount, is_reversed')
+      .select('assignment_id, amount, is_reversed, payment_type')
       .eq('period_month', filterMonth)
       .eq('period_year', filterYear),
     supabase.from('payments')
-      .select('assignment_id, amount, is_reversed'),
+      .select('assignment_id, amount, is_reversed, payment_type'),
     supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
   ]);
 
@@ -309,19 +309,24 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
 
   // Sum payments per assignment for THIS period
   const paidPerAssignment: Record<string, number> = {};
-  (payments || []).filter((p: any) => !p.is_reversed).forEach((p: any) => {
+  (payments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent')).forEach((p: any) => {
     paidPerAssignment[p.assignment_id] = (paidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
   });
 
   // Sum ALL payments per assignment for CUMULATIVE balance
   const totalPaidPerAssignment: Record<string, number> = {};
   const paymentCountPerAssignment: Record<string, number> = {};
-  (allPayments || []).filter((p: any) => !p.is_reversed).forEach((p: any) => {
+  (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent')).forEach((p: any) => {
     totalPaidPerAssignment[p.assignment_id] = (totalPaidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
     paymentCountPerAssignment[p.assignment_id] = (paymentCountPerAssignment[p.assignment_id] || 0) + 1;
   });
 
   const statusMap: Record<string, any> = {};
+
+  const totalDepositPerAssignment: Record<string, number> = {};
+  (allPayments || []).filter((p: any) => !p.is_reversed && p.payment_type === 'security_deposit').forEach((p: any) => {
+    totalDepositPerAssignment[p.assignment_id] = (totalDepositPerAssignment[p.assignment_id] || 0) + Number(p.amount);
+  });
 
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
@@ -389,6 +394,7 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
       isOverdue,
       fullyPaid,
       status,
+      totalDepositPaid: totalDepositPerAssignment[a.id] || 0
     };
   });
 

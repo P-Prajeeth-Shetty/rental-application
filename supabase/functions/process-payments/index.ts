@@ -184,6 +184,30 @@ serve(async (req) => {
 
       const existingPays = existingPayments.filter(ep => ep.assignment_id === assignment.id);
       
+      if (p.payment_type && p.payment_type !== 'rent') {
+        const pDate = new Date(p.payment_date);
+        allPayloads.push({
+          assignment_id: p.assignment_id,
+          amount: remainingAmount,
+          payment_date: p.payment_date,
+          payment_method: p.payment_method || null,
+          period_month: pDate.getMonth() + 1,
+          period_year: pDate.getFullYear(),
+          reference_number: p.reference_number || null,
+          notes: p.notes || null,
+          status: 'paid',
+          payment_type: p.payment_type,
+          payment_timing: 'on_time',
+          days_late: 0,
+          credit_amount: 0,
+          expected_amount: remainingAmount,
+          upload_batch_id: upload_batch_id || null,
+          gst_amount: 0,
+          tds_amount: 0
+        });
+        continue;
+      }
+
       // Calculate months elapsed since lease start
       const start = new Date(assignment.lease_start);
       let currentMonth = start.getMonth() + 1;

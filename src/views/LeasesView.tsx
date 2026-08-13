@@ -95,7 +95,7 @@ export const LeasesView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Server-computed payment status per assignment
-  const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { paidAmount: number; balance: number; isOverdue: boolean; fullyPaid: boolean; status: string }>>({});
+  const [paymentStatusMap, setPaymentStatusMap] = useState<Record<string, { paidAmount: number; balance: number; isOverdue: boolean; fullyPaid: boolean; status: string; totalDepositPaid?: number }>>({});
 
   // Filters
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
@@ -649,7 +649,9 @@ export const LeasesView: React.FC = () => {
                     if (payForm.payment_type === 'rent') {
                       defaultAmount = getEffectiveRentAsOf(assignment).toString();
                     } else if (payForm.payment_type === 'security_deposit') {
-                      defaultAmount = (assignment.security_deposit || 0).toString();
+                      const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
+                      const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
+                      defaultAmount = depositLeft.toString();
                     }
                   }
                   setPayForm({ ...payForm, assignment_id: val, amount: defaultAmount });
@@ -723,7 +725,9 @@ export const LeasesView: React.FC = () => {
                       if (val === 'rent') {
                         defaultAmount = getEffectiveRentAsOf(assignment).toString();
                       } else if (val === 'security_deposit') {
-                        defaultAmount = (assignment.security_deposit || 0).toString();
+                        const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
+                        const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
+                        defaultAmount = depositLeft.toString();
                       } else if (val === 'adjustment') {
                         defaultAmount = '';
                       }
