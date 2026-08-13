@@ -18,6 +18,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    if (req.method === 'PATCH') {
+      const { data, error } = await supabaseClient
+        .from('rent_revisions')
+        .update({ increase_pct: 5 })
+        .is('increase_pct', null);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, message: "Fixed NULL percentages" }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
     // 2. Fetch all active tenant assignments
     const { data: assignments, error: fetchError } = await supabaseClient
       .from('tenant_assignments')
@@ -87,6 +99,7 @@ serve(async (req) => {
             assignment_id: a.id,
             previous_rent: currentRentSim,
             new_rent: newRent,
+            increase_pct: 5,
             effective_from: nextIncreaseDate.toISOString().split('T')[0]
           });
 
