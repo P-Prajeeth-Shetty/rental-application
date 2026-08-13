@@ -110,6 +110,8 @@ export const TenantsView: React.FC = () => {
   // Rent revision history
   const [revisionTarget, setRevisionTarget] = useState<Assignment | null>(null);
   const [revisions, setRevisions] = useState<RentRevision[]>([]);
+  const [editingRevisionId, setEditingRevisionId] = useState<string | null>(null);
+  const [editRevisionForm, setEditRevisionForm] = useState({ increase_pct: '', new_rent: '', effective_from: '' });
 
   // Vacate property
   const [vacateTarget, setVacateTarget] = useState<Assignment | null>(null);
@@ -415,8 +417,43 @@ export const TenantsView: React.FC = () => {
 
   const openRevisionHistory = async (a: Assignment) => {
     setRevisionTarget(a);
+    setEditingRevisionId(null);
     const { data } = await supabase.from('rent_revisions').select('*').eq('assignment_id', a.id).order('effective_from', { ascending: false });
     setRevisions(data || []);
+  };
+
+  const handleSaveRevision = async (revId: string, previousRent: number) => {
+    setIsSubmitting(true);
+    try {
+      const pct = parseFloat(editRevisionForm.increase_pct);
+      const newRent = parseFloat(editRevisionForm.new_rent);
+      const { error } = await supabase.from('rent_revisions').update({
+        increase_pct: isNaN(pct) ? null : pct,
+        new_rent: isNaN(newRent) ? previousRent : newRent,
+        effective_from: editRevisionForm.effective_from
+      }).eq('id', revId);
+      if (error) throw error;
+      setEditingRevisionId(null);
+      if (revisionTarget) openRevisionHistory(revisionTarget);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteRevision = async (revId: string) => {
+    if (!confirm('Are you sure you want to delete this rent revision?')) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('rent_revisions').delete().eq('id', revId);
+      if (error) throw error;
+      if (revisionTarget) openRevisionHistory(revisionTarget);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -1063,17 +1100,48 @@ export const TenantsView: React.FC = () => {
                   <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Previous</th>
                   <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>New</th>
                   <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>%</th>
-                  <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Reason</th>
+                  <th style={{ padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '0.8rem', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {revisions.map(r => (
                   <tr key={r.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '10px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>{new Date(r.effective_from).toLocaleDateString()}</td>
-                    <td style={{ padding: '10px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>₹{Number(r.previous_rent).toLocaleString('en-IN')}</td>
-                    <td style={{ padding: '10px 12px', fontSize: '0.88rem', fontWeight: 500, color: '#10b981' }}>₹{Number(r.new_rent).toLocaleString('en-IN')}</td>
-                    <td style={{ padding: '10px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>+{Number(r.increase_pct)}%</td>
-                    <td style={{ padding: '10px 12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{r.reason || '—'}</td>
+                    {editingRevisionId === r.id ? (
+                      <>
+                        <td style={{ padding: '6px 12px' }}>
+                          <input type="date" value={editRevisionForm.effective_from} onChange={e => setEditRevisionForm({...editRevisionForm, effective_from: e.target.value})} style={{ width: '100%', padding: '4px', border: '1px solid var(--border-color)' }} />
+                        </td>
+                        <td style={{ padding: '6px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>₹{Number(r.previous_rent).toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '6px 12px' }}>
+                          <input type="number" step="0.01" value={editRevisionForm.new_rent} onChange={e => setEditRevisionForm({...editRevisionForm, new_rent: e.target.value})} style={{ width: '100px', padding: '4px', border: '1px solid var(--border-color)' }} />
+                        </td>
+                        <td style={{ padding: '6px 12px' }}>
+                          <input type="number" step="0.01" value={editRevisionForm.increase_pct} onChange={e => setEditRevisionForm({...editRevisionForm, increase_pct: e.target.value})} style={{ width: '60px', padding: '4px', border: '1px solid var(--border-color)' }} />
+                        </td>
+                        <td style={{ padding: '6px 12px', textAlign: 'right' }}>
+                          <button onClick={() => handleSaveRevision(r.id, r.previous_rent)} style={{ color: '#10b981', background: 'none', border: 'none', cursor: 'pointer', marginRight: '8px', fontSize: '0.8rem', fontWeight: 600 }} disabled={isSubmitting}>Save</button>
+                          <button onClick={() => setEditingRevisionId(null)} style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }} disabled={isSubmitting}>Cancel</button>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={{ padding: '10px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>{new Date(r.effective_from).toLocaleDateString()}</td>
+                        <td style={{ padding: '10px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>₹{Number(r.previous_rent).toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '10px 12px', fontSize: '0.88rem', fontWeight: 500, color: '#10b981' }}>₹{Number(r.new_rent).toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '10px 12px', fontSize: '0.88rem', color: 'var(--text-primary)' }}>+{Number(r.increase_pct)}%</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'right' }}>
+                          <button onClick={() => {
+                            setEditingRevisionId(r.id);
+                            setEditRevisionForm({
+                              increase_pct: r.increase_pct?.toString() || '',
+                              new_rent: r.new_rent.toString(),
+                              effective_from: r.effective_from
+                            });
+                          }} style={{ color: '#0f766e', background: 'none', border: 'none', cursor: 'pointer', marginRight: '8px' }} title="Edit"><Pencil size={14} /></button>
+                          <button onClick={() => handleDeleteRevision(r.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }} title="Delete"><Trash2 size={14} /></button>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
