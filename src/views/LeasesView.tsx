@@ -649,7 +649,7 @@ export const LeasesView: React.FC = () => {
                     if (payForm.payment_type === 'rent') {
                       defaultAmount = getEffectiveRentAsOf(assignment).toString();
                     } else if (payForm.payment_type === 'security_deposit') {
-                      defaultAmount = assignment.security_deposit.toString();
+                      defaultAmount = (assignment.security_deposit || 0).toString();
                     }
                   }
                   setPayForm({ ...payForm, assignment_id: val, amount: defaultAmount });
@@ -723,7 +723,7 @@ export const LeasesView: React.FC = () => {
                       if (val === 'rent') {
                         defaultAmount = getEffectiveRentAsOf(assignment).toString();
                       } else if (val === 'security_deposit') {
-                        defaultAmount = assignment.security_deposit.toString();
+                        defaultAmount = (assignment.security_deposit || 0).toString();
                       } else if (val === 'adjustment') {
                         defaultAmount = '';
                       }
