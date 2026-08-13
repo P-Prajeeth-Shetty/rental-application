@@ -629,7 +629,7 @@ export const TenantsView: React.FC = () => {
                         {activeAssign ? (
                           <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(16,185,129,0.15)', color: '#10b981' }}>Active</span>
                         ) : assigns.length > 0 ? (
-                          <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Vacated</span>
+                          <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Inactive</span>
                         ) : (
                           <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>New</span>
                         )}
@@ -709,7 +709,7 @@ export const TenantsView: React.FC = () => {
                           <span style={{ padding: '3px 8px', borderRadius: '1px', fontSize: '0.75rem', fontWeight: 500,
                             backgroundColor: a.status === 'active' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
                             color: a.status === 'active' ? '#10b981' : '#ef4444' }}>
-                            {a.status}
+                            {a.status === 'active' ? 'Occupied' : 'Vacated'}
                           </span>
                         </td>
                         <td 
