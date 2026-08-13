@@ -47,7 +47,8 @@ export const SideWidgets: React.FC<SideWidgetsProps> = ({ onNavigate }) => {
         });
 
         (assignments || []).forEach(a => {
-          const type = a.properties?.property_type || 'Residential';
+          const props: any = Array.isArray(a.properties) ? a.properties[0] : a.properties;
+          const type = props?.property_type || 'Residential';
           if (statsByType[type]) {
             statsByType[type].occupied += 1;
           }
