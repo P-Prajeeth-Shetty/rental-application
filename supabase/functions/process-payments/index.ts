@@ -1,119 +1,17 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import {
+  computeDueDate,
+  classifyTiming,
+  computeCredit,
+  getExpectedRentForMonth,
+  computeNetPayable,
+} from "../_shared/rentCalc.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-type PaymentMode = 'prepaid' | 'postpaid' | 'advance_on_entry';
-type PaymentTiming = 'early' | 'on_time' | 'late' | 'unknown';
-
-function computeDueDate(
-  paymentMode: PaymentMode,
-  dueDay: number,
-  leaseStart: string,
-  periodMonth: number,
-  periodYear: number,
-  isFirstPayment: boolean
-): Date {
-  // All rent is always due on the 1st of the month
-  return new Date(periodYear, periodMonth - 1, 1);
-}
-
-function classifyTiming(
-  paymentDate: string,
-  dueDate: Date,
-  graceDays: number
-): { timing: PaymentTiming; daysLate: number } {
-  const paid = new Date(paymentDate);
-  const graceEnd = new Date(dueDate);
-  graceEnd.setDate(graceEnd.getDate() + graceDays);
-
-  if (paid < dueDate) {
-    return { timing: 'early', daysLate: 0 };
-  }
-  if (paid <= graceEnd) {
-    return { timing: 'on_time', daysLate: 0 };
-  }
-  const msPerDay = 86400000;
-  const daysLate = Math.ceil((paid.getTime() - dueDate.getTime()) / msPerDay);
-  return { timing: 'late', daysLate };
-}
-
-function computeCredit(amountPaid: number, expectedRent: number): number {
-  return amountPaid - expectedRent;
-}
-
-function getExpectedRentForMonth(
-  assignment: any,
-  month: number,
-  year: number,
-  revisions: any[]
-): number {
-  let periodStart = new Date(year, month - 1, 1);
-  let periodEnd = new Date(year, month, 0); // last day of month
-
-  const leaseStart = new Date(assignment.lease_start);
-  
-  periodStart.setHours(0,0,0,0);
-  periodEnd.setHours(0,0,0,0);
-  leaseStart.setHours(0,0,0,0);
-
-  // If lease hasn't started yet in this month
-  if (periodStart < leaseStart) {
-    if (periodEnd < leaseStart) return 0;
-    periodStart = leaseStart;
-  }
-
-  // If lease has ended in this month
-  if (assignment.lease_end) {
-    const leaseEnd = new Date(assignment.lease_end);
-    leaseEnd.setHours(0,0,0,0);
-    if (periodEnd > leaseEnd) {
-      if (periodStart > leaseEnd) return 0;
-      periodEnd = leaseEnd;
-    }
-  }
-
-  const daysInMonth = new Date(year, month, 0).getDate();
-  let totalRent = 0;
-
-  for (let d = periodStart.getDate(); d <= periodEnd.getDate(); d++) {
-    const currentDate = new Date(year, month - 1, d);
-    currentDate.setHours(0,0,0,0);
-
-    let applicableRent = assignment.current_rent;
-
-    if (revisions && revisions.length > 0) {
-      const rev = revisions.find(r => {
-        const revDate = new Date(r.effective_from);
-        revDate.setHours(0,0,0,0);
-        return revDate <= currentDate;
-      });
-      if (rev) {
-        applicableRent = rev.new_rent;
-      } else {
-        applicableRent = revisions[revisions.length - 1].previous_rent;
-      }
-    }
-
-    totalRent += (applicableRent / daysInMonth);
-  }
-
-  return Math.round(totalRent * 100) / 100;
-}
-
-function computeNetPayable(
-  baseRent: number,
-  gstRate: number,
-  tdsRate: number
-): { net: number; gstAmount: number; tdsAmount: number } {
-  const gstAmount = Math.round(baseRent * gstRate / 100 * 100) / 100;
-  const tdsAmount = Math.round(baseRent * tdsRate / 100 * 100) / 100;
-  const net = Math.round((baseRent + gstAmount - tdsAmount) * 100) / 100;
-  return { net, gstAmount, tdsAmount };
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

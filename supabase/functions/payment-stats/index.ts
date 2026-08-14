@@ -1,128 +1,20 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import {
+  computeDueDate,
+  getExpectedMonths,
+  getExpectedRentForMonth,
+  computeNetPayable as computeNetPayableDetailed,
+} from "../_shared/rentCalc.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// ── Payment mode due-date logic (mirrors paymentUtils.ts) ───────────────
-
-type PaymentMode = 'prepaid' | 'postpaid' | 'advance_on_entry';
-
-function computeDueDate(
-  paymentMode: PaymentMode,
-  dueDay: number,
-  leaseStart: string,
-  periodMonth: number,
-  periodYear: number,
-  isFirstPayment: boolean
-): Date {
-  // All rent is always due on the 1st of the month
-  return new Date(periodYear, periodMonth - 1, 1);
-}
-
-// ── Get expected months from lease_start to refMonth/refYear ────────────
-
-function getExpectedMonths(
-  leaseStart: string,
-  leaseEnd: string | null,
-  refMonth: number,
-  refYear: number
-): { month: number; year: number }[] {
-  const start = new Date(leaseStart);
-  let m = start.getMonth() + 1;
-  let y = start.getFullYear();
-  const result: { month: number; year: number }[] = [];
-
-  while (y < refYear || (y === refYear && m <= refMonth)) {
-    result.push({ month: m, year: y });
-    m++;
-    if (m > 12) { m = 1; y++; }
-  }
-
-  if (leaseEnd) {
-    const end = new Date(leaseEnd);
-    const endMonth = end.getMonth() + 1;
-    const endYear = end.getFullYear();
-    return result.filter(r => r.year < endYear || (r.year === endYear && r.month <= endMonth));
-  }
-  return result;
-}
-
-// ── Get expected rent for a specific month (mirrors process-payments) ───
-
-function getExpectedRentForMonth(
-  assignment: any,
-  month: number,
-  year: number,
-  revisions: any[]
-): number {
-  let periodStart = new Date(year, month - 1, 1);
-  let periodEnd = new Date(year, month, 0); // last day of month
-
-  const leaseStart = new Date(assignment.lease_start);
-  
-  periodStart.setHours(0,0,0,0);
-  periodEnd.setHours(0,0,0,0);
-  leaseStart.setHours(0,0,0,0);
-
-  // If lease hasn't started yet in this month
-  if (periodStart < leaseStart) {
-    if (periodEnd < leaseStart) return 0;
-    periodStart = leaseStart;
-  }
-
-  // If lease has ended in this month
-  if (assignment.lease_end) {
-    const leaseEnd = new Date(assignment.lease_end);
-    leaseEnd.setHours(0,0,0,0);
-    if (periodEnd > leaseEnd) {
-      if (periodStart > leaseEnd) return 0;
-      periodEnd = leaseEnd;
-    }
-  }
-
-  const daysInMonth = new Date(year, month, 0).getDate();
-  let totalRent = 0;
-
-  for (let d = periodStart.getDate(); d <= periodEnd.getDate(); d++) {
-    const currentDate = new Date(year, month - 1, d);
-    currentDate.setHours(0,0,0,0);
-
-    let applicableRent = assignment.current_rent;
-
-    if (revisions && revisions.length > 0) {
-      const currentStr = [
-        currentDate.getFullYear(),
-        String(currentDate.getMonth() + 1).padStart(2, '0'),
-        String(currentDate.getDate()).padStart(2, '0')
-      ].join('-');
-
-      const rev = revisions.find(r => {
-        return r.effective_from.split('T')[0] <= currentStr;
-      });
-      if (rev) {
-        applicableRent = rev.new_rent;
-      } else {
-        applicableRent = revisions[revisions.length - 1].previous_rent;
-      }
-    }
-
-    totalRent += (applicableRent / daysInMonth);
-  }
-
-  return Math.round(totalRent * 100) / 100;
-}
-
-function computeNetPayable(
-  baseRent: number,
-  gstRate: number,
-  tdsRate: number
-): number {
-  const gstAmount = Math.round(baseRent * gstRate / 100 * 100) / 100;
-  const tdsAmount = Math.round(baseRent * tdsRate / 100 * 100) / 100;
-  return Math.round((baseRent + gstAmount - tdsAmount) * 100) / 100;
+// payment-stats only ever needs the net figure, not the GST/TDS breakdown
+function computeNetPayable(baseRent: number, gstRate: number, tdsRate: number): number {
+  return computeNetPayableDetailed(baseRent, gstRate, tdsRate).net;
 }
 
 // ── ACTION: dashboard ───────────────────────────────────────────────────
@@ -136,14 +28,16 @@ async function handleDashboard(supabase: any) {
   const [
     { data: properties },
     { data: assignments },
-    { data: allPayments },
+    { data: periodSummary },
     { data: revisionsData }
   ] = await Promise.all([
     supabase.from('properties').select('total_units, property_type'),
     supabase.from('tenant_assignments')
       .select('id, current_rent, lease_start, lease_end, payment_mode, due_day, grace_days, gst_rate, tds_rate, tenant_id, unit_number, tenants(full_name), properties(name, property_type), status')
       .in('status', ['active', 'vacated']),
-    supabase.from('payments').select('assignment_id, amount, period_month, period_year, is_reversed, payment_type'),
+    // Pre-aggregated in SQL (one row per assignment/month/year) instead of
+    // pulling every individual payment row into the function.
+    supabase.from('payments_period_summary').select('assignment_id, period_month, period_year, rent_paid, rent_payment_count'),
     supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
   ]);
 
@@ -172,29 +66,26 @@ async function handleDashboard(supabase: any) {
     revisionsMap.get(r.assignment_id).push(r);
   });
 
-  // Valid (non-reversed) rent-ledger payments (includes historical catch-up settlements)
-  const validPayments = (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent' || p.payment_type === 'historical_settlement'));
-
-  // Per-assignment totals
+  // Rent-ledger totals, already summed per (assignment, month, year) in SQL
+  // (the view filters out reversed payments and non-rent payment types).
   const paidPerAssignment: Record<string, number> = {};
-  validPayments.forEach((p: any) => {
-    paidPerAssignment[p.assignment_id] = (paidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
-  });
-
-  // Build paid periods set: "assignId-month-year"
   const paidSet = new Set<string>();
-  validPayments.forEach((p: any) => {
-    paidSet.add(`${p.assignment_id}-${p.period_month}-${p.period_year}`);
+  let currentMonthPaid = 0;
+  (periodSummary || []).forEach((r: any) => {
+    const rentPaid = Number(r.rent_paid || 0);
+    paidPerAssignment[r.assignment_id] = (paidPerAssignment[r.assignment_id] || 0) + rentPaid;
+    if ((r.rent_payment_count || 0) > 0) {
+      paidSet.add(`${r.assignment_id}-${r.period_month}-${r.period_year}`);
+    }
+    if (r.period_month === currentMonth && r.period_year === currentYear) {
+      currentMonthPaid += rentPaid;
+    }
   });
 
   // Compute cumulative expected + overdue items
   let totalExpected = 0;
   let totalPaid = 0;
   const overdueItems: any[] = [];
-
-  // Current month totals for collection rate gauge
-  const currentMonthPayments = validPayments.filter((p: any) => p.period_month === currentMonth && p.period_year === currentYear);
-  const currentMonthPaid = currentMonthPayments.reduce((s: number, p: any) => s + Number(p.amount), 0);
   let currentMonthExpected = 0;
 
   (assignments || []).forEach((a: any) => {
@@ -290,16 +181,14 @@ async function handleDashboard(supabase: any) {
 async function handlePaymentStatus(supabase: any, filterMonth: number, filterYear: number) {
   const now = new Date();
 
-  const [{ data: assignments }, { data: payments }, { data: allPayments }, { data: revisionsData }] = await Promise.all([
+  const [{ data: assignments }, { data: periodSummary }, { data: revisionsData }] = await Promise.all([
     supabase.from('tenant_assignments')
       .select('id, current_rent, payment_mode, due_day, grace_days, lease_start, lease_end, gst_rate, tds_rate')
       .in('status', ['active', 'vacated']),
-    supabase.from('payments')
-      .select('assignment_id, amount, is_reversed, payment_type')
-      .eq('period_month', filterMonth)
-      .eq('period_year', filterYear),
-    supabase.from('payments')
-      .select('assignment_id, amount, is_reversed, payment_type'),
+    // One row per (assignment, month, year), pre-summed in SQL, instead of
+    // fetching every individual payment row for the cumulative balance.
+    supabase.from('payments_period_summary')
+      .select('assignment_id, period_month, period_year, rent_paid, deposit_paid, rent_payment_count'),
     supabase.from('rent_revisions').select('assignment_id, previous_rent, new_rent, effective_from').order('effective_from', { ascending: false }),
   ]);
 
@@ -313,24 +202,27 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
 
   // Sum payments per assignment for THIS period
   const paidPerAssignment: Record<string, number> = {};
-  (payments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent' || p.payment_type === 'historical_settlement')).forEach((p: any) => {
-    paidPerAssignment[p.assignment_id] = (paidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
-  });
+  (periodSummary || [])
+    .filter((r: any) => r.period_month === filterMonth && r.period_year === filterYear)
+    .forEach((r: any) => {
+      paidPerAssignment[r.assignment_id] = (paidPerAssignment[r.assignment_id] || 0) + Number(r.rent_paid || 0);
+    });
 
   // Sum ALL payments per assignment for CUMULATIVE balance
   const totalPaidPerAssignment: Record<string, number> = {};
   const paymentCountPerAssignment: Record<string, number> = {};
-  (allPayments || []).filter((p: any) => !p.is_reversed && (!p.payment_type || p.payment_type === 'rent' || p.payment_type === 'historical_settlement')).forEach((p: any) => {
-    totalPaidPerAssignment[p.assignment_id] = (totalPaidPerAssignment[p.assignment_id] || 0) + Number(p.amount);
-    paymentCountPerAssignment[p.assignment_id] = (paymentCountPerAssignment[p.assignment_id] || 0) + 1;
+  const totalDepositPerAssignment: Record<string, number> = {};
+  (periodSummary || []).forEach((r: any) => {
+    const rentPaid = Number(r.rent_paid || 0);
+    const depositPaid = Number(r.deposit_paid || 0);
+    totalPaidPerAssignment[r.assignment_id] = (totalPaidPerAssignment[r.assignment_id] || 0) + rentPaid;
+    paymentCountPerAssignment[r.assignment_id] = (paymentCountPerAssignment[r.assignment_id] || 0) + (r.rent_payment_count || 0);
+    if (depositPaid) {
+      totalDepositPerAssignment[r.assignment_id] = (totalDepositPerAssignment[r.assignment_id] || 0) + depositPaid;
+    }
   });
 
   const statusMap: Record<string, any> = {};
-
-  const totalDepositPerAssignment: Record<string, number> = {};
-  (allPayments || []).filter((p: any) => !p.is_reversed && p.payment_type === 'security_deposit').forEach((p: any) => {
-    totalDepositPerAssignment[p.assignment_id] = (totalDepositPerAssignment[p.assignment_id] || 0) + Number(p.amount);
-  });
 
   (assignments || []).forEach((a: any) => {
     const assignmentRevisions = revisionsMap.get(a.id) || [];

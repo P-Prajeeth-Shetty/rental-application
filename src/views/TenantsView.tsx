@@ -3,46 +3,14 @@ import './views.css';
 import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, ArrowRightLeft, Printer, CornerDownRight, FileText } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
-import { uploadTenantDocument, getTenantDocumentUrl } from '../lib/storageUtils';
+import { getTenantDocumentUrl } from '../lib/storageUtils';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { AgreementSlipModal } from '../components/agreement/AgreementSlipModal';
 import { useCurrentProfile } from '../hooks/useCurrentProfile';
 import { rentBadge } from '../lib/paymentUtils';
+import { useTenants, type Tenant, type Assignment, type RentRevision } from '../hooks/useTenants';
 
 import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
-interface Tenant {
-  id: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  id_proof_type: string | null;
-  id_proof_number: string | null;
-  emergency_contact: string | null;
-  notes: string | null;
-  id_proof_url: string | null;
-  created_at: string;
-}
-
-interface Assignment {
-  id: string;
-  unit_number: string;
-  current_rent: number;
-  lease_start: string;
-  lease_end: string | null;
-  security_deposit: number;
-  status: string;
-  property_id: string;
-  payment_mode?: string;
-  due_day?: number;
-  grace_days?: number;
-  gst_rate?: number;
-  tds_rate?: number;
-  previous_assignment_id?: string | null;
-  transfer_reason?: string | null;
-  properties: { id: string; name: string } | null;
-  payments?: { amount: number; is_reversed: boolean }[];
-  rent_revisions?: { previous_rent: number; new_rent: number; increase_pct: number | null; effective_from: string }[];
-}
 
 function getEffectiveRentAsOf(assignment: Assignment, date: Date = new Date()) {
   if (!assignment.rent_revisions || assignment.rent_revisions.length === 0) {
@@ -63,32 +31,18 @@ function getEffectiveRentAsOf(assignment: Assignment, date: Date = new Date()) {
   return sortedRevisions[sortedRevisions.length - 1].previous_rent;
 }
 
-interface Property {
-  id: string;
-  name: string;
-  total_units: number;
-}
-
-interface RentRevision {
-  id: string;
-  previous_rent: number;
-  new_rent: number;
-  increase_pct: number;
-  effective_from: string;
-  reason: string | null;
-  created_at: string;
-}
-
-
-
 export const TenantsView: React.FC = () => {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [assignmentsMap, setAssignmentsMap] = useState<Record<string, Assignment[]>>({});
-  const [properties, setProperties] = useState<Property[]>([]);
+  const {
+    tenants, assignmentsMap, properties, isLoading, error, setError,
+    saveTenant, deleteTenant: deleteTenantById,
+    saveAssignment,
+    applyRentIncrease,
+    vacateAssignment,
+    transferAssignment,
+    fetchRevisions, saveRevisionEdit, deleteRevision: deleteRevisionById,
+  } = useTenants();
   const [paymentLedgerTarget, setPaymentLedgerTarget] = useState<any>(null);
   const [paymentLedgerBalance, setPaymentLedgerBalance] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPropertyId, setFilterPropertyId] = useState<string>('');
 
@@ -140,38 +94,6 @@ export const TenantsView: React.FC = () => {
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
-  // ── Fetch ─────────────────────────────────────────────────────────────────
-
-  const fetchAll = async () => {
-    setIsLoading(true);
-    try {
-      const [{ data: tData, error: tErr }, { data: aData, error: aErr }, { data: pData, error: pErr }] = await Promise.all([
-        supabase.from('tenants').select('*').order('created_at', { ascending: false }),
-        supabase.from('tenant_assignments').select('*, properties(id, name), payments(amount, is_reversed), rent_revisions(previous_rent, new_rent, increase_pct, effective_from)').order('created_at', { ascending: false }),
-        supabase.from('properties').select('id, name, total_units'),
-      ]);
-      if (tErr) throw tErr;
-      if (aErr) throw aErr;
-      if (pErr) throw pErr;
-
-      setTenants(tData || []);
-      setProperties(pData || []);
-
-      const map: Record<string, Assignment[]> = {};
-      (aData || []).forEach((a: any) => {
-        if (!map[a.tenant_id]) map[a.tenant_id] = [];
-        map[a.tenant_id].push(a);
-      });
-      setAssignmentsMap(map);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchAll(); }, []);
-
   // ── Tenant CRUD ───────────────────────────────────────────────────────────
 
   const openCreateTenant = () => {
@@ -194,31 +116,8 @@ export const TenantsView: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      let id_proof_url = undefined;
-      if (idProofFile) {
-        id_proof_url = await uploadTenantDocument(idProofFile);
-      }
-
-      const payload: any = {
-        full_name: tenantForm.full_name,
-        email: tenantForm.email || null, phone: tenantForm.phone || null,
-        id_proof_type: tenantForm.id_proof_type || null, id_proof_number: tenantForm.id_proof_number || null,
-        emergency_contact: tenantForm.emergency_contact || null, notes: tenantForm.notes || null,
-      };
-      
-      if (id_proof_url !== undefined) {
-        payload.id_proof_url = id_proof_url;
-      }
-
-      if (tenantModal === 'create') {
-        const { error } = await supabase.from('tenants').insert([payload]);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('tenants').update(payload).eq('id', tenantForm.id);
-        if (error) throw error;
-      }
+      await saveTenant(tenantModal === 'create' ? 'create' : 'edit', tenantForm, idProofFile);
       setTenantModal(null);
-      fetchAll();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -228,22 +127,13 @@ export const TenantsView: React.FC = () => {
 
   const handleDeleteTenant = async () => {
     if (!deleteTarget) return;
-    
-    const hasAssignments = assignmentsMap[deleteTarget.id]?.length > 0;
-    if (hasAssignments) {
-      setError("Cannot delete a tenant who has assignment history. Please use the 'Vacate' feature on their property assignment instead to preserve payment data.");
-      setDeleteTarget(null);
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('tenants').delete().eq('id', deleteTarget.id);
-      if (error) throw error;
+      await deleteTenantById(deleteTarget);
       setDeleteTarget(null);
-      fetchAll();
     } catch (err: any) {
       setError(err.message);
+      setDeleteTarget(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -278,41 +168,16 @@ export const TenantsView: React.FC = () => {
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignModal) return;
-    
+
     if (!assignForm.lease_start) {
       setError("Please select a Lease Start date.");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      const payload = {
-        property_id: assignForm.property_id,
-        unit_number: assignForm.unit_number,
-        current_rent: parseFloat(assignForm.current_rent) || 0,
-        lease_start: assignForm.lease_start,
-        lease_end: assignForm.lease_end || null,
-        security_deposit: parseFloat(assignForm.security_deposit) || 0,
-        payment_mode: assignForm.payment_mode,
-        due_day: parseInt(assignForm.due_day) || 1,
-        grace_days: parseInt(assignForm.grace_days) || 5,
-        gst_rate: parseFloat(assignForm.gst_rate) || 0,
-        tds_rate: parseFloat(assignForm.tds_rate) || 0
-      };
-
-      if (editAssignmentId) {
-        const { error } = await supabase.from('tenant_assignments').update(payload).eq('id', editAssignmentId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('tenant_assignments').insert([{ ...payload, tenant_id: assignModal.id, status: 'active' }]);
-        if (error) throw error;
-      }
-      
-      // Trigger automated projections for the new assignment
-      await supabase.functions.invoke('auto-rent-increase');
-      
+      await saveAssignment(assignForm, assignModal.id, editAssignmentId);
       setAssignModal(null);
-      fetchAll();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -332,47 +197,8 @@ export const TenantsView: React.FC = () => {
     if (!rentModal) return;
     setIsSubmitting(true);
     try {
-      const pct = parseFloat(rentForm.increase_pct);
-      const newRent = parseFloat(rentForm.new_rent);
-      
-      const actualPct = isNaN(pct) ? null : pct;
-      const actualNewRent = isNaN(newRent) ? rentModal.current_rent : newRent;
-
-      // Insert revision
-      const { error: revErr } = await supabase.from('rent_revisions').insert([{
-        assignment_id: rentModal.id,
-        previous_rent: rentModal.current_rent,
-        new_rent: actualNewRent,
-        increase_pct: actualPct,
-        effective_from: rentForm.effective_from,
-        reason: rentForm.reason || null,
-        created_by: (await supabase.auth.getUser()).data.user?.id || null,
-      }]);
-      if (revErr) throw revErr;
-
-      // Only update current rent immediately if effective date is today or in the past
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const effectiveDate = new Date(rentForm.effective_from);
-      effectiveDate.setHours(0, 0, 0, 0);
-      
-      if (effectiveDate <= today) {
-        const { error: updErr } = await supabase.from('tenant_assignments').update({ current_rent: actualNewRent }).eq('id', rentModal.id);
-        if (updErr) throw updErr;
-      }
-      
-      // Delete subsequent automated revisions so they can be re-projected from the new baseline
-      await supabase.from('rent_revisions')
-        .delete()
-        .eq('assignment_id', rentModal.id)
-        .gt('effective_from', rentForm.effective_from)
-        .is('reason', null);
-        
-      // Instantly trigger re-calculation
-      await supabase.functions.invoke('auto-rent-increase');
-
+      await applyRentIncrease(rentModal, rentForm);
       setRentModal(null);
-      fetchAll();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -387,13 +213,8 @@ export const TenantsView: React.FC = () => {
     if (!vacateTarget || !vacateDate) return;
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('tenant_assignments').update({
-        status: 'vacated',
-        lease_end: vacateDate
-      }).eq('id', vacateTarget.id);
-      if (error) throw error;
+      await vacateAssignment(vacateTarget.id, vacateDate);
       setVacateTarget(null);
-      fetchAll();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -427,29 +248,9 @@ export const TenantsView: React.FC = () => {
     if (!transferTarget || !transferForm.property_id || !transferForm.transfer_date) return;
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.rpc('transfer_tenant_assignment', {
-        p_old_assignment_id: transferTarget.id,
-        p_transfer_date: transferForm.transfer_date,
-        p_new_property_id: transferForm.property_id,
-        p_new_unit_number: transferForm.unit_number,
-        p_new_rent: parseFloat(transferForm.current_rent) || 0,
-        p_new_deposit: parseFloat(transferForm.security_deposit) || 0,
-        p_new_lease_end: transferForm.lease_end || null,
-        p_payment_mode: transferForm.payment_mode,
-        p_due_day: parseInt(transferForm.due_day) || 1,
-        p_grace_days: parseInt(transferForm.grace_days) || 5,
-        p_gst_rate: parseFloat(transferForm.gst_rate) || 0,
-        p_tds_rate: parseFloat(transferForm.tds_rate) || 0,
-        p_reason: transferForm.reason || null,
-      });
-      if (error) throw error;
-      
-      // Trigger automated projections for the transferred assignment
-      await supabase.functions.invoke('auto-rent-increase');
-      
+      await transferAssignment(transferTarget.id, transferForm);
       setTransferTarget(null);
       setTransferTenant(null);
-      fetchAll();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -462,36 +263,16 @@ export const TenantsView: React.FC = () => {
   const openRevisionHistory = async (a: Assignment) => {
     setRevisionTarget(a);
     setEditingRevisionId(null);
-    const { data } = await supabase.from('rent_revisions').select('*').eq('assignment_id', a.id).order('effective_from', { ascending: false });
-    setRevisions(data || []);
+    setRevisions(await fetchRevisions(a.id));
   };
 
   const handleSaveRevision = async (revId: string, previousRent: number) => {
+    if (!revisionTarget) return;
     setIsSubmitting(true);
     try {
-      const pct = parseFloat(editRevisionForm.increase_pct);
-      const newRent = parseFloat(editRevisionForm.new_rent);
-      const { error } = await supabase.from('rent_revisions').update({
-        increase_pct: isNaN(pct) ? null : pct,
-        new_rent: isNaN(newRent) ? previousRent : newRent,
-        effective_from: editRevisionForm.effective_from
-      }).eq('id', revId);
-      if (error) throw error;
-      
-      // Delete subsequent automated revisions so they can be re-projected from the new baseline
-      if (revisionTarget) {
-        await supabase.from('rent_revisions')
-          .delete()
-          .eq('assignment_id', revisionTarget.id)
-          .gt('effective_from', editRevisionForm.effective_from)
-          .is('reason', null);
-          
-        // Instantly trigger re-calculation
-        await supabase.functions.invoke('auto-rent-increase');
-      }
-
+      await saveRevisionEdit(revId, previousRent, editRevisionForm, revisionTarget.id);
       setEditingRevisionId(null);
-      if (revisionTarget) openRevisionHistory(revisionTarget);
+      setRevisions(await fetchRevisions(revisionTarget.id));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -501,24 +282,11 @@ export const TenantsView: React.FC = () => {
 
   const handleDeleteRevision = async (revId: string, effectiveFrom: string) => {
     if (!confirm('Are you sure you want to delete this rent revision?')) return;
+    if (!revisionTarget) return;
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('rent_revisions').delete().eq('id', revId);
-      if (error) throw error;
-      
-      // Delete subsequent automated revisions so they can be re-projected from the new baseline
-      if (revisionTarget) {
-        await supabase.from('rent_revisions')
-          .delete()
-          .eq('assignment_id', revisionTarget.id)
-          .gt('effective_from', effectiveFrom)
-          .is('reason', null);
-          
-        // Instantly trigger re-calculation
-        await supabase.functions.invoke('auto-rent-increase');
-      }
-
-      if (revisionTarget) openRevisionHistory(revisionTarget);
+      await deleteRevisionById(revId, effectiveFrom, revisionTarget.id);
+      setRevisions(await fetchRevisions(revisionTarget.id));
     } catch (err: any) {
       setError(err.message);
     } finally {
