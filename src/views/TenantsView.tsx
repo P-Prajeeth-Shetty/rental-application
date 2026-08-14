@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './views.css';
-import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, ArrowRightLeft, Printer, CornerDownRight } from 'lucide-react';
+import { Search, Plus, X, Pencil, Trash2, Home, ChevronDown, ChevronUp, TrendingUp, List, MoreVertical, ArrowRightLeft, Printer, CornerDownRight, FileText } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
+import { uploadTenantDocument, getTenantDocumentUrl } from '../lib/storageUtils';
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { AgreementSlipModal } from '../components/agreement/AgreementSlipModal';
 import { useCurrentProfile } from '../hooks/useCurrentProfile';
@@ -18,6 +19,7 @@ interface Tenant {
   id_proof_number: string | null;
   emergency_contact: string | null;
   notes: string | null;
+  id_proof_url: string | null;
   created_at: string;
 }
 
@@ -95,6 +97,7 @@ export const TenantsView: React.FC = () => {
   const [tenantModal, setTenantModal] = useState<'create' | 'edit' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tenantForm, setTenantForm] = useState({ id: '', full_name: '', email: '', phone: '', id_proof_type: '', id_proof_number: '', emergency_contact: '', notes: '' });
+  const [idProofFile, setIdProofFile] = useState<File | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Tenant | null>(null);
 
   // Assign modal
@@ -173,6 +176,7 @@ export const TenantsView: React.FC = () => {
 
   const openCreateTenant = () => {
     setTenantForm({ id: '', full_name: '', email: '', phone: '', id_proof_type: '', id_proof_number: '', emergency_contact: '', notes: '' });
+    setIdProofFile(null);
     setTenantModal('create');
   };
 
@@ -182,6 +186,7 @@ export const TenantsView: React.FC = () => {
       id_proof_type: t.id_proof_type || '', id_proof_number: t.id_proof_number || '',
       emergency_contact: t.emergency_contact || '', notes: t.notes || ''
     });
+    setIdProofFile(null);
     setTenantModal('edit');
   };
 
@@ -189,12 +194,22 @@ export const TenantsView: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const payload = {
+      let id_proof_url = undefined;
+      if (idProofFile) {
+        id_proof_url = await uploadTenantDocument(idProofFile);
+      }
+
+      const payload: any = {
         full_name: tenantForm.full_name,
         email: tenantForm.email || null, phone: tenantForm.phone || null,
         id_proof_type: tenantForm.id_proof_type || null, id_proof_number: tenantForm.id_proof_number || null,
         emergency_contact: tenantForm.emergency_contact || null, notes: tenantForm.notes || null,
       };
+      
+      if (id_proof_url !== undefined) {
+        payload.id_proof_url = id_proof_url;
+      }
+
       if (tenantModal === 'create') {
         const { error } = await supabase.from('tenants').insert([payload]);
         if (error) throw error;
@@ -601,9 +616,9 @@ export const TenantsView: React.FC = () => {
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '4%' }}></th>
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '22%' }}>Tenant</th>
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '16%' }}>Phone</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '20%' }}>Property</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '10%' }}>Unit</th>
-                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '12%' }}>Rent</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '20%' }}>ID Proof</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '10%' }}>Units</th>
+                <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '12%' }}>Total Rent</th>
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '8%' }}>Status</th>
                 <th style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500, width: '8%', textAlign: 'right' }}>Actions</th>
               </tr>
@@ -611,7 +626,8 @@ export const TenantsView: React.FC = () => {
             <tbody>
               {filteredTenants.map(t => {
                 const assigns = assignmentsMap[t.id] || [];
-                const activeAssign = assigns.find(a => a.status === 'active');
+                const activeAssigns = assigns.filter(a => a.status === 'active');
+                const totalActiveRent = activeAssigns.reduce((sum, a) => sum + getEffectiveRentAsOf(a), 0);
                 const isExpanded = expandedTenant === t.id;
                 return (
                   <React.Fragment key={t.id}>
@@ -624,11 +640,39 @@ export const TenantsView: React.FC = () => {
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t.email || ''}</div>
                       </td>
                       <td style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t.phone || '—'}</td>
-                      <td style={{ padding: '14px 16px' }}>{activeAssign?.properties?.name || <span style={{ color: 'var(--text-secondary)' }}>Unassigned</span>}</td>
-                      <td style={{ padding: '14px 16px' }}>{activeAssign?.unit_number || '—'}</td>
-                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{activeAssign ? `₹${Number(getEffectiveRentAsOf(activeAssign)).toLocaleString('en-IN')}` : '—'}</td>
                       <td style={{ padding: '14px 16px' }}>
-                        {activeAssign ? (
+                        {t.id_proof_type ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            {t.id_proof_url ? (
+                              <span
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    const url = await getTenantDocumentUrl(t.id_proof_url as string);
+                                    window.open(url, '_blank');
+                                  } catch (err) {
+                                    console.error(err);
+                                    alert('Could not open document.');
+                                  }
+                                }}
+                                style={{ fontSize: '0.85rem', fontWeight: 500, color: '#0ea5e9', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                title="Click to view document"
+                              >
+                                <FileText size={12} /> {t.id_proof_type}
+                              </span>
+                            ) : (
+                              <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>{t.id_proof_type}</div>
+                            )}
+                            {t.id_proof_number && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t.id_proof_number}</div>}
+                          </div>
+                        ) : (
+                          <span style={{ color: 'var(--text-secondary)' }}>None</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{activeAssigns.length > 0 ? activeAssigns.length : '—'}</td>
+                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{activeAssigns.length > 0 ? `₹${Number(totalActiveRent).toLocaleString('en-IN')}` : '—'}</td>
+                      <td style={{ padding: '14px 16px' }}>
+                        {activeAssigns.length > 0 ? (
                           <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(16,185,129,0.15)', color: '#10b981' }}>Active</span>
                         ) : assigns.length > 0 ? (
                           <span style={{ padding: '3px 10px', borderRadius: '1px', fontSize: '0.8rem', fontWeight: 500, backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>Inactive</span>
@@ -891,6 +935,24 @@ export const TenantsView: React.FC = () => {
                 placeholder="XXXX-XXXX-XXXX" 
               />
             </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upload Document (Optional)</label>
+            <input 
+              type="file" 
+              accept="image/*,.pdf" 
+              onChange={e => setIdProofFile(e.target.files?.[0] || null)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            />
           </div>
           <ModalInput 
             label="Emergency Contact" 

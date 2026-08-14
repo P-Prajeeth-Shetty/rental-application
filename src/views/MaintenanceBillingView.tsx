@@ -192,7 +192,7 @@ export const MaintenanceBillingView: React.FC = () => {
           amount,
           status: 'unpaid'
         };
-      });
+      }).filter(charge => charge.amount > 0);
 
       const { error: chargesErr } = await supabase.from('maintenance_charges').insert(chargesData);
       if (chargesErr) throw chargesErr;
@@ -406,9 +406,32 @@ export const MaintenanceBillingView: React.FC = () => {
                           <br/>
                           <span style={{ opacity: 0.8 }}>{charge.payments.payment_method} {charge.payments.reference_number ? `(${charge.payments.reference_number})` : ''}</span>
                         </div>
-                        {charge.receipt_url && (
-                          <button
-                            type="button"
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td style={{ padding: '16px', textAlign: 'right' }}>
+                    {charge.status === 'unpaid' ? (
+                      <button
+                        onClick={() => { setSelectedCharge(charge); setPayModalOpen(true); }}
+                        style={{ 
+                          padding: '8px 16px', 
+                          fontSize: '0.85rem', 
+                          background: '#0f766e', 
+                          color: '#ffffff', 
+                          border: 'none', 
+                          borderRadius: '2px', 
+                          fontWeight: 600, 
+                          cursor: 'pointer' 
+                        }}
+                      >
+                        Record Payment
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        {charge.receipt_url ? (
+                          <span
                             onClick={async (e) => {
                               e.preventDefault();
                               try {
@@ -419,25 +442,27 @@ export const MaintenanceBillingView: React.FC = () => {
                                 alert('Could not open receipt.');
                               }
                             }}
-                            style={{ alignSelf: 'flex-start', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            style={{ 
+                              fontSize: '0.85rem', 
+                              fontWeight: 500, 
+                              color: '#0ea5e9', 
+                              cursor: 'pointer', 
+                              textDecoration: 'underline', 
+                              textUnderlineOffset: '2px', 
+                              display: 'inline-flex', 
+                              alignItems: 'center', 
+                              gap: '4px' 
+                            }}
+                            title="Click to view receipt"
                           >
-                            <FileText size={12} /> Receipt
-                          </button>
+                            <FileText size={12} /> Payment Complete
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                            Payment Complete
+                          </span>
                         )}
                       </div>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                  <td style={{ padding: '16px', textAlign: 'right' }}>
-                    {charge.status === 'unpaid' && (
-                      <button
-                        onClick={() => { setSelectedCharge(charge); setPayModalOpen(true); }}
-                        className="btn-primary"
-                        style={{ padding: '6px 12px', fontSize: '0.85rem' }}
-                      >
-                        Record Payment
-                      </button>
                     )}
                   </td>
                 </tr>
@@ -575,7 +600,13 @@ export const MaintenanceBillingView: React.FC = () => {
 
         <ModalActionButtons
           onCancel={() => setGenerateModalOpen(false)}
-          submitText={isSubmitting ? "Generating..." : `Generate ${activeAssignmentsForProperty.length > 0 ? activeAssignmentsForProperty.length : ''} Invoices`}
+          submitText={isSubmitting ? "Generating..." : `Generate ${
+            splitType === 'equal' 
+              ? activeAssignmentsForProperty.length 
+              : activeAssignmentsForProperty.filter(a => Number(customAmounts[a.id] || 0) > 0).length
+          } Invoice${
+            (splitType === 'equal' ? activeAssignmentsForProperty.length : activeAssignmentsForProperty.filter(a => Number(customAmounts[a.id] || 0) > 0).length) === 1 ? '' : 's'
+          }`}
           isSubmitting={isSubmitting}
           customSubmitAction={handleGenerateBill}
         />

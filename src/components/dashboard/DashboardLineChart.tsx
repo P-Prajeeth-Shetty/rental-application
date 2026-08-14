@@ -18,24 +18,38 @@ export const DashboardLineChart: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: payments, error } = await supabase
-        .from('payments')
-        .select(`
-          amount,
-          payment_date,
-          status,
-          tenant_assignments (
-            properties (
-              property_type
+      const [{ data: payments, error: pErr }, { data: assignments, error: aErr }] = await Promise.all([
+        supabase
+          .from('payments')
+          .select(`
+            amount,
+            payment_date,
+            status,
+            tenant_assignments (
+              properties (
+                property_type
+              )
             )
-          )
-        `)
-        .eq('status', 'paid');
+          `)
+          .eq('status', 'paid'),
+        supabase
+          .from('tenant_assignments')
+          .select(`
+            current_rent,
+            lease_start,
+            lease_end,
+            rent_revisions (
+              new_rent,
+              effective_from
+            )
+          `)
+      ]);
 
-      if (error) throw error;
+      if (pErr) throw pErr;
+      if (aErr) throw aErr;
 
       const currentYear = new Date().getFullYear();
-      const monthly = MONTHS.map(m => ({ name: m, Residential: 0, Commercial: 0 }));
+      const monthly = MONTHS.map(m => ({ name: m, Residential: 0, Commercial: 0, Target: 0 }));
 
       (payments || []).forEach((pay: any) => {
         const d = new Date(pay.payment_date);
@@ -50,6 +64,33 @@ export const DashboardLineChart: React.FC = () => {
             monthly[monthIdx].Commercial += amount;
           } else {
             monthly[monthIdx].Residential += amount;
+          }
+        }
+      });
+
+      // Target amount (Total Expected Rent Roll per month)
+      (assignments || []).forEach((a: any) => {
+        for (let m = 0; m < 12; m++) {
+          const monthStart = new Date(currentYear, m, 1);
+          const monthEnd = new Date(currentYear, m + 1, 0);
+          
+          const leaseStart = new Date(a.lease_start);
+          const leaseEnd = a.lease_end ? new Date(a.lease_end) : new Date(2100, 0, 1);
+
+          // Check if active in this month
+          if (leaseStart <= monthEnd && leaseEnd >= monthStart) {
+            let effectiveRent = a.current_rent;
+            if (a.rent_revisions && a.rent_revisions.length > 0) {
+              const sortedRevs = [...a.rent_revisions].sort((x, y) => new Date(y.effective_from).getTime() - new Date(x.effective_from).getTime());
+              for (const rev of sortedRevs) {
+                const revDate = new Date(rev.effective_from);
+                if (monthStart >= revDate) {
+                   effectiveRent = rev.new_rent;
+                   break;
+                }
+              }
+            }
+            monthly[m].Target += Number(effectiveRent) || 0;
           }
         }
       });
@@ -85,6 +126,10 @@ export const DashboardLineChart: React.FC = () => {
               <span style={{ width: '12px', height: '12px', background: '#7c3aed', borderRadius: '2px' }}></span>
               Commercial
             </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+              <span style={{ width: '12px', height: '3px', background: '#94a3b8', borderTop: '2px dashed #94a3b8' }}></span>
+              Target
+            </span>
           </div>
         </div>
         <ChartDropdown 
@@ -115,6 +160,16 @@ export const DashboardLineChart: React.FC = () => {
               <Tooltip 
                 formatter={(value: any, name: any) => [fmtRupee(Number(value) || 0), name]}
                 contentStyle={{ borderRadius: '1px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 600 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="Target" 
+                stroke="#94a3b8" 
+                strokeWidth={2} 
+                strokeDasharray="5 5"
+                dot={false}
+                activeDot={{ r: 4 }} 
+                isAnimationActive={false}
               />
               <Line 
                 type="monotone" 
