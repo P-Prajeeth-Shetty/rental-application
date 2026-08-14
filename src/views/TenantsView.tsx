@@ -84,6 +84,7 @@ export const TenantsView: React.FC = () => {
   const [assignmentsMap, setAssignmentsMap] = useState<Record<string, Assignment[]>>({});
   const [properties, setProperties] = useState<Property[]>([]);
   const [paymentLedgerTarget, setPaymentLedgerTarget] = useState<any>(null);
+  const [paymentLedgerBalance, setPaymentLedgerBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -773,9 +774,10 @@ export const TenantsView: React.FC = () => {
                                 <button onClick={(e) => { e.stopPropagation(); setActionMenuOpen(null); openRentModal(a); }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <TrendingUp size={14} color="#f59e0b" /> Increase Rent
                                 </button>
-                                <button onClick={(e) => { 
-                                  e.stopPropagation(); 
+                                <button onClick={async (e) => {
+                                  e.stopPropagation();
                                   setActionMenuOpen(null);
+                                  setPaymentLedgerBalance(0);
                                   setPaymentLedgerTarget({
                                     assignmentId: a.id,
                                     tenantName: t.full_name,
@@ -785,6 +787,13 @@ export const TenantsView: React.FC = () => {
                                     gstRate: Number(a.gst_rate ?? 18),
                                     tdsRate: Number(a.tds_rate ?? 10)
                                   });
+                                  const now = new Date();
+                                  const { data: statusData, error: statusErr } = await supabase.functions.invoke('payment-stats', {
+                                    body: { action: 'payment-status', filterMonth: now.getMonth() + 1, filterYear: now.getFullYear() },
+                                  });
+                                  if (!statusErr && statusData?.statusMap?.[a.id]) {
+                                    setPaymentLedgerBalance(statusData.statusMap[a.id].balance || 0);
+                                  }
                                 }} style={{ background: 'transparent', border: 'none', padding: '8px 12px', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', width: '100%', textAlign: 'left', borderRadius: '2px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                   <List size={14} color="#10b981" /> Payment Ledger
                                 </button>
@@ -1439,7 +1448,7 @@ export const TenantsView: React.FC = () => {
           propertyName={paymentLedgerTarget.propertyName}
           unitNumber={paymentLedgerTarget.unitNumber}
           currentRent={paymentLedgerTarget.currentRent}
-          backendBalance={0}
+          backendBalance={paymentLedgerBalance}
           gstRate={paymentLedgerTarget.gstRate}
           tdsRate={paymentLedgerTarget.tdsRate}
           onClose={() => setPaymentLedgerTarget(null)}
