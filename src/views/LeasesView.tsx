@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './views.css';
-import { Upload, Plus, Search, History, Download, Check, AlertTriangle } from 'lucide-react';
+import { Upload, Plus, Search, History, Download, Check, AlertTriangle, FileText } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 import { CustomSelect } from '../components/ui/CustomSelect';
@@ -8,7 +8,7 @@ import { Modal, ModalInput, ModalActionButtons } from '../components/ui/Modal';
 
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { timingBadge, rentBadge } from '../lib/paymentUtils';
-import { uploadPaymentReceipt } from '../lib/storageUtils';
+import { uploadPaymentReceipt, getPaymentReceiptUrl } from '../lib/storageUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
 
 interface AssignmentWithTenant {
@@ -66,6 +66,7 @@ interface Payment {
   is_reversed: boolean;
   notes: string | null;
   created_at: string;
+  receipt_url: string | null;
 }
 
 interface ExcelRow {
@@ -616,6 +617,23 @@ export const LeasesView: React.FC = () => {
                         >
                           <History size={14} />
                         </button>
+                        {latestPay?.receipt_url && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const url = await getPaymentReceiptUrl(latestPay.receipt_url as string);
+                                window.open(url, '_blank');
+                              } catch (err) {
+                                console.error(err);
+                                showToast('error', 'Could not open receipt.');
+                              }
+                            }}
+                            title="View payment receipt"
+                            style={{ padding: '6px', borderRadius: '2px', background: 'rgba(16,185,129,0.12)', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <FileText size={14} />
+                          </button>
+                        )}
                           <button
                             onClick={() => {
                               setPayForm({ ...payForm, assignment_id: a.id, amount: String(Math.max(0, balance)), payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' });
