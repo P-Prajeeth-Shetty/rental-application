@@ -223,29 +223,41 @@ export const LeasesView: React.FC = () => {
         const monthsCovered = Math.max(1, parseInt(row['Months Covered'] || row['months_covered'] || '1') || 1);
         const notes = String(row['Notes'] || row['notes'] || '');
 
-        // Match by tenant name + property + unit (handles duplicate names)
         let match: AssignmentWithTenant | undefined;
-        if (property && unit) {
+        
+        // 1. Match primarily by Unit + Property (regardless of tenantName)
+        if (unit && property) {
           match = assignments.find(a => 
-            a.tenants?.full_name.toLowerCase() === tenantName.toLowerCase() &&
-            a.properties?.name.toLowerCase() === property.toLowerCase() &&
-            a.unit_number.toLowerCase() === unit.toLowerCase()
+            a.unit_number.toLowerCase() === unit.toLowerCase() &&
+            a.properties?.name.toLowerCase() === property.toLowerCase()
           );
         }
-        if (!match && property) {
+        
+        // 2. Match by Unit only (if unique)
+        if (!match && unit) {
+          const matchesByUnit = assignments.filter(a => a.unit_number.toLowerCase() === unit.toLowerCase());
+          if (matchesByUnit.length === 1) {
+            match = matchesByUnit[0];
+          }
+        }
+        
+        // 3. Fallback to Tenant Name + Property
+        if (!match && tenantName && property) {
           match = assignments.find(a => 
             a.tenants?.full_name.toLowerCase() === tenantName.toLowerCase() &&
             a.properties?.name.toLowerCase() === property.toLowerCase()
           );
         }
-        if (!match) {
+
+        // 4. Fallback to just Tenant Name
+        if (!match && tenantName) {
           match = assignments.find(a => a.tenants?.full_name.toLowerCase() === tenantName.toLowerCase());
         }
 
         const parsed: ExcelRow = { tenant_name: tenantName, property, unit, amount, payment_date: formatExcelDate(paymentDate), method, reference, month, year, payment_type: paymentType, months_covered: monthsCovered, notes };
 
-        if (!tenantName) parsed.error = 'Missing tenant name';
-        else if (!match) parsed.error = 'Tenant not found';
+        if (!unit && !tenantName) parsed.error = 'Missing unit or tenant name';
+        else if (!match) parsed.error = 'Unit/Tenant not found';
         else if (!amount || amount <= 0) parsed.error = 'Invalid amount';
         else { parsed.matched_assignment_id = match.id; parsed.matched_assignment = match; }
 
@@ -339,7 +351,7 @@ export const LeasesView: React.FC = () => {
             'GST Amount': gstAmt,
             'TDS Amount': tdsAmt,
             'Net Amount': net,
-            'Paid Amount': net,
+            'Paid Amount': Math.max(net, getStatus(a.id).balance),
             'Bal Amount': getStatus(a.id).balance,
             'Payment Date': new Date().toISOString().split('T')[0],
             'Method': 'UPI',
@@ -481,9 +493,9 @@ export const LeasesView: React.FC = () => {
           <button onClick={() => fileRef.current?.click()} className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 16px', border: '1.5px solid #e2e8f0', background: '#ffffff', color: '#111827', height: '48px', fontWeight: 500, cursor: 'pointer' }}>
             <Upload size={16} color="#0f766e" /> Upload Excel
           </button>
-          <button onClick={() => { 
+          <button onClick={() => {
             const defaultAssign = assignments[0];
-            const defaultAmount = defaultAssign ? getEffectiveRentAsOf(defaultAssign).toString() : '';
+            const defaultAmount = defaultAssign ? Math.max(getEffectiveRentAsOf(defaultAssign), paymentStatusMap[defaultAssign.id]?.balance || 0).toString() : '';
             setPayForm({ ...payForm, assignment_id: defaultAssign?.id || '', amount: defaultAmount, payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' }); 
             setPayModal(true); 
           }} className="btn btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', borderRadius: '2px', padding: '0 20px', height: '48px', fontWeight: 600, background: '#0f766e', color: '#ffffff', border: 'none', cursor: 'pointer' }}>
@@ -617,23 +629,7 @@ export const LeasesView: React.FC = () => {
                         >
                           <History size={14} />
                         </button>
-                        {latestPay?.receipt_url && (
-                          <button
-                            onClick={async () => {
-                              try {
-                                const url = await getPaymentReceiptUrl(latestPay.receipt_url as string);
-                                window.open(url, '_blank');
-                              } catch (err) {
-                                console.error(err);
-                                showToast('error', 'Could not open receipt.');
-                              }
-                            }}
-                            title="View payment receipt"
-                            style={{ padding: '6px', borderRadius: '2px', background: 'rgba(16,185,129,0.12)', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                          >
-                            <FileText size={14} />
-                          </button>
-                        )}
+
                           <button
                             onClick={() => {
                               setPayForm({ ...payForm, assignment_id: a.id, amount: String(Math.max(0, balance)), payment_date: new Date().toISOString().split('T')[0], payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' });
@@ -685,7 +681,7 @@ export const LeasesView: React.FC = () => {
                     let defaultAmount = payForm.amount;
                     if (assignment) {
                       if (payForm.payment_type === 'rent') {
-                        defaultAmount = getEffectiveRentAsOf(assignment).toString();
+                        defaultAmount = Math.max(getEffectiveRentAsOf(assignment), paymentStatusMap[assignment.id]?.balance || 0).toString();
                       } else if (payForm.payment_type === 'security_deposit') {
                         const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
                         const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
@@ -765,7 +761,7 @@ export const LeasesView: React.FC = () => {
                     let defaultAmount = payForm.amount;
                     if (assignment) {
                       if (val === 'rent') {
-                        defaultAmount = getEffectiveRentAsOf(assignment).toString();
+                        defaultAmount = Math.max(getEffectiveRentAsOf(assignment), paymentStatusMap[assignment.id]?.balance || 0).toString();
                       } else if (val === 'security_deposit') {
                         const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
                         const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
