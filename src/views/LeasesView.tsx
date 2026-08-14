@@ -8,6 +8,7 @@ import { Modal, ModalInput, ModalActionButtons } from '../components/ui/Modal';
 
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { timingBadge, rentBadge } from '../lib/paymentUtils';
+import { uploadPaymentReceipt } from '../lib/storageUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
 
 interface AssignmentWithTenant {
@@ -106,6 +107,7 @@ export const LeasesView: React.FC = () => {
   const [payModal, setPayModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [payForm, setPayForm] = useState({ assignment_id: '', amount: '', payment_date: '', payment_method: 'UPI', reference_number: '', notes: '', payment_type: 'rent' });
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   // Excel upload
   const [excelModal, setExcelModal] = useState(false);
@@ -158,6 +160,11 @@ export const LeasesView: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      let receipt_url = null;
+      if (receiptFile) {
+        receipt_url = await uploadPaymentReceipt(receiptFile);
+      }
+
       const payload = [{
         assignment_id: payForm.assignment_id,
         amount: payForm.amount,
@@ -165,7 +172,8 @@ export const LeasesView: React.FC = () => {
         payment_method: payForm.payment_method || null,
         payment_type: payForm.payment_type || 'rent',
         reference_number: payForm.reference_number || null,
-        notes: payForm.notes || null
+        notes: payForm.notes || null,
+        receipt_url: receipt_url
       }];
 
       const { data, error } = await supabase.functions.invoke('process-payments', {
@@ -647,35 +655,37 @@ export const LeasesView: React.FC = () => {
 
       {/* ══ Record Payment Modal ══════════════════════════════════════════ */}
       <Modal isOpen={payModal} onClose={() => !isSubmitting && setPayModal(false)} title="Record Payment">
-        <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tenant *</label>
-            <div style={{ position: 'relative' }}>
-              <CustomSelect
-                value={payForm.assignment_id}
-                onChange={(val) => {
-                  const assignment = assignments.find(a => a.id === val);
-                  let defaultAmount = payForm.amount;
-                  if (assignment) {
-                    if (payForm.payment_type === 'rent') {
-                      defaultAmount = getEffectiveRentAsOf(assignment).toString();
-                    } else if (payForm.payment_type === 'security_deposit') {
-                      const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
-                      const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
-                      defaultAmount = depositLeft.toString();
-                    } else if (payForm.payment_type === 'historical_settlement') {
-                      defaultAmount = Math.max(0, paymentStatusMap[assignment.id]?.balance || 0).toString();
+        <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tenant (Active)</label>
+              <div style={{ position: 'relative' }}>
+                <CustomSelect
+                  value={payForm.assignment_id}
+                  onChange={(val) => {
+                    const assignment = assignments.find(a => a.id === val);
+                    let defaultAmount = payForm.amount;
+                    if (assignment) {
+                      if (payForm.payment_type === 'rent') {
+                        defaultAmount = getEffectiveRentAsOf(assignment).toString();
+                      } else if (payForm.payment_type === 'security_deposit') {
+                        const totalDepositPaid = paymentStatusMap[assignment.id]?.totalDepositPaid || 0;
+                        const depositLeft = Math.max(0, (assignment.security_deposit || 0) - totalDepositPaid);
+                        defaultAmount = depositLeft.toString();
+                      } else if (payForm.payment_type === 'historical_settlement') {
+                        defaultAmount = Math.max(0, paymentStatusMap[assignment.id]?.balance || 0).toString();
+                      }
                     }
-                  }
-                  setPayForm({ ...payForm, assignment_id: val, amount: defaultAmount });
-                }}
-                placeholder="Select tenant..."
-                searchable={true}
-                options={assignments.map(a => ({
-                  value: a.id,
-                  label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')})`
-                }))}
-              />
+                    setPayForm({ ...payForm, assignment_id: val, amount: defaultAmount });
+                  }}
+                  placeholder="Select tenant..."
+                  searchable={true}
+                  options={assignments.map(a => ({
+                    value: a.id,
+                    label: `${a.tenants?.full_name} — ${a.properties?.name} ${a.unit_number} (₹${Number(getEffectiveRentAsOf(a)).toLocaleString('en-IN')})`
+                  }))}
+                />
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -774,6 +784,24 @@ export const LeasesView: React.FC = () => {
                 placeholder="Enter notes..." 
               />
             </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attachment (Optional)</label>
+            <input 
+              type="file" 
+              accept="image/*,.pdf" 
+              onChange={e => setReceiptFile(e.target.files?.[0] || null)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            />
           </div>
           <ModalActionButtons 
             onCancel={() => setPayModal(false)} 

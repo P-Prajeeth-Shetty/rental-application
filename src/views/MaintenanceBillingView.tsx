@@ -3,7 +3,8 @@ import './views.css';
 import { supabase } from '../lib/supabase';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { Modal, ModalInput, ModalActionButtons } from '../components/ui/Modal';
-import { CheckCircle, Clock, Plus, Search } from 'lucide-react';
+import { CheckCircle, Clock, Plus, Search, FileText } from 'lucide-react';
+import { uploadPaymentReceipt, getPaymentReceiptUrl } from '../lib/storageUtils';
 
 interface Property {
   id: string;
@@ -46,6 +47,7 @@ interface MaintenanceCharge {
   status: 'unpaid' | 'paid';
   created_at: string;
   payment_id?: string;
+  receipt_url?: string | null;
   maintenance_bills?: MaintenanceBill;
   tenant_assignments?: TenantAssignment;
   payments?: PaymentDetails;
@@ -82,6 +84,7 @@ export const MaintenanceBillingView: React.FC = () => {
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState<string>('UPI');
   const [referenceNumber, setReferenceNumber] = useState<string>('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -214,6 +217,11 @@ export const MaintenanceBillingView: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      let receipt_url = null;
+      if (receiptFile) {
+        receipt_url = await uploadPaymentReceipt(receiptFile);
+      }
+
       // 1. Insert into payments table and return the new ID
       const { data: paymentRecord, error: paymentErr } = await supabase.from('payments').insert({
         assignment_id: selectedCharge.assignment_id,
@@ -225,7 +233,8 @@ export const MaintenanceBillingView: React.FC = () => {
         reference_number: referenceNumber || null,
         status: 'paid',
         payment_type: 'maintenance',
-        notes: `Maintenance Payment for Bill #${selectedCharge.bill_id.substring(0, 8)}`
+        notes: `Maintenance Payment for Bill #${selectedCharge.bill_id.substring(0, 8)}`,
+        receipt_url: receipt_url
       }).select().single();
 
       if (paymentErr) throw paymentErr;
@@ -234,7 +243,8 @@ export const MaintenanceBillingView: React.FC = () => {
       const { error: chargeErr } = await supabase.from('maintenance_charges')
         .update({
           status: 'paid',
-          payment_id: paymentRecord.id
+          payment_id: paymentRecord.id,
+          receipt_url: receipt_url
         })
         .eq('id', selectedCharge.id);
 
@@ -390,9 +400,30 @@ export const MaintenanceBillingView: React.FC = () => {
                   </td>
                   <td style={{ padding: '16px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                     {charge.status === 'paid' && charge.payments ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span>{new Date(charge.payments.payment_date).toLocaleDateString('en-GB')}</span>
-                        <span style={{ opacity: 0.8 }}>{charge.payments.payment_method} {charge.payments.reference_number ? `(${charge.payments.reference_number})` : ''}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div>
+                          <span>{new Date(charge.payments.payment_date).toLocaleDateString('en-GB')}</span>
+                          <br/>
+                          <span style={{ opacity: 0.8 }}>{charge.payments.payment_method} {charge.payments.reference_number ? `(${charge.payments.reference_number})` : ''}</span>
+                        </div>
+                        {charge.receipt_url && (
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              try {
+                                const url = await getPaymentReceiptUrl(charge.receipt_url as string);
+                                window.open(url, '_blank');
+                              } catch (err) {
+                                console.error(err);
+                                alert('Could not open receipt.');
+                              }
+                            }}
+                            style={{ alignSelf: 'flex-start', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <FileText size={12} /> Receipt
+                          </button>
+                        )}
                       </div>
                     ) : (
                       '—'
@@ -601,6 +632,25 @@ export const MaintenanceBillingView: React.FC = () => {
               onChange={(e) => setReferenceNumber(e.target.value)}
               placeholder="e.g. UTR or Cheque Number"
             />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '0.88rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Attachment (Optional)</label>
+              <input 
+                type="file" 
+                accept="image/*,.pdf" 
+                onChange={e => setReceiptFile(e.target.files?.[0] || null)}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.85rem',
+                  width: '100%',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
 
             <ModalActionButtons
               onCancel={() => setPayModalOpen(false)}

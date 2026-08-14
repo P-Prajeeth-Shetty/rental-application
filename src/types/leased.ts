@@ -47,6 +47,7 @@ export interface OutgoingPayment {
   period_year: number | null;
   status: 'paid' | 'pending' | 'failed';
   notes: string | null;
+  receipt_url: string | null;
   created_at: string;
 }
 

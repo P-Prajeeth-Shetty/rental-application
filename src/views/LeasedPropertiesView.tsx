@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './views.css';
 import { Plus, Pencil, Trash2, Building2, User, FileText, IndianRupee, ChevronLeft, MapPin, Home, Printer } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { uploadPaymentReceipt, getPaymentReceiptUrl } from '../lib/storageUtils';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { Modal, ModalInput, ModalTextarea, ModalActionButtons } from '../components/ui/Modal';
 import { AgreementSlipModal } from '../components/agreement/AgreementSlipModal';
@@ -32,6 +33,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
   
   // Generic form data state
   const [formData, setFormData] = useState<any>({});
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   // Print agreement slip
   const [agreementSlipTarget, setAgreementSlipTarget] = useState<LeaseAgreement | null>(null);
@@ -71,6 +73,7 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
   const handleOpenModal = (type: Tab, mode: ModalMode, data?: any) => {
     setModalType(type);
     setModalMode(mode);
+    setReceiptFile(null);
     if (mode === 'edit' && data) {
       setFormData(data);
     } else {
@@ -100,11 +103,18 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
       else if (modalType === 'agreements') table = 'lease_agreements';
       else if (modalType === 'payments') table = 'outgoing_payments';
 
+      let dataToSubmit = { ...formData };
+
+      if (modalType === 'payments' && receiptFile) {
+        const receipt_url = await uploadPaymentReceipt(receiptFile);
+        dataToSubmit.receipt_url = receipt_url;
+      }
+
       if (modalMode === 'create') {
-        const { error } = await supabase.from(table).insert([formData]);
+        const { error } = await supabase.from(table).insert([dataToSubmit]);
         if (error) throw error;
       } else {
-        const { id, created_at, ...updateData } = formData;
+        const { id, created_at, ...updateData } = dataToSubmit;
         const { error } = await supabase.from(table).update(updateData).eq('id', id);
         if (error) throw error;
       }
@@ -309,7 +319,6 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
             {activeTab === 'properties' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-
                     <button className="btn btn-primary" onClick={() => handleOpenModal('properties', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> Add Property
                     </button>
@@ -345,7 +354,6 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
             {activeTab === 'landlords' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-
                     <button className="btn btn-primary" onClick={() => handleOpenModal('landlords', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> Add Landlord
                     </button>
@@ -396,7 +404,6 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
             {activeTab === 'agreements' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-
                     <button className="btn btn-primary" onClick={() => handleOpenModal('agreements', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> New Agreement
                     </button>
@@ -447,7 +454,6 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
             {activeTab === 'payments' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px' }}>
-
                     <button className="btn btn-primary" onClick={() => handleOpenModal('payments', 'create')} style={{ display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '1px' }}>
                       <Plus size={16}/> Record Payment
                     </button>
@@ -478,6 +484,24 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                             <td>
                               <div style={{ fontSize: '0.85rem' }}>{p.payment_method || '—'}</div>
                               <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{p.reference_number || '—'}</div>
+                              {p.receipt_url && (
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    try {
+                                      const url = await getPaymentReceiptUrl(p.receipt_url as string);
+                                      window.open(url, '_blank');
+                                    } catch (err) {
+                                      console.error(err);
+                                      alert('Could not open receipt.');
+                                    }
+                                  }}
+                                  style={{ marginTop: '4px', fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                  <FileText size={12} /> Receipt
+                                </button>
+                              )}
                             </td>
                             <td>
                               <span className="status-badge" style={{ backgroundColor: p.status === 'paid' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)', color: p.status === 'paid' ? '#10b981' : '#f59e0b' }}>
@@ -621,8 +645,28 @@ export const LeasedPropertiesView: React.FC<{ searchQuery: string, filterType?: 
                 <div style={{ flex: 1 }}><ModalInput type="date" label="Payment Date *" value={formData.payment_date} onChange={e => setFormData({...formData, payment_date: e.target.value})} required /></div>
                 <div style={{ flex: 1 }}><ModalInput label="Payment Method" value={formData.payment_method} onChange={e => setFormData({...formData, payment_method: e.target.value})} placeholder="e.g. UPI, NEFT" /></div>
               </div>
-              <ModalInput label="Reference Number" value={formData.reference_number} onChange={e => setFormData({...formData, reference_number: e.target.value})} />
-              <ModalTextarea label="Notes" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}><ModalInput label="Reference / UTR" value={formData.reference_number || ''} onChange={e => setFormData({...formData, reference_number: e.target.value})} placeholder="Transaction ID" /></div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attachment (Optional)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*,.pdf" 
+                    onChange={e => setReceiptFile(e.target.files?.[0] || null)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+              <ModalTextarea label="Notes (Optional)" value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} />
             </>
           )}
 

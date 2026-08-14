@@ -203,6 +203,7 @@ serve(async (req) => {
           credit_amount: 0,
           expected_amount: remainingAmount,
           upload_batch_id: upload_batch_id || null,
+          receipt_url: p.receipt_url || null,
           gst_amount: 0,
           tds_amount: 0
         });
@@ -282,6 +283,7 @@ serve(async (req) => {
           credit_amount: creditAmount,
           expected_amount: expectedAmountForMonth,
           upload_batch_id: upload_batch_id || null,
+          receipt_url: p.receipt_url || null,
           gst_amount: gstAmount,
           tds_amount: tdsAmount
         });

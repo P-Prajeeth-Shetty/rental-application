@@ -3,7 +3,9 @@ import { TrendingUp, TrendingDown, Calendar, IndianRupee } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { timingBadge } from '../../lib/paymentUtils';
 import type { PaymentTiming } from '../../lib/paymentUtils';
+import { getPaymentReceiptUrl } from '../../lib/storageUtils';
 import { Drawer } from './Modal';
+import { FileText } from 'lucide-react';
 
 interface HistoryPayment {
   id: string;
@@ -24,6 +26,7 @@ interface HistoryPayment {
   is_reversed: boolean;
   reversal_notes: string | null;
   notes: string | null;
+  receipt_url: string | null;
 }
 
 interface TenantHistoryDrawerProps {
@@ -53,7 +56,7 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
       const [{ data, error }, { data: revData }] = await Promise.all([
         supabase
           .from('payments')
-          .select('*')
+          .select('id, amount, payment_date, payment_method, period_month, period_year, reference_number, status, payment_type, payment_timing, days_late, credit_amount, expected_amount, gst_amount, tds_amount, is_reversed, reversal_notes, notes, receipt_url')
           .eq('assignment_id', assignmentId)
           .order('period_year', { ascending: false })
           .order('period_month', { ascending: false }),
@@ -212,6 +215,26 @@ export const TenantHistoryDrawer: React.FC<TenantHistoryDrawerProps> = ({
                       <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(14,165,233,0.1)', color: '#0ea5e9', fontWeight: 600 }}>
                         Rent revised to ₹{matchedRevision.new_rent.toLocaleString('en-IN')}
                       </span>
+                    )}
+                    {/* Receipt link */}
+                    {p.receipt_url && (
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          try {
+                            const url = await getPaymentReceiptUrl(p.receipt_url as string);
+                            window.open(url, '_blank');
+                          } catch (err) {
+                            console.error(err);
+                            alert('Could not open receipt.');
+                          }
+                        }}
+                        style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '2px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <FileText size={12} />
+                        Receipt
+                      </button>
                     )}
                   </div>
 
