@@ -332,9 +332,6 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
     totalDepositPerAssignment[p.assignment_id] = (totalDepositPerAssignment[p.assignment_id] || 0) + Number(p.amount);
   });
 
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
-
   (assignments || []).forEach((a: any) => {
     const assignmentRevisions = revisionsMap.get(a.id) || [];
     const baseRent = getExpectedRentForMonth(a, filterMonth, filterYear, assignmentRevisions);
@@ -344,23 +341,14 @@ async function handlePaymentStatus(supabase: any, filterMonth: number, filterYea
     const paidAmount = paidPerAssignment[a.id] || 0;
     const fullyPaid = paidAmount >= expected;
 
-    // CUMULATIVE BALANCE CALCULATION (Anniversary Billing)
-    // We compute exactly the list of months expected to be paid up to 'now'
+    // CUMULATIVE BALANCE CALCULATION
+    // Full current calendar month is always due on the 1st, regardless of lease anniversary day.
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
     const expectedMonths = getExpectedMonths(a.lease_start, a.lease_end, currentMonth, currentYear);
-    
-    // Check if we should include the current month based on due date/anniversary
-    const start = new Date(a.lease_start);
-    let includedMonths = expectedMonths;
-    if (a.payment_mode !== 'prepaid' && a.payment_mode !== 'advance_on_entry') {
-        if (now.getDate() < start.getDate()) {
-            includedMonths = expectedMonths.slice(0, -1);
-        }
-    }
 
     let totalExpectedAllTime = 0;
-    includedMonths.forEach(em => {
+    expectedMonths.forEach(em => {
       const baseRentForMonth = getExpectedRentForMonth(a, em.month, em.year, assignmentRevisions);
       totalExpectedAllTime += computeNetPayable(baseRentForMonth, gstRate, tdsRate);
     });
