@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './views.css';
-import { Upload, Plus, Search, History, Download, Check, AlertTriangle, FileText } from 'lucide-react';
+import { Upload, Plus, Search, History, Download, Check, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
 import { CustomSelect } from '../components/ui/CustomSelect';
@@ -8,7 +8,7 @@ import { Modal, ModalInput, ModalActionButtons } from '../components/ui/Modal';
 
 import { TenantHistoryDrawer } from '../components/ui/TenantHistoryDrawer';
 import { timingBadge, rentBadge } from '../lib/paymentUtils';
-import { uploadPaymentReceipt, getPaymentReceiptUrl } from '../lib/storageUtils';
+import { uploadPaymentReceipt } from '../lib/storageUtils';
 import type { PaymentTiming } from '../lib/paymentUtils';
 
 interface AssignmentWithTenant {
