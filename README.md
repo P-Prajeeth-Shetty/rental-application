@@ -16,23 +16,24 @@
 
 ## ✨ Features
 
-- 🏠 **Property Management**: Complete CRUD operations for properties, viewing occupancy rates, and calculating total potential revenue.
-- 👥 **Tenant Tracking**: Manage active, vacated, and pending tenant assignments with detailed leasing periods and current rent tracking.
-- 💰 **Financial Dashboard**: Powerful payment tracking system. Upload CSV payments, monitor on-time vs. late payments, and view beautiful revenue analytics.
-- 🛠️ **Maintenance Requests**: Kanban-style maintenance ticketing system to track repair statuses across all your properties.
-- 🔐 **Role-based Authentication**: Secure user management with Admin, Manager, and Viewer roles utilizing Supabase Row Level Security (RLS).
-- 🎨 **Premium UI/UX**: State-of-the-art liquid glassmorphism design system, redesigned login experience, advanced charting components, and a highly responsive layout.
-- 🆘 **Help Center**: Integrated support hub for user guidance and smooth onboarding.
+- 🏠 **Property Management**: Complete CRUD operations for owned properties, occupancy rates, and revenue tracking — plus a separate "leased-in" module for properties rented *from* landlords (agreements, outgoing payments).
+- 👥 **Tenant Tracking**: Manage active, vacated, and transferred tenant assignments, with automatic 5%-every-11-months rent escalation and full rent-revision history.
+- 💰 **Financial Dashboard**: Upload CSV payments, auto-classify early/on-time/late timing, track security deposits separately from rent, and view revenue analytics.
+- 🛠️ **Maintenance Billing**: Create per-property maintenance bills, split costs across tenants (equal or custom), and track charges/payments per tenant.
+- 🔐 **Role-based Authentication**: Admin and standard user roles enforced via Supabase Row Level Security (RLS); admin-only user management runs through server-verified edge functions.
+- 🎨 **Premium UI/UX**: Glassmorphism design system, dark mode, responsive layout, and a shared design-token stylesheet.
+- 🆘 **Help Center**: Integrated support hub for user guidance and onboarding.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how the codebase is organized and how these pieces fit together.
 
 ## 💻 Tech Stack
 
 - **Frontend Framework**: React 19 + Vite
 - **Language**: TypeScript
-- **Styling**: Custom CSS Modules (Glassmorphism & Modern UI)
+- **Styling**: Custom CSS per view/component (Glassmorphism & Modern UI)
 - **Icons**: Lucide React
 - **Charts**: Recharts
-- **Backend & Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth
+- **Backend & Database**: Supabase (PostgreSQL, Auth, Storage, Edge Functions, pg_cron)
 
 ## 🚀 Quick Start
 
@@ -62,7 +63,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ### 4. Database Setup
 
-Ensure your Supabase project is configured with the necessary tables (`properties`, `tenant_assignments`, `payments`, `profiles`, `audit_logs`). The schema migrations can be found in the `supabase/migrations` folder.
+Apply the migrations in `supabase/migrations` in order (via `supabase db push` or the Supabase SQL editor). They create the full schema — properties, tenants, tenant assignments, rent revisions, payments, maintenance billing, leased-in properties/landlords, reminders/notebooks, profiles, roles, and audit logs — along with the RLS policies, storage buckets, and the `pg_cron` job that drives automatic rent escalation.
+
+Then deploy the edge functions in `supabase/functions` (`supabase functions deploy`). See [ARCHITECTURE.md](ARCHITECTURE.md#supabase-edge-functions) for what each one does.
 
 ### 5. Start the development server
 
@@ -79,22 +82,6 @@ This project is optimized for deployment on Vercel.
 1. Connect your GitHub repository to Vercel.
 2. In the Vercel project settings, add the `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your Environment Variables.
 3. Deploy!
-
-## 📸 Screenshots
-
-*(Add screenshots of your gorgeous dashboard here!)*
-
-| Dashboard | Property Details |
-| :---: | :---: |
-| <img src="https://via.placeholder.com/600x400.png?text=Dashboard+Screenshot" alt="Dashboard" /> | <img src="https://via.placeholder.com/600x400.png?text=Property+Screenshot" alt="Properties" /> |
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/P-Prajeeth-Shetty/rental-application/issues).
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
