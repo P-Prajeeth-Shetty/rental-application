@@ -110,7 +110,7 @@
   justify-content: center;
   min-height: 175px;
   height: 175px;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   padding: 26px 30px;
   border: none;
   box-shadow: none;
@@ -163,7 +163,7 @@
   width: 48px;
   height: 48px;
   background: white;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -294,7 +294,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  border-radius: 2px;
+  border-radius: var(--border-radius-sm);
   border: 1px solid var(--border-color, #e2e8f0);
   background: var(--bg-surface, #ffffff);
   color: var(--text-primary, #1e293b);
@@ -326,7 +326,7 @@
   right: 0;
   min-width: 180px;
   background: #ffffff !important;
-  border-radius: 2px;
+  border-radius: var(--border-radius-sm);
   padding: 6px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #e2e8f0;
@@ -347,7 +347,7 @@
 
 .dropdown-menu-item {
   padding: 9px 14px;
-  border-radius: 2px;
+  border-radius: var(--border-radius-sm);
   font-size: 0.85rem;
   font-weight: 500;
   color: #334155;
@@ -415,7 +415,7 @@
 
 .stat-badge {
   padding: 2px 6px;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   font-size: 0.7rem;
   font-weight: 600;
   color: white;
@@ -486,7 +486,7 @@
 .progress-bar-container {
   height: 24px;
   background: white;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   overflow: hidden;
   margin-bottom: var(--spacing-md);
 }
@@ -494,7 +494,7 @@
 .progress-bar-fill {
   height: 100%;
   background: var(--primary-gradient);
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
 }
 
 .widget-details h4 {
@@ -608,7 +608,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   padding: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.6);
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -723,7 +723,7 @@
   margin-bottom: 16px;
   background: rgba(255, 255, 255, 0.3);
   padding: 8px;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
@@ -796,7 +796,7 @@
 .overdue-icon-wrap {
   width: 36px;
   height: 36px;
-  border-radius: 2px;
+  border-radius: var(--border-radius-sm);
   background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
   display: flex;
@@ -820,7 +820,7 @@
   font-weight: 700;
   font-size: 1rem;
   padding: 6px 14px;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
@@ -838,7 +838,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   background: rgba(239, 68, 68, 0.04);
   border: 1px solid rgba(239, 68, 68, 0.08);
   transition: all 0.2s ease;
@@ -904,7 +904,7 @@
 .overdue-month-badge {
   font-size: 0.7rem;
   padding: 2px 8px;
-  border-radius: 1px;
+  border-radius: var(--border-radius-sm);
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   font-weight: 500;
