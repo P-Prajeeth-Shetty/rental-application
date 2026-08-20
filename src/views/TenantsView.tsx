@@ -775,6 +775,7 @@ export const TenantsView: React.FC = () => {
             <div style={{ flex: 1 }}>
               <ModalInput 
                 type="number" 
+                step="0.01"
                 label="Monthly Rent (₹) *" 
                 value={assignForm.current_rent} 
                 onChange={e => setAssignForm({ ...assignForm, current_rent: e.target.value })} 
@@ -865,6 +866,7 @@ export const TenantsView: React.FC = () => {
           </div>
           <ModalInput 
             type="number" 
+            step="0.01"
             label="Security Deposit (₹)" 
             value={assignForm.security_deposit} 
             onChange={e => setAssignForm({ ...assignForm, security_deposit: e.target.value })} 
@@ -1154,6 +1156,7 @@ export const TenantsView: React.FC = () => {
             <div style={{ flex: 1 }}>
               <ModalInput
                 type="number"
+                step="0.01"
                 label="Monthly Rent (₹) *"
                 value={transferForm.current_rent}
                 onChange={e => setTransferForm({ ...transferForm, current_rent: e.target.value })}
@@ -1164,6 +1167,7 @@ export const TenantsView: React.FC = () => {
             <div style={{ flex: 1 }}>
               <ModalInput
                 type="number"
+                step="0.01"
                 label="Security Deposit (₹)"
                 value={transferForm.security_deposit}
                 onChange={e => setTransferForm({ ...transferForm, security_deposit: e.target.value })}
