@@ -10,10 +10,12 @@ export const DashboardAreaChart: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('monthly');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState<number[]>([new Date().getFullYear()]);
 
   useEffect(() => {
     fetchData();
-  }, [viewMode]);
+  }, [viewMode, selectedYear]);
 
   const fetchData = async () => {
     try {
@@ -25,7 +27,14 @@ export const DashboardAreaChart: React.FC = () => {
 
       if (error) throw error;
 
-      const currentYear = new Date().getFullYear();
+      // Extract unique years
+      const yearsSet = new Set<number>();
+      yearsSet.add(new Date().getFullYear());
+      (payments || []).forEach((p: any) => {
+        if (p.payment_date) yearsSet.add(new Date(p.payment_date).getFullYear());
+      });
+      const yearsList = Array.from(yearsSet).sort((a, b) => b - a); // Descending
+      setAvailableYears(yearsList);
 
       if (viewMode === 'quarterly') {
         const quarterly = [
@@ -37,7 +46,7 @@ export const DashboardAreaChart: React.FC = () => {
 
         (payments || []).forEach((pay: any) => {
           const d = new Date(pay.payment_date);
-          if (d.getFullYear() !== currentYear) return;
+          if (d.getFullYear() !== selectedYear) return;
           const qIdx = Math.floor(d.getMonth() / 3);
           if (qIdx >= 0 && qIdx < 4) {
             quarterly[qIdx].Total += Number(pay.amount) || 0;
@@ -50,7 +59,7 @@ export const DashboardAreaChart: React.FC = () => {
 
         (payments || []).forEach((pay: any) => {
           const d = new Date(pay.payment_date);
-          if (d.getFullYear() !== currentYear) return;
+          if (d.getFullYear() !== selectedYear) return;
           const monthIdx = d.getMonth();
           if (monthIdx >= 0 && monthIdx < 12) {
             monthly[monthIdx].Total += Number(pay.amount) || 0;
@@ -69,16 +78,23 @@ export const DashboardAreaChart: React.FC = () => {
 
   return (
     <div className="surface-card" style={{ padding: '24px', borderRadius: '1px', minHeight: '368px', height: '368px', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'relative', zIndex: 10 }}>
         <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Monthly Activity</h3>
-        <ChartDropdown 
-          value={viewMode} 
-          onChange={setViewMode} 
-          options={[
-            { value: 'monthly', label: 'Monthly View' },
-            { value: 'quarterly', label: 'Quarterly View' }
-          ]} 
-        />
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <ChartDropdown 
+            value={selectedYear.toString()} 
+            onChange={(val) => setSelectedYear(parseInt(val))} 
+            options={availableYears.map(y => ({ value: y.toString(), label: y.toString() }))} 
+          />
+          <ChartDropdown 
+            value={viewMode} 
+            onChange={setViewMode} 
+            options={[
+              { value: 'monthly', label: 'Monthly View' },
+              { value: 'quarterly', label: 'Quarterly View' }
+            ]} 
+          />
+        </div>
       </div>
 
       {loading ? (

@@ -70,7 +70,8 @@ serve(async (req) => {
       revisionsMap.get(r.assignment_id).push(r);
     });
 
-    const allPayloads = [];
+    const allPayloads: any[] = [];
+    const transactionUpdates: { id: string; months_covered: number }[] = [];
 
     for (const p of incomingPayments) {
       const assignment = assignmentsMap.get(p.assignment_id);
@@ -80,11 +81,34 @@ serve(async (req) => {
       let remainingAmount = parseFloat(p.amount);
       if (isNaN(remainingAmount) || remainingAmount <= 0) continue;
 
+      // ── Insert raw transaction record ──────────────────────────
+      const { data: txn, error: txnErr } = await supabaseClient
+        .from('payment_transactions')
+        .insert({
+          assignment_id: p.assignment_id,
+          amount: remainingAmount,
+          payment_date: p.payment_date,
+          payment_method: p.payment_method || null,
+          payment_type: p.payment_type || 'rent',
+          reference_number: p.reference_number || null,
+          receipt_url: p.receipt_url || null,
+          notes: p.notes || null,
+          months_covered: 1,
+        })
+        .select('id')
+        .single();
+
+      if (txnErr) throw txnErr;
+      const transactionId = txn.id;
+      let monthsCovered = 0;
+      // ──────────────────────────────────────────────────────────
+
       const existingPays = existingPayments.filter(ep => ep.assignment_id === assignment.id);
       const isHistoricalSettlement = p.payment_type === 'historical_settlement';
 
       if (p.payment_type && p.payment_type !== 'rent' && !isHistoricalSettlement) {
         const pDate = new Date(p.payment_date);
+        monthsCovered = 1;
         allPayloads.push({
           assignment_id: p.assignment_id,
           amount: remainingAmount,
@@ -103,8 +127,10 @@ serve(async (req) => {
           upload_batch_id: upload_batch_id || null,
           receipt_url: p.receipt_url || null,
           gst_amount: 0,
-          tds_amount: 0
+          tds_amount: 0,
+          transaction_id: transactionId,
         });
+        transactionUpdates.push({ id: transactionId, months_covered: monthsCovered });
         continue;
       }
 
@@ -133,7 +159,8 @@ serve(async (req) => {
         const { net: expectedAmountForMonth, gstAmount, tdsAmount } = computeNetPayable(baseRentForMonth, gstRate, tdsRate);
         
         // If this month is already fully paid, move to next month
-        if (totalPaidSoFarForMonth >= expectedAmountForMonth) {
+        // Use 0.01 tolerance to avoid floating point precision issues
+        if (totalPaidSoFarForMonth >= expectedAmountForMonth - 0.01) {
           currentMonth++;
           if (currentMonth > 12) { currentMonth = 1; currentYear++; }
           isFirstPayment = false;
@@ -147,6 +174,15 @@ serve(async (req) => {
         const amountToApply = Math.min(amountNeeded, remainingAmount);
         // Round to 2 decimal places to avoid floating point issues
         const roundedAmountToApply = Math.round(amountToApply * 100) / 100;
+
+        // Guard: if rounding reduces the amount to 0, treat the month as paid
+        // and move on. Without this, the loop creates infinite ₹0 rows.
+        if (roundedAmountToApply <= 0) {
+          currentMonth++;
+          if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+          isFirstPayment = false;
+          continue;
+        }
 
         const dueDate = computeDueDate(
           assignment.payment_mode || 'prepaid',
@@ -165,6 +201,7 @@ serve(async (req) => {
         const creditAmount = computeCredit(newTotalPaidForMonth, expectedAmountForMonth);
         const status = newTotalPaidForMonth >= expectedAmountForMonth ? 'paid' : 'partial';
 
+        monthsCovered++;
         allPayloads.push({
           assignment_id: p.assignment_id,
           amount: roundedAmountToApply,
@@ -183,7 +220,8 @@ serve(async (req) => {
           upload_batch_id: upload_batch_id || null,
           receipt_url: p.receipt_url || null,
           gst_amount: gstAmount,
-          tds_amount: tdsAmount
+          tds_amount: tdsAmount,
+          transaction_id: transactionId,
         });
 
         remainingAmount -= roundedAmountToApply;
@@ -194,10 +232,21 @@ serve(async (req) => {
         }
         isFirstPayment = false;
       }
+
+      // Update the transaction with the actual months covered
+      transactionUpdates.push({ id: transactionId, months_covered: Math.max(monthsCovered, 1) });
     }
 
     const { error: insertErr } = await supabaseClient.from('payments').insert(allPayloads);
     if (insertErr) throw insertErr;
+
+    // Update months_covered on each transaction record
+    for (const tu of transactionUpdates) {
+      await supabaseClient
+        .from('payment_transactions')
+        .update({ months_covered: tu.months_covered })
+        .eq('id', tu.id);
+    }
 
     return new Response(JSON.stringify({ success: true, count: allPayloads.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

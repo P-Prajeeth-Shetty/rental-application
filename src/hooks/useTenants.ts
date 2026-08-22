@@ -205,6 +205,15 @@ export function useTenants() {
     if (editAssignmentId) {
       const { error: err } = await supabase.from('tenant_assignments').update(payload).eq('id', editAssignmentId);
       if (err) throw err;
+
+      // When editing (e.g. correcting lease_start), purge all automated
+      // revisions so the auto-rent-increase function can rebuild them from
+      // the updated start date. Manual revisions (those with a non-null
+      // reason) are preserved.
+      await supabase.from('rent_revisions')
+        .delete()
+        .eq('assignment_id', editAssignmentId)
+        .is('reason', null);
     } else {
       const { error: err } = await supabase.from('tenant_assignments').insert([{ ...payload, tenant_id: tenantId, status: 'active' }]);
       if (err) throw err;

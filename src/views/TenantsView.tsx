@@ -165,12 +165,46 @@ export const TenantsView: React.FC = () => {
     });
   };
 
+  // Compute existing unit numbers for the selected property from all
+  // assignments across every tenant. This drives the datalist suggestions
+  // and the "is the property full?" guard.
+  const selectedPropertyId = assignForm.property_id;
+  const selectedProperty = properties.find(p => p.id === selectedPropertyId);
+  const allAssignmentsForProperty = Object.values(assignmentsMap)
+    .flat()
+    .filter(a => a.property_id === selectedPropertyId && a.status === 'active');
+  const existingUnitNumbers = [...new Set(allAssignmentsForProperty.map(a => a.unit_number))];
+  const propertyIsFull = selectedProperty
+    ? existingUnitNumbers.length >= selectedProperty.total_units
+    : false;
+
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignModal) return;
 
     if (!assignForm.lease_start) {
       setError("Please select a Lease Start date.");
+      return;
+    }
+
+    // ── Unit-count guard ────────────────────────────────────────────
+    // If the user typed a unit name that does NOT already exist in the
+    // property, check whether adding it would exceed total_units.
+    const unitAlreadyExists = existingUnitNumbers
+      .some(u => u.toLowerCase() === assignForm.unit_number.trim().toLowerCase());
+
+    // When editing, check if the unit is changing to a new name
+    const isChangingUnit = editAssignmentId
+      ? !allAssignmentsForProperty.some(
+          a => a.id === editAssignmentId && a.unit_number.toLowerCase() === assignForm.unit_number.trim().toLowerCase()
+        )
+      : true;
+
+    if (!unitAlreadyExists && isChangingUnit && propertyIsFull) {
+      setError(
+        `This property already has ${existingUnitNumbers.length}/${selectedProperty!.total_units} unit names assigned (${existingUnitNumbers.join(', ')}). ` +
+        `You cannot add a new unit. Pick one of the existing unit numbers, or increase the property's total units first.`
+      );
       return;
     }
 
@@ -762,15 +796,54 @@ export const TenantsView: React.FC = () => {
               />
             </div>
           </div>
+          {/* Unit occupancy indicator */}
+          {selectedProperty && (
+            <div style={{ padding: '10px 14px', borderRadius: '2px', border: '1px solid var(--border-color)', background: propertyIsFull ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                Unique units occupied: <b style={{ color: propertyIsFull ? '#ef4444' : '#10b981' }}>{existingUnitNumbers.length} / {selectedProperty.total_units}</b>
+              </span>
+              {existingUnitNumbers.length > 0 && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  {existingUnitNumbers.join(', ')}
+                </span>
+              )}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '12px' }}>
             <div style={{ flex: 1 }}>
-              <ModalInput 
-                label="Unit Number *" 
-                value={assignForm.unit_number} 
-                onChange={e => setAssignForm({ ...assignForm, unit_number: e.target.value })} 
-                placeholder="e.g. 4B" 
-                required 
-              />
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.80rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Unit Number *
+                </label>
+                <input
+                  list="unit-number-suggestions"
+                  value={assignForm.unit_number}
+                  onChange={e => setAssignForm({ ...assignForm, unit_number: e.target.value })}
+                  placeholder={existingUnitNumbers.length > 0 ? `e.g. ${existingUnitNumbers[0]}` : 'e.g. 4B'}
+                  required
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '2px',
+                    border: `1px solid ${!assignForm.unit_number ? 'var(--border-color)' : existingUnitNumbers.some(u => u.toLowerCase() === assignForm.unit_number.trim().toLowerCase()) ? '#10b981' : propertyIsFull ? '#ef4444' : 'var(--border-color)'}`,
+                    background: 'var(--bg-main)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.95rem',
+                    outline: 'none',
+                    width: '100%',
+                    fontFamily: 'inherit',
+                  }}
+                />
+                <datalist id="unit-number-suggestions">
+                  {existingUnitNumbers.map(u => (
+                    <option key={u} value={u} />
+                  ))}
+                </datalist>
+                {assignForm.unit_number && !existingUnitNumbers.some(u => u.toLowerCase() === assignForm.unit_number.trim().toLowerCase()) && propertyIsFull && (
+                  <div style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: '4px' }}>
+                    ⚠ Property is full. Pick an existing unit or increase total units.
+                  </div>
+                )}
+              </div>
             </div>
             <div style={{ flex: 1 }}>
               <ModalInput 

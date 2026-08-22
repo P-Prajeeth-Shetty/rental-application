@@ -225,15 +225,29 @@ export const LeasesView: React.FC = () => {
 
         let match: AssignmentWithTenant | undefined;
         
-        // 1. Match primarily by Unit + Property (regardless of tenantName)
-        if (unit && property) {
+        // 1. Match by Unit + Property + Tenant Name (best: resolves shared-unit
+        //    ambiguity like two tenants in 522-G)
+        if (unit && property && tenantName) {
           match = assignments.find(a => 
+            a.unit_number.toLowerCase() === unit.toLowerCase() &&
+            a.properties?.name.toLowerCase() === property.toLowerCase() &&
+            a.tenants?.full_name.toLowerCase() === tenantName.toLowerCase()
+          );
+        }
+
+        // 2. Match by Unit + Property (regardless of tenantName)
+        if (!match && unit && property) {
+          const matchesByUnitProp = assignments.filter(a => 
             a.unit_number.toLowerCase() === unit.toLowerCase() &&
             a.properties?.name.toLowerCase() === property.toLowerCase()
           );
+          // Only auto-match if there is exactly one tenant in this unit
+          if (matchesByUnitProp.length === 1) {
+            match = matchesByUnitProp[0];
+          }
         }
         
-        // 2. Match by Unit only (if unique)
+        // 3. Match by Unit only (if unique across all properties)
         if (!match && unit) {
           const matchesByUnit = assignments.filter(a => a.unit_number.toLowerCase() === unit.toLowerCase());
           if (matchesByUnit.length === 1) {
@@ -241,7 +255,7 @@ export const LeasesView: React.FC = () => {
           }
         }
         
-        // 3. Fallback to Tenant Name + Property
+        // 4. Fallback to Tenant Name + Property
         if (!match && tenantName && property) {
           match = assignments.find(a => 
             a.tenants?.full_name.toLowerCase() === tenantName.toLowerCase() &&
@@ -249,7 +263,7 @@ export const LeasesView: React.FC = () => {
           );
         }
 
-        // 4. Fallback to just Tenant Name
+        // 5. Fallback to just Tenant Name
         if (!match && tenantName) {
           match = assignments.find(a => a.tenants?.full_name.toLowerCase() === tenantName.toLowerCase());
         }
@@ -359,6 +373,12 @@ export const LeasesView: React.FC = () => {
             'Notes': '',
             'Payment Type': 'rent'
           };
+        })
+        // Sort by Unit number first, then by Tenant Name for clean Excel ordering
+        .sort((a, b) => {
+          const unitCmp = (a['Unit'] || '').localeCompare(b['Unit'] || '', undefined, { numeric: true, sensitivity: 'base' });
+          if (unitCmp !== 0) return unitCmp;
+          return (a['Tenant Name'] || '').localeCompare(b['Tenant Name'] || '');
         })
       : [{ 'Tenant Name': 'Example Tenant', 'Email': 'example@email.com', 'Phone': '9876543210', 'Property': 'Example Property', 'Unit': '101', 'Rent': 25000, 'GST Rate (%)': 18, 'TDS Rate (%)': 10, 'GST Amount': 4500, 'TDS Amount': 2500, 'Net Amount': 27000, 'Paid Amount': 27000, 'Bal Amount': 0, 'Payment Date': new Date().toISOString().split('T')[0], 'Method': 'UPI', 'Reference': 'TXN12345', 'Notes': '', 'Payment Type': 'rent' }];
 
