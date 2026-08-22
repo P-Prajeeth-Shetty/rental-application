@@ -119,7 +119,11 @@ export const LeasesView: React.FC = () => {
   // Tenant history drawer
   const [historyTarget, setHistoryTarget] = useState<AssignmentWithTenant | null>(null);
 
-  const showToast = (type: 'success' | 'error', message: string) => {
+  const showToast = async (type: 'success' | 'error', message: string) => {
+    if (message?.toLowerCase().includes('jwt expired')) {
+      await supabase.auth.signOut();
+      message = "Your session has expired. Please log in again.";
+    }
     const id = Date.now();
     setToasts(prev => [...prev, { id, type, message }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
